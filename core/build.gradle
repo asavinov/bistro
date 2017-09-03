@@ -1,0 +1,85 @@
+buildscript {
+    ext.kotlin_version = '1.1.4-3'
+    repositories {
+        flatDir {
+            dirs "$rootProject.projectDir"
+        }
+		mavenLocal()
+		mavenCentral()
+	}
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: "kotlin"
+apply plugin: 'antlr'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+jar {
+    baseName = 'bistro-core'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    //jcenter()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'org.conceptoriented.bistro'
+version = '0.1.0'
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+
+    antlr("org.antlr:antlr4:4.7")
+
+    compile("org.antlr:antlr4-runtime:4.7")
+    compile("com.google.guava:guava:23.0")
+    compile("org.apache.commons:commons-lang3:3.6")
+    compile("org.apache.commons:commons-csv:1.4")
+    compile("org.json:json:20170516")
+    compile("net.objecthunter:exp4j:0.4.8")
+    compile("com.udojava:EvalEx:1.11")
+
+    testCompile("junit:junit:4.12")
+}
+
+// https://docs.gradle.org/current/userguide/antlr_plugin.html
+generateGrammarSource {
+    maxHeapSize = "64m"
+	arguments += ["-visitor", "-listener", "-long-messages"]
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
+
+// Install into (local) maven repository
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+// Generate archive with source files (to be installed into maven repository)
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar
+}
