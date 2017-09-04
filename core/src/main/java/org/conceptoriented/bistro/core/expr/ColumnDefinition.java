@@ -11,7 +11,7 @@ import org.json.JSONObject;
  * It is a syntactic representation of a derived column with some specific serialization convention corresponding to certain format, for example, programming language or expression language.
  * This class knows about the syntactic conventions of the language/expression language and can also translate it the corresponding object representation.
  * This objects are supposed to be used to represent formulas edited by the user and stored in columns. The system then translates then into an executable form (evaluators).
- * This class has to directly or indirectly encode all names needed for computing certain column kind like main table name, parameter path names, and maybe additional parameters like whether to append records.
+ * This class has to directly or indirectly encode all names needed for computing certain column kind like main table name, parameter path names, and maybe additional parameters like whether to add records.
  */
 public interface ColumnDefinition {
 	// Transform syntactic representation to object representation by producing the necessary internal objects like Udes, tables, columns etc.

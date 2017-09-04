@@ -17,7 +17,7 @@ import java.util.List;
  * 
  * Limitations:
  * - It is not possible to vary input ids just because this evaluate interface is unaware of the ids and their semantics. The evaluate method will not get any id - it will get only output values and return an output value.
- * - The evaluate method does not have access to schema elements like columns and hence cannot read/write data directly, append/search records.
+ * - The evaluate method does not have access to schema elements like columns and hence cannot read/write data directly, add/search records.
  *  
  * Questions/problems:
  * - How to deal with link columns. One solution is to use one evaluator object for one element in the tuple by returning only primitive value.
@@ -25,7 +25,7 @@ import java.util.List;
  * 
  * Use cases:
  * - Accumulate. Here the first parameter is explicitly used as the current output and then the updated output is returned. Separate evaluators are used for initialization and finalization.
- * - Link. Approach 1: Separate evaluators are used for each member of the tuple. However, their return values are not stored but rather are used to find/append an element by the column evaluator.
+ * - Link. Approach 1: Separate evaluators are used for each member of the tuple. However, their return values are not stored but rather are used to find/add an element by the column evaluator.
  * - Translation of source expression. An instance of this class is returned by a translator from some expression syntax. For each syntax, there is one translator. The paths can be encoded into the source expressions.
  *   The result is a native expression using its native variables.
  * 
@@ -39,7 +39,7 @@ public interface UDE {
 	 */
 	public void setParamPaths(List<NamePath> paths);
 	public List<NamePath> getParamPaths();
-	public List<List<Column>> getResolvedParamPaths();
+	public List<ColumnPath> getResolvedParamPaths();
 	/**
 	 * Each parameter has a description which can be retrieved by means of this method. 
 	 * It is not the best approach because these descriptions are language specific.

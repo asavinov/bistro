@@ -48,35 +48,35 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 		return this.errors;
 	}
 
-	protected void evaluateExpr(UDE expr, List<Column> accuLinkPath) {
+	protected void evaluateExpr(UDE expr, ColumnPath accuLinkPath) {
 		
 		errors.clear(); // Clear state
 
-		Table mainTable = accuLinkPath == null ? this.column.getInput() : accuLinkPath.get(0).getInput(); // Loop/scan table
+		Table mainTable = accuLinkPath == null ? this.column.getInput() : accuLinkPath.getInput(); // Loop/scan table
 
 		// ACCU: Currently we do full re-evaluate by resetting the accu column outputs and then making full scan through all existing facts
 		// ACCU: The optimal approach is to apply negative accu function for removed elements and then positive accu function for added elements
 		Range mainRange = mainTable.getIdRange();
 
 		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading values
-		List<List<Column>> paramPaths = expr.getResolvedParamPaths();
+		List<ColumnPath> paramPaths = expr.getResolvedParamPaths();
 		Object[] paramValues = new Object[paramPaths.size()]; // Will store values for all params
 		Object out; // Current output value
 		Object result; // Will be written to output for each input
 
 		for(long i=mainRange.start; i<mainRange.end; i++) {
 			// Find group [ACCU-specific]
-			Long g = accuLinkPath == null ? i : (Long) accuLinkPath.get(0).getData().getValue(accuLinkPath, i);
+			Long g = accuLinkPath == null ? i : (Long) accuLinkPath.getValue(i);
 
 			// Read all parameter values
 			int paramNo = 0;
-			for(List<Column> paramPath : paramPaths) {
-				paramValues[paramNo] = paramPath.get(0).data.getValue(paramPath, i);
+			for(ColumnPath paramPath : paramPaths) {
+				paramValues[paramNo] = paramPath.getValue(i);
 				paramNo++;
 			}
 			
 			// Read current out value
-			out = this.column.getData().getValue(g); // [ACCU-specific] [FIN-specific]
+			out = this.column.getValue(g); // [ACCU-specific] [FIN-specific]
 
 			// Evaluate
 			result = expr.evaluate(paramValues, out);
@@ -86,7 +86,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 			}
 
 			// Update output
-			this.column.getData().setValue(g, result);
+			this.column.setValue(g, result);
 		}
 	}
 
@@ -99,14 +99,17 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 
 		Table mainTable = this.column.getInput();
 		// Currently we make full scan by re-evaluating all existing input ids
-		Range mainRange = this.column.getData().getIdRange();
+		Range mainRange = this.column.getInput().getIdRange();
 
 		// Each item in this lists is for one member expression 
 		// We use lists and not map because want to use common index (faster) for access and not key (slower) which is important for frequent accesses in a long loop.
-		List< List<List<Column>> > rhsParamPaths = new ArrayList< List<List<Column>> >();
+		List< List<ColumnPath> > rhsParamPaths = new ArrayList< List<ColumnPath> >();
 		List< Object[] > rhsParamValues = new ArrayList< Object[] >();
 		List< Object > rhsResults = new ArrayList< Object >();
-		Record outRecord = new Record(); // All output values for all expressions along with column names (is used by the search)
+
+		// Record used for search
+		List<Column> columns = new ArrayList<>();
+		List<Object> values = new ArrayList<>();
 
 		// Initialize items of these lists for each member expression
 		for(Pair<Column,UDE> mmbr : exprs) {
@@ -119,20 +122,22 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 		}
 
 		for(long i=mainRange.start; i<mainRange.end; i++) {
-			
-			outRecord.fields.clear();
-			
-			// Evaluate ALL child rhs expressions by producing an array of their results 
+
+			// Reset record
+			columns.clear();
+			values.clear();
+
+			// Evaluate ALL child rhs expressions by producing an array of their results
 			int mmbrNo = 0;
 			for(Pair<Column,UDE> mmbr : exprs) {
 
-				List<List<Column>> paramPaths = rhsParamPaths.get(mmbrNo);
+				List<ColumnPath> paramPaths = rhsParamPaths.get(mmbrNo);
 				Object[] paramValues = rhsParamValues.get(mmbrNo);
 				
 				// Read all parameter values (assuming that this column output is not used in link columns)
 				int paramNo = 0;
-				for(List<Column> paramPath : paramPaths) {
-					paramValues[paramNo] = paramPath.get(0).data.getValue(paramPath, i);
+				for(ColumnPath paramPath : paramPaths) {
+					paramValues[paramNo] = paramPath.getValue(i);
 					paramNo++;
 				}
 
@@ -145,34 +150,37 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 				}
 
 				rhsResults.set(mmbrNo, result);
-				outRecord.set(mmbr.getLeft().getName(), result);
-				
+
+				// Set field in the record
+				columns.add(mmbr.getKey());
+				values.add(result);
+
 				mmbrNo++; // Iterate
 			}
 
 			// Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-			Object out = typeTable.find(outRecord, true);
+			Object out = typeTable.find(columns, values, true);
 			
 			// Update output
-			this.column.getData().setValue(i, out);
+			this.column.setValue(i, out);
 		}
 
 	}
 
 	protected void evaluateExprDefault() {
-		Range mainRange = this.column.getData().getIdRange(); // All dirty/new rows
+		Range mainRange = this.column.getInput().getIdRange(); // All dirty/new rows
 		Object defaultValue = this.column.getDefaultValue();
 		for(long i=mainRange.start; i<mainRange.end; i++) {
-			this.column.getData().setValue(i, defaultValue);
+			this.column.setValue(i, defaultValue);
 		}
 	}
 
 	protected List<Column> getExpressionDependencies(UDE expr) { // Get parameter paths from expression and extract (unique) columns from them
 		List<Column> columns = new ArrayList<Column>();
 		
-		List<List<Column>> paths = expr.getResolvedParamPaths();
-		for(List<Column> path : paths) {
-			for(Column col : path) {
+		List<ColumnPath> paths = expr.getResolvedParamPaths();
+		for(ColumnPath path : paths) {
+			for(Column col : path.columns) {
 				if(!columns.contains(col) && col != this.column) {
 					columns.add(col);
 				}

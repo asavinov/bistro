@@ -23,9 +23,9 @@ public class SUM extends EvaluatorBase {
 
 	@Override
 	public void evaluate(long row) {
-		Object value1 = column1.getData().getValue(row);
+		Object value1 = column1.getValue(row);
 		if(value1 instanceof String) try { value1 = NumberFormat.getInstance(Locale.US).parse((String)value1); } catch (ParseException e) { value1 = null; }
-		Object value2 = column2.getData().getValue(row);
+		Object value2 = column2.getValue(row);
 		if(value2 instanceof String) try { value2 = NumberFormat.getInstance(Locale.US).parse((String)value2); } catch (ParseException e) { value2 = null; }
 		
 		if(value1 == null) value1 = Double.NaN;
@@ -34,7 +34,7 @@ public class SUM extends EvaluatorBase {
 		double result = Double.NaN;
 		result = ((Number)value1).doubleValue() + ((Number)value2).doubleValue();
 		
-		thisColumn.getData().setValue(row, result);
+		thisColumn.setValue(row, result);
 	}
 
 }

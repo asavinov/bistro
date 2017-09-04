@@ -9,7 +9,7 @@ import org.conceptoriented.bistro.core.Column;
  * - possibility to manipulating row ids, for example, increment/decrement ids or iterate through ids. For that purpose, it gets the following features:
  *   - get access to function object for reading output for arbitrary inputs
  *   - get access to ranges to determine valid ranges of input ids
- *   - no possibility to write/modify/append
+ *   - no possibility to write/modify/add
  * - it does not get output values. It is because it gets function objects and hence it has to be able to retrieve the same outputs.
  *   - instead of output values as parameters, it gets one input id (and a number of function objects)
  * 
@@ -25,10 +25,10 @@ import org.conceptoriented.bistro.core.Column;
  * API Design. The class must know data API (at least read output given input). It also must know how to deal with input ids, particularly, validity ranges.
  * The evaluator gets only input id as parameter (not column output values) and uses then column references to read the necessary values.
  * Do we need to work with subsets/groups by using inverse functions? Conceptually not because this means physically producing a new collection. 
- * How to implement link/append columns? To search/append or not to search.
- * - !!! One option is that it returns a list of (expression) expression outputs so essentially it is a list of normal expressions. And then the system does search and append. This system knows that it is a link function and it will return a list of values for certain columns (as declared) to be searched/appended. A column evaluator in this case is defined as a list of normal columns which can be calculated or link columns, and they can be evaluated individually.
+ * How to implement link/add columns? To search/add or not to search.
+ * - !!! One option is that it returns a list of (expression) expression outputs so essentially it is a list of normal expressions. And then the system does search and add. This system knows that it is a link function and it will return a list of values for certain columns (as declared) to be searched/appended. A column evaluator in this case is defined as a list of normal columns which can be calculated or link columns, and they can be evaluated individually.
  *   Note that in this case, the system has to write outputs itself (for all functions), that is, evaluators cannot change columns.
- * - Another option is that functions are able to inverse search/append by returning id (rather than list of values). The system uses this function precisely as any other function by simply storing its output (or the function itself stores the found id).
+ * - Another option is that functions are able to inverse search/add by returning id (rather than list of values). The system uses this function precisely as any other function by simply storing its output (or the function itself stores the found id).
  *  
  * Possible principles:
  * - evaluators can only read and not write
@@ -41,7 +41,7 @@ import org.conceptoriented.bistro.core.Column;
  * - inverse functions for getting input(s) given output(s) might be needed for link columns or for look ups and search.
  * - updating function: by the function or by the system? If by the function then it breaks the conception somewhat if it can update many outputs. So initially we could prohibit updates. In this case, we need to split API into reading and writing. Note that read-only functions can be optimized, for example, a (in-memory) copy could be created with the necessary range or otherwise optimized for this function.
  * - updating function for many inputs. We do not have a use case for this (new values could overwrite previous outputs) but if it is possible then the system might need to know this range for dependency management. Also, we could prohibit from writing/updating outputs.
- * - appending new records might be needed for link/append columns: by the function or by the system?
+ * - appending new records might be needed for link/add columns: by the function or by the system?
  * - reuse of an evaluator implementation (formula) for different columns declaratively without hard-coding column names.
  *   For example, we implemented some complex algorithm and want to provide it as a plug-in where the user can apply it to different columns.
  *   The evaluator has to use its interval/local parameters while column references are specified declaratively and resolved at initialization.

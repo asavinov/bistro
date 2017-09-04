@@ -14,7 +14,7 @@ public class NamePath {
 	
 	// Assume that it is a column path, resolve all individual columns relative to the specified table
 	// The returned array contains as many elements as the names in the sequence
-	public List<Column> resolveColumns(Table table) {
+	public ColumnPath resolveColumns(Table table) {
 		List<Column> result = new ArrayList<Column>();
 		
 		Schema schema = table.getSchema();
@@ -28,7 +28,7 @@ public class NamePath {
 			table = column.getOutput();
 		}
 		
-		return result;
+		return new ColumnPath(result);
 	}
 
 	// Assume that the sequence is a fully qualified name of a column

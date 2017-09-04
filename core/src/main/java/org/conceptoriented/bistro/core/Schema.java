@@ -71,9 +71,17 @@ public class Schema {
 	public List<Column> getColumns() {
 		return this.columns;
 	}
+	public List<Column> getColumns(Table table) {
+		List<Column> res = this.columns.stream().filter(x -> x.getInput().equals(table)).collect(Collectors.<Column>toList());
+		return res;
+	}
 	public List<Column> getColumns(String table) {
 		List<Column> res = this.columns.stream().filter(x -> x.getInput().getName().equalsIgnoreCase(table)).collect(Collectors.<Column>toList());
 		return res;
+	}
+	public Column getColumn(Table table, String column) {
+		Column ret = this.columns.stream().filter(x -> x.getInput().equals(table) && x.getName().equalsIgnoreCase(column)).findAny().orElse(null);
+		return ret;
 	}
 	public Column getColumn(String table, String column) {
         Column ret = this.columns.stream().filter(x -> x.getInput().getName().equalsIgnoreCase(table) && x.getName().equalsIgnoreCase(column)).findAny().orElse(null);

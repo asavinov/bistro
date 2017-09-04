@@ -50,8 +50,8 @@ public class UdeJava implements UDE {
 		return paths;
 	}
 	@Override
-	public List<List<Column>> getResolvedParamPaths() {
-		List<List<Column>> paths = new ArrayList<List<Column>>();
+	public List<ColumnPath> getResolvedParamPaths() {
+		List<ColumnPath> paths = new ArrayList<ColumnPath>();
 		for(ExprDependency dep : this.exprDependencies) {
 			paths.add(dep.columns);
 		}
@@ -297,7 +297,7 @@ public class UdeJava implements UDE {
 	protected void bind() {
 		for(ExprDependency dep : this.exprDependencies) {
 			dep.columns = dep.qname.resolveColumns(this.table);
-			if(dep.columns == null || dep.columns.size() < dep.qname.names.size()) {
+			if(dep.columns == null || dep.columns.getLength() < dep.qname.names.size()) {
 				this.translateError = new BistroError(BistroErrorCode.BIND_ERROR, "Bind error", "Cannot resolve column path " + dep.pathName);
 				return;
 			}
@@ -460,5 +460,5 @@ class ExprDependency {
 	public String pathName; // Original param paths
 	public String paramName;
 	public NamePath qname; // Parsed param paths
-	List<Column> columns; // Resolved param paths
+	ColumnPath columns; // Resolved param paths
 }

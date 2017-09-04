@@ -13,7 +13,7 @@ public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
 	UDE accuExpr;
 	UDE finExpr;
 
-	List<Column> accuPathColumns;
+	ColumnPath accuPathColumns;
 
 	@Override
 	public void evaluate() {
@@ -57,14 +57,14 @@ public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
 			}
 		}
 
-		for(Column col : this.accuPathColumns) {
+		for(Column col : this.accuPathColumns.columns) {
 			if(!ret.contains(col)) ret.add(col);
 		}
 
 		return ret;
 	}
 
-	public ColumnEvaluatorAccu(Column column, UDE initExpr, UDE accuExpr, UDE finExpr, List<Column> accuPathColumns) {
+	public ColumnEvaluatorAccu(Column column, UDE initExpr, UDE accuExpr, UDE finExpr, ColumnPath accuPathColumns) {
 		super(column);
 
 		this.initExpr = initExpr;

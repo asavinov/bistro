@@ -14,8 +14,8 @@ public enum ColumnKind {
 
 	// Tuple (complex). 
 	// A number of expressions assigned to one column of the output (complex) set and returning a member of this output column set.
-	// This combination of values is then used look up and existing element (and optionally append)
-	// One version is that the evaluator knows how to loop up (and append). Another version is that it is done externally and evaluator only evaluates a number of expressions.
+	// This combination of values is then used look up and existing element (and optionally add)
+	// One version is that the evaluator knows how to loop up (and add). Another version is that it is done externally and evaluator only evaluates a number of expressions.
 	LINK(70),
 
 	// Accumulation

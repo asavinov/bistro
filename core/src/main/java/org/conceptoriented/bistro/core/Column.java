@@ -5,8 +5,11 @@ import org.conceptoriented.bistro.core.expr.ColumnDefinitionCalc;
 import org.conceptoriented.bistro.core.expr.ColumnDefinitionLink;
 import org.conceptoriented.bistro.core.expr.ExpressionKind;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class Column {
@@ -47,14 +50,35 @@ public class Column {
 	private boolean key = false;
 	public boolean isKey() {  return this.key; }
 
-	//
-	// Data
-	//
-	protected ColumnData data;
-	public ColumnData getData() {
-		return this.data;
-	}
+    //
+    // Data dirty state: added/removed inputs (set population), and change outputs (function updated)
+    //
 
+    protected boolean isChanged = false;
+
+    //
+	// Data (public)
+	//
+
+    private ColumnData data;
+
+    public Object getValue(long id) { return this.data.getValue(id); }
+
+	public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
+
+    //
+    // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
+    //
+
+    protected void add() { this.data.add(); this.isChanged = true; }
+	protected void add(long count) { this.data.add(count); this.isChanged = true; }
+
+    protected void remove() { this.data.remove(1); this.isChanged = true; }
+    protected void remove(long count) { this.data.remove(count); this.isChanged = true; }
+
+
+
+    @Deprecated // This probably should also moved to UtilsData which knows about all data types, conversions, default values etc.
 	public Object getDefaultValue() { // TODO: Depends on the column type. Maybe move to Data class or to Evaluator/Definition
 		Object defaultValue;
 		if(this.getOutput().isPrimitive()) {
@@ -65,8 +89,27 @@ public class Column {
 		}
 		return defaultValue;
 	}
-	
-	//
+
+    @Deprecated // Convenience method. Should be part of UtilsData with casts/conversions. Replace it everywhere by add() and setValue()
+	public long appendValue(Object value) {
+        // Cast the value to type of this column
+        if(this.getOutput().getName().equalsIgnoreCase("String")) {
+            try { value = value.toString(); }
+            catch (Exception e) { value = ""; }
+        }
+        else if(this.getOutput().getName().equalsIgnoreCase("Double") || this.getOutput().getName().equalsIgnoreCase("Integer")) {
+            if(value instanceof String) {
+                try { value = NumberFormat.getInstance(Locale.US).parse(((String)value).trim()); }
+                catch (ParseException e) { value = Double.NaN; }
+            }
+        }
+
+        this.data.add(); // TODO: it does not work. we need to get largest (new) id but we can do it only from the table, so remove this method
+        this.data.setValue(0, value);
+        return 0;
+    }
+
+    //
 	// Formula kind
 	//
 	
@@ -350,7 +393,7 @@ public class Column {
 			if(this.hasEvaluateErrors()) return;
 		}
 
-		this.data.markNewAsClean(); // Mark dirty as clean
+		this.isChanged = false;
 
 		this.setFormulaClean(); // Mark up-to-date if successful
 	}
@@ -388,6 +431,6 @@ public class Column {
 		this.expressionKind = ExpressionKind.EXP4J; // By default
 
 		// Data
-		this.data = new ColumnData(this);
+		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
 	}
 }

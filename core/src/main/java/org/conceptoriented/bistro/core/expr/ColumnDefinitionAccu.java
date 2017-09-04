@@ -40,7 +40,7 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 		Table outputTable = column.getOutput();
 
 
-		List<Column> accuPathColumns = null;
+		ColumnPath accuPathColumns = null;
 
 		// Accu table and link (group) path
 		Table accuTable = schema.getTable(this.accuTable);

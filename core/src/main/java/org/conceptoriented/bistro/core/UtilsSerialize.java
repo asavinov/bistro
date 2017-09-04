@@ -7,15 +7,15 @@ import org.apache.commons.csv.CSVRecord;
 import org.conceptoriented.bistro.core.expr.ColumnDefinitionCalc;
 import org.conceptoriented.bistro.core.expr.ColumnDefinitionAccu;
 import org.conceptoriented.bistro.core.expr.ColumnDefinitionLink;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class UtilsSerialize {
 
@@ -120,14 +120,11 @@ public class UtilsSerialize {
             throw new BistroError(BistroErrorCode.CREATE_ELEMENT, "Error creating table. ", "Name contains invalid characters. ");
         }
 
-        long maxLength = obj.has("maxLength") && !obj.isNull("maxLength") ? obj.getLong("maxLength") : -1;
-
         //
         // Create
         //
 
         tab = schema.createTable(name);
-        tab.setMaxLength(maxLength);
 
         return tab;
     }
@@ -149,14 +146,14 @@ public class UtilsSerialize {
         // Get column types
         List<String> colTypes = UtilsData.recommendTypes(colNames, records);
 
-        // Create/append table with file name
+        // Create/add table with file name
         Table tab = schema.createTable(tableName);
 
         // Append columns
         schema.createColumns(tab.getName(), colNames, colTypes);
 
         // Append records to this table
-        tab.append(records, null);
+        Record.add(tab, records, null);
 
         return tab;
     }
@@ -176,7 +173,7 @@ public class UtilsSerialize {
         // Read Records from CSV
         List<Record> records = Record.fromCsvList(csvLines, params);
 
-        // Create/append table with file name
+        // Create/add table with file name
         Table tab = schema.createTable(tableName);
 
         // Append columns if necessary
@@ -186,7 +183,7 @@ public class UtilsSerialize {
         }
 
         // Append records to this table
-        tab.append(records, null);
+        Record.add(tab, records, null);
 
         return tab;
     }
@@ -218,14 +215,11 @@ public class UtilsSerialize {
             }
         }
 
-        long maxLength = obj.has("maxLength") ? obj.getLong("maxLength") : 0;
-
         //
         // Update only properties which are present
         //
 
         if(obj.has("name")) tab.setName(obj.getString("name"));
-        if(obj.has("maxLength")) tab.setMaxLength(obj.getLong("maxLength"));
     }
 
     public static String tableToJson() {
@@ -235,9 +229,7 @@ public class UtilsSerialize {
         String jid = "`id`: `" + table.getId() + "`";
         String jname = "`name`: `" + table.getName() + "`";
 
-        String jmaxLength = "`maxLength`: " + table.getMaxLength() + "";
-
-        String json = jid + ", " + jname + ", " + jmaxLength;
+        String json = jid + ", " + jname + ", ";
 
         return ("{" + json + "}").replace('`', '"');
     }
@@ -447,6 +439,260 @@ public class UtilsSerialize {
         String json = jid + ", " + jname + ", " + jin + ", " + jout + ", " + jdirty + ", " + jstatus + ", " + jkind + ", " + jcalc + ", " + jlink + ", " + jinit + ", " + jaccu + ", " + jatbl + ", " + japath;
 
         return ("{" + json + "}").replace('`', '"');
+    }
+
+}
+
+
+
+class Record {
+
+    // Alternative: Apache Commons CaseInsensitiveMap
+    Map<String, Object> fields = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+
+    public List<String> getNames() {
+        return new ArrayList<String>(fields.keySet());
+    }
+
+    public Object get(String name) {
+        return fields.get(name);
+    }
+
+    public void set(String name, Object value) {
+        fields.put(name, value);
+    }
+
+    public String toJsonMap() { // Column name is a key. Column value is the key value.
+        // Loop over all keys
+        String data = "";
+        for (Map.Entry<String, Object> entry : fields.entrySet())
+        {
+            String data_elem = "`" + entry.getKey() + "`:`" + entry.getValue() + "`, ";
+            data += data_elem;
+        }
+        if(data.length() > 2) {
+            data = data.substring(0, data.length()-2);
+        }
+
+        return ("{" + data + "}").replace('`', '"'); // Trick to avoid backslashing double quotes: use backticks and then replace it at the end
+    }
+    public String toJsonList(List<String> columns) { // First element in the pair is column name. Second element is column value.
+        String data = "";
+        // Loop over all columns (to retain their order in the list)
+        for(String column : columns) {
+            Object value = this.get(column);
+            if(value == null) value = "";
+            String data_elem = "[`" + column + "`,`" + value.toString() + "`], ";
+            data += data_elem;
+        }
+        if(data.length() > 2) {
+            data = data.substring(0, data.length()-2);
+        }
+
+        return ("[" + data + "]").replace('`', '"'); // Trick to avoid backslashing double quotes: use backticks and then replace it at the end
+    }
+    public String toCsv(List<String> columns) { // Comma separated column values.
+        String data = "";
+        // Loop over all columns (to retain their order in the list)
+        for(String column : columns) {
+            Object value = this.get(column);
+            if(value == null) value = "";
+            String data_elem = "`" + value.toString() + "`,";
+            data += data_elem;
+        }
+        if(data.length() > 1) {
+            data = data.substring(0, data.length()-1);
+        }
+
+        return data.replace('`', '"'); // Trick to avoid backslashing double quotes: use backticks and then replace it at the end
+    }
+
+    //
+    // Creation methods
+    //
+
+    public static Record fromJson(String json) {
+        JSONObject obj = new JSONObject(json);
+        return fromJsonObject(obj);
+    }
+
+    public static Record fromJsonObject(JSONObject obj) {
+        Record record = new Record();
+
+        Iterator<?> keys = obj.keys();
+        while(keys.hasNext()) {
+            String key = (String)keys.next(); // Column name
+            Object value = obj.get(key);
+            record.set(key, value);
+        }
+        return record;
+    }
+
+    public static List<Record> fromJsonList(String jsonString) {
+        List<Record> records = new ArrayList<Record>();
+
+        Object token = new JSONTokener(jsonString).nextValue();
+        JSONArray arr;
+        if (token instanceof JSONArray) { // Array of records
+            arr = (JSONArray) token;
+        }
+        else { // (token instanceof JSONObject)
+            if(!((JSONObject)token).has("data")) { // token is Record object
+                records.add(Record.fromJsonObject((JSONObject)token));
+                return records;
+            }
+            else {
+                Object content = ((JSONObject)token).get("data");
+                if(content instanceof JSONObject) { // content is Record object
+                    records.add(Record.fromJsonObject((JSONObject)content));
+                    return records;
+                }
+                else if(content instanceof JSONArray) {
+                    arr = (JSONArray) content;
+                }
+                else {
+                    return null;
+                }
+            }
+
+        }
+
+        // Loop over all list
+        for (int i = 0 ; i < arr.length(); i++) {
+            JSONObject jrec = arr.getJSONObject(i);
+            Record record = Record.fromJsonObject(jrec);
+            records.add(record);
+        }
+
+        return records;
+    }
+
+    public static List<Record> fromCsvList(String csvLines, String params) {
+        if(params == null || params.isEmpty()) params = "{}";
+
+        JSONObject paramsObj = new JSONObject(params);
+        List<String> lines = new ArrayList<String>(Arrays.asList(csvLines.split("\\r?\\n")));
+
+        //
+        // Extract a list of column names from the header (first line)
+        //
+        String headerLine = lines.get(0);
+        List<String> colNames = UtilsSerialize.csvLineToList(headerLine, paramsObj);
+
+        //
+        // Add records in the loop over all lines
+        //
+        List<Record> records = new ArrayList<Record>();
+        for (int i=1; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if(line == null || line.trim().isEmpty()) continue;
+
+            List<String> vals = UtilsSerialize.csvLineToList(line, paramsObj);
+
+            Record record = new Record();
+            for(int j=0; j<vals.size(); j++) {
+                if(j >= colNames.size()) break; // More values than columns
+                record.set(colNames.get(j), vals.get(j));
+            }
+
+            records.add(record);
+        }
+
+        return records;
+    }
+    public static List<Record> fromCsvFile(String fileName, List<String> columnNames, boolean skipFirst) {
+        List<Record> records = new ArrayList<Record>();
+        Record record = null;
+
+        try {
+            File file = new File(fileName);
+
+            Reader in = new FileReader(file);
+            Iterable<CSVRecord> csvRecs = CSVFormat.EXCEL.parse(in);
+
+            int recordNumber = 0;
+            for (CSVRecord csvRec : csvRecs) {
+
+                if(skipFirst && recordNumber == 0) { // First record
+                    recordNumber++;
+                    continue;
+                }
+
+                record = new Record();
+                for(int i=0; i<csvRec.size(); i++) {
+                    Object value = csvRec.get(i);
+                    record.set(columnNames.get(i), value);
+                }
+                records.add(record);
+
+                recordNumber++;
+            }
+
+            in.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return records;
+    }
+
+    public static List<Record> fromTable(Table table, Range range) {
+        if(range == null) {
+            range = table.getIdRange();
+        }
+
+        // Get all outgoing columns
+        List<Column> columns = table.getColumns();
+
+        List<Record> records = new ArrayList<Record>();
+        for(long row = range.start; row < range.end; row++) {
+
+            Record record = new Record();
+            record.set("_id", row);
+
+            for(Column column : columns) {
+                // Get value from the record
+                Object value = column.getValue(row);
+                // Store the value in the record
+                record.set(column.getName(), value);
+            }
+
+            records.add(record);
+        }
+
+        return records;
+    }
+
+
+
+    public static long addToTable(Table table, Record record) {
+
+        // Get all outgoing columns
+        List<Column> columns = table.getColumns();
+
+        for(Column column : columns) { // We must add a new value to all columns even if it has not been provided (null)
+
+            // Get value from the record
+            Object value = record.get(column.getName());
+
+            // Append the value to the column (even if it is null). This will also update the dirty status of data (range).
+            column.add();
+            column.setValue(table.getIdRange().end, value);
+        }
+
+        table.getIdRange().end++;
+        return table.getIdRange().end - 1;
+    }
+
+    public static void add(Table table, List<Record> records, Map<String, String> columnMapping) {
+        for(Record record : records) {
+            Record.addToTable(table, record);
+        }
+    }
+
+
+    public Record() {
     }
 
 }

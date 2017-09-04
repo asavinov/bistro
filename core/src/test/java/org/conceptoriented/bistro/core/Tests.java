@@ -70,27 +70,60 @@ public class Tests {
 
     @Test
     public void tableDataTest() { // Manual operations table id ranges
-        // Population: append, delete id to/from table
-        //   Problem: we cannot do it for columns - ColumnData should not support append/delete but maybe only update id range. So ColumnData is essentially immutable and can be resampled only from thier input Table.
+        // Population: add, delete id to/from table
+        //   Problem: we cannot do it for columns - ColumnData should not support add/delete but maybe only update id range. So ColumnData is essentially immutable and can be resampled only from thier input Table.
         //   Question: how columns store their range of inputs if it has to be shared? Option 1: use input table range. Option 2: each column has its range.
         //   Problem: we do not want to delete intermediate values (maybe only mark them as deleted).
-        //     Solution 1: We do not have append and delete - we have extend range (append) and shrink range (delete).
+        //     Solution 1: We do not have add and delete - we have extend range (add) and shrink range (delete).
         //     Solution 2: In future, allow for individual deletes and maybe inserts.
 
         // Get result range from table. Check for validity after operations.
-        // Note: do not use records - they are treated as setting multiple columns simultaniously - not for append/delete
+        // Note: do not use records - they are treated as setting multiple columns simultaniously - not for add/delete
     }
 
+    /**
+     * Principles:
+     * Elements are added/remove using table methods.
+     * The range of ids is read from the table.
+     * Values are set and get using column methos.
+     * Convenience methods:
+     * Getting or setting several columns simultaniously using Map (of column names or column references).
+     */
     @Test
     public void columnDataTest() { // Manual operations table id ranges
         // Prepopulate table for experiments with column data
+        Schema s = new Schema("My Schema");
+        Table t = s.createTable("My Table");
+        Column c1 = s.createColumn("My Table", "My Column", "Double"); // <-- Should not we objects? Name use should be limited, indeed.
 
-        // Read table range
-        // Get and set values given valid id
-        // Wrong ids: check right exception
+        long id = t.add();
+        assertEquals(0, id);
+        long id2 = t.add();
+        c1.setValue(id2, 1.0);
+        assertEquals(1.0, (double)c1.getValue(id2), Double.MIN_VALUE);
 
-        // Working with multiple columns. Use Record or Map for getting/setting multiple column values
-        // Wrong Record/Map: check correct exception
+        Column c2 = s.createColumn("My Table", "My Column 2", "String");
+        long id3 = t.add();
+        c2.setValue(id3, "StringValue");
+        assertEquals("StringValue", (String)c2.getValue(id3));
+
+        assertEquals(0, t.getIdRange().start);
+        assertEquals(3, t.getIdRange().end);
+
+        // Records.
+        // Working with multiple columns (records)
+        long id4 = t.add();
+        List<Column> cols = new ArrayList<>(Arrays.asList(c1,c2));
+        List<Object> vals = new ArrayList<>(Arrays.asList(2.0,"StringValue 2"));
+        t.setValues(id4, cols, vals);
+        assertEquals(2.0, (double)c1.getValue(id4), Double.MIN_VALUE);
+        assertEquals("StringValue 2", (String)c2.getValue(id4));
+
+        // Record search
+
+        // TODO: Wrong Record/Map: check correct exception
+
+        // TODO: Wrong ids: check exception for wrong ids
 
         // Data type conversion while setting/getting: use different types and formats and options.
         // Check right conversion or right exceptions. Rely on our UtilsData for conversion and specify/document what has to happen.
@@ -118,7 +151,6 @@ public class Tests {
     	// Create and configure: schema, tables, columns
         schema = new Schema("My Schema");
         Table table = schema.createTable("T");
-        table.maxLength = 2;
 
         // Data column will get its data from pushed records (input column)
         Column columnA = schema.createColumn("T", "A", "Double");
@@ -135,16 +167,16 @@ public class Tests {
         Record record = new Record();
 
         record.set("A", 5.0);
-        table.append(record); // The number of added/dirty records is incremented. Some records can be marked for deletion/old. 
-    	
+        Record.addToTable(table, record);
+
         record.set("A", 10.0);
-        table.append(record); // The number of added/dirty records is incremented. Some records can be marked for deletion/old. 
+        Record.addToTable(table, record);
 
         // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
         schema.evaluate();
         
         record.set("A", 20.0);
-        table.append(record); 
+        Record.addToTable(table, record);
 
         // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
         schema.evaluate();
@@ -211,9 +243,9 @@ public class Tests {
 
         columnB.evaluate();
 
-        assertEquals(11.0, (Double)columnB.getData().getValue(0), 0.00001);
-        assertEquals(Double.NaN, columnB.getData().getValue(1));
-        assertEquals(13.0, (Double)columnB.getData().getValue(2), 0.00001);
+        assertEquals(11.0, (Double)columnB.getValue(0), 0.00001);
+        assertEquals(Double.NaN, columnB.getValue(1));
+        assertEquals(13.0, (Double)columnB.getValue(2), 0.00001);
     }
 
     @Test
@@ -224,7 +256,7 @@ public class Tests {
         Column columnB = schema.getColumn("T", "B");
         
         // Create ColumnEvaluatorCalc by using a custom Java class as UserDefinedExpression
-        List<List<Column>> inputPaths = Arrays.asList( Arrays.asList(columnA) ); // Bind to column objects directly (without names)
+        List<ColumnPath> inputPaths = Arrays.asList( new ColumnPath(Arrays.asList(columnA)) ); // Bind to column objects directly (without names)
         UDE ude = new CustomCalcUde(inputPaths);
         ColumnEvaluatorCalc eval = new ColumnEvaluatorCalc(columnB, ude);
         columnB.setEvaluatorCalc(eval);
@@ -237,9 +269,9 @@ public class Tests {
 
         columnB.evaluate();
 
-        assertEquals(11.0, (Double)columnB.getData().getValue(0), 0.00001);
-        assertEquals(Double.NaN, columnB.getData().getValue(1));
-        assertEquals(13.0, (Double)columnB.getData().getValue(2), 0.00001);
+        assertEquals(11.0, (Double)columnB.getValue(0), 0.00001);
+        assertEquals(Double.NaN, columnB.getValue(1));
+        assertEquals(13.0, (Double)columnB.getValue(2), 0.00001);
     }
     protected Schema createCalcSchema() {
     	schema = new Schema("My Schema");
@@ -250,11 +282,11 @@ public class Tests {
         
         Record record = new Record();
         record.set("A", 5.0);
-        table.append(record);
+        Record.addToTable(table, record);
         record.set("A", null);
-        table.append(record);
+        Record.addToTable(table, record);
         record.set("A", 6);
-        table.append(record);
+        Record.addToTable(table, record);
 
         return schema;
     }
@@ -263,8 +295,8 @@ public class Tests {
     	@Override public void setParamPaths(List<NamePath> paths) {}
     	@Override public List<NamePath> getParamPaths() { return null; }
 
-    	List<List<Column>> inputPaths = new ArrayList<List<Column>>(); // The expression parameters are bound to these input column paths
-    	@Override public List<List<Column>> getResolvedParamPaths() { return inputPaths; }
+    	List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    	@Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
 
     	@Override public void translate(String formula) {}
     	@Override public List<BistroError> getTranslateErrors() { return null; }
@@ -275,7 +307,7 @@ public class Tests {
 		}
     	@Override public BistroError getEvaluateError() { return null; }
     	
-    	public CustomCalcUde(List<List<Column>> inputPaths) {
+    	public CustomCalcUde(List<ColumnPath> inputPaths) {
     		this.inputPaths.addAll(inputPaths);
     	}
     }
@@ -300,8 +332,8 @@ public class Tests {
 
         c5.evaluate();
 
-        assertEquals(0L, c5.getData().getValue(0));
-        assertEquals(1L, c5.getData().getValue(1));
+        assertEquals(0L, c5.getValue(0));
+        assertEquals(1L, c5.getValue(1));
     }
     
     @Test
@@ -333,8 +365,8 @@ public class Tests {
 
         c5.evaluate();
 
-        assertEquals(0L, c5.getData().getValue(0));
-        assertEquals(1L, c5.getData().getValue(1));
+        assertEquals(0L, c5.getValue(0));
+        assertEquals(1L, c5.getValue(1));
     }
     Schema createLinkSchema() {
     	// Create and configure: schema, tables, columns
@@ -349,7 +381,7 @@ public class Tests {
         Column c2 = schema.createColumn("T", "B", "String");
 
         // Add one or more records to the table
-        t1.append(Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
+        Record.addToTable(t1, Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
 
         //
         // Table 2
@@ -363,8 +395,8 @@ public class Tests {
         c5.setKind(ColumnKind.LINK);
 
         // Add one or more records to the table
-        t2.append(Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
-        t2.append(Record.fromJson("{ A: 10.0, B: \"ccc\" }"));
+        Record.addToTable(t2, Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
+        Record.addToTable(t2, Record.fromJson("{ A: 10.0, B: \"ccc\" }"));
 
         return schema;
     }
@@ -396,9 +428,9 @@ public class Tests {
 
         schema.evaluate();
 
-        assertEquals(20.0, ta.getData().getValue(0));
-        assertEquals(20.0, ta.getData().getValue(1));
-        assertEquals(0.0, ta.getData().getValue(2));
+        assertEquals(20.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
     }
     @Test
     public void accuUdeTest()
@@ -415,10 +447,10 @@ public class Tests {
         UDE initUde = new UdeJava("0.0", schema.getTable("T"));
 
         //UserDefinedExpression accuUde = new UdeJava(" [out] + 2.0 * [Id] ", schema.getTable("T2"));;
-        List<List<Column>> inputPaths = Arrays.asList( Arrays.asList( schema.getColumn("T2", "Id") ) );
+        List<ColumnPath> inputPaths = Arrays.asList( new ColumnPath( schema.getColumn("T2", "Id") ) );
         UDE accuUde = new CustomAccuUde(inputPaths);
 
-        List<Column> accuPathColumns = Arrays.asList(schema.getColumn("T2", "G"));
+        ColumnPath accuPathColumns = new ColumnPath(schema.getColumn("T2", "G"));
         
         ColumnEvaluatorAccu eval = new ColumnEvaluatorAccu(ta, initUde, accuUde, null, accuPathColumns);
         ta.setEvaluatorAccu(eval);
@@ -435,9 +467,9 @@ public class Tests {
 
         schema.evaluate();
 
-        assertEquals(20.0, ta.getData().getValue(0));
-        assertEquals(20.0, ta.getData().getValue(1));
-        assertEquals(0.0, ta.getData().getValue(2));
+        assertEquals(20.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
     }
     protected Schema createAccuSchema() {
     	
@@ -454,9 +486,9 @@ public class Tests {
         Column ta = schema.createColumn("T", "A", "Double");
         ta.setKind(ColumnKind.ACCU);
 
-        t1.append(Record.fromJson("{ Id: 5.0 }"));
-        t1.append(Record.fromJson("{ Id: 10.0 }"));
-        t1.append(Record.fromJson("{ Id: 15.0 }"));
+        Record.addToTable(t1, Record.fromJson("{ Id: 5.0 }"));
+        Record.addToTable(t1, Record.fromJson("{ Id: 10.0 }"));
+        Record.addToTable(t1, Record.fromJson("{ Id: 15.0 }"));
 
         //
         // Table 2 (fact table)
@@ -468,12 +500,12 @@ public class Tests {
         // Define group column
         Column t2g = schema.createColumn("T2", "G", "T");
         t2g.setKind(ColumnKind.LINK);
-        
-        t2.append(Record.fromJson("{ Id: 5.0 }"));
-        t2.append(Record.fromJson("{ Id: 5.0 }"));
-        t2.append(Record.fromJson("{ Id: 10.0 }"));
-        t2.append(Record.fromJson("{ Id: 20.0 }"));
-        
+
+        Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
+        Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
+        Record.addToTable(t2, Record.fromJson("{ Id: 10.0 }"));
+        Record.addToTable(t2, Record.fromJson("{ Id: 20.0 }"));
+
         return schema;
     }
     class CustomAccuUde implements UDE {
@@ -481,8 +513,8 @@ public class Tests {
     	@Override public void setParamPaths(List<NamePath> paths) {}
     	@Override public List<NamePath> getParamPaths() { return null; }
 
-    	List<List<Column>> inputPaths = new ArrayList<List<Column>>(); // The expression parameters are bound to these input column paths
-    	@Override public List<List<Column>> getResolvedParamPaths() { return inputPaths; }
+    	List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    	@Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
 
     	@Override public void translate(String formula) {}
     	@Override public List<BistroError> getTranslateErrors() { return null; }
@@ -494,7 +526,7 @@ public class Tests {
 		}
     	@Override public BistroError getEvaluateError() { return null; }
     	
-    	public CustomAccuUde(List<List<Column>> inputPaths) {
+    	public CustomAccuUde(List<ColumnPath> inputPaths) {
     		this.inputPaths.addAll(inputPaths);
     	}
     }
@@ -506,10 +538,10 @@ public class Tests {
     {
     	// What do we need?
     	
-    	// We want to append records asynchronously
-    	// Each append increases the new interval of the table
+    	// We want to add records asynchronously
+    	// Each add increases the new interval of the table
 
-    	// Each append result in column append and column status has to be updated
+    	// Each add result in column add and column status has to be updated
     	// User column becomes dirty and propagates deeply (its own dirty status will be resent immediately or by evaluate because it is a user column)
     	// Calc columns cannot be changed from outside but since it is a new record we do not lose anything so we can set the new value. But the column itself is marked dirty because this new value has to be computed from the formula.
     	// Link columns cannot be changed same as calc. And this column is also marked as dirty for future evaluation.
@@ -563,7 +595,6 @@ public class Tests {
     	schema = new Schema("My Schema");
 
         Table table = schema.createTable("T");
-        table.maxLength = 2;
 
         // Data column will get its data from pushed records (input column)
         Column columnA = schema.createColumn("T", "A", "Double");

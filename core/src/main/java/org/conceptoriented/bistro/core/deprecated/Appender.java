@@ -1,6 +1,5 @@
 package org.conceptoriented.bistro.core.deprecated;
 
-import org.conceptoriented.bistro.core.Record;
 import org.conceptoriented.bistro.core.Table;
 
 /**
@@ -85,5 +84,10 @@ class Remover {
 	public Remover(Table table) {
 		this.table = table;
 	}
+
+}
+
+// Dummy class instead of the previous Record used for serialization
+class Record {
 
 }
