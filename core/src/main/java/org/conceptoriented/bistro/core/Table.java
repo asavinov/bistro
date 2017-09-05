@@ -1,9 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Table {
@@ -115,10 +112,11 @@ public class Table {
     }
 
     //
-    // Operations with data records (convenience)
+    // Search
     //
 
-	public long find(List<Column> columns, List<Object> values, boolean append) {
+	// Important: Values must have the same type as the column data type - otherwise the comparision will not work
+    public long find(List<Column> columns, List<Object> values, boolean append) {
 
         //List<String> names = record.entrySet()..getNames();
         //List<Object> values = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());
@@ -133,16 +131,19 @@ public class Table {
 				Object recordValue = values.get(j);
 				Object columnValue = columns.get(j).getValue(i);
 
-                // TODO: The same number in Double and Integer will not be equal. So we need cast to some common type at some level of the system or here. It is where we need conception for casting/conversion, that is, how the system has to treat equality of different types. Or describe formally that the values in parameters must be compariable with column type, and if necessary the necessary conversion using Utils has to be done like Utils.castTo(), for derived columns this could done automatically after computing the value of the expression.
-				// Compare two values of different types
-				if(recordValue instanceof Number && columnValue instanceof Number) {
-					if( ((Number) recordValue).doubleValue() != ((Number) columnValue).doubleValue() ) { found = false; break; }
-					// OLD: if(!recordValue.equals(columnValue)) { found = false; break; }
-				}
-				else {
-					// Compare nullable objects
-					if( !com.google.common.base.Objects.equal(recordValue, columnValue) ) { found = false; break; }
-				}
+                // PROBLEM: The same number in Double and Integer will not be equal.
+				//   SOLUTION 1: cast to some common type before comparison. It can be done in-line here or we can use utility methods.
+				//   *SOLUTION 2: assume that the values have the type of the column, that is, the same comparable numeric type
+				//   SOLUTION 3: always cast the value to the type of this column (either here or in the expression)
+
+				// PROBLEM: Object.equals does not handle null's correctly
+				//   *SOLUTION: Use .Objects.equals (Java 1.7), ObjectUtils.equals (Apache), or Objects.equal (Google common), a==b (Kotlin, translated to "a?.equals(b) ?: (b === null)"
+
+                // Nullable comparison. If both are not null then for correct numeric comparison they must have the same type
+                if( !Objects.equals(recordValue, columnValue) ) {
+                    found = false;
+                    break;
+                }
 			}
 			
 			if(found) {

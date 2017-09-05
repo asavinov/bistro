@@ -43,9 +43,7 @@ public class Column {
 	public Table getOutput() {
 		return this.output;
 	}
-	public void setOutput(Table table) {
-		this.output = table;
-	}
+	public void setOutput(Table table) { this.output = table; this.setValue(null); }
 
 	private boolean key = false;
 	public boolean isKey() {  return this.key; }
@@ -64,7 +62,9 @@ public class Column {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-	public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
+    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
+
+    public void setValue(Object value) { this.data.setValue(value); this.isChanged = true; }
 
     //
     // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
@@ -419,12 +419,12 @@ public class Column {
 		return true;
 	}
 
-	public Column(Schema schema, String name, String input, String output) {
+	public Column(Schema schema, String name, Table input, Table output) {
 		this.schema = schema;
 		this.id = UUID.randomUUID();
 		this.name = name;
-		this.input = schema.getTable(input);
-		this.output = schema.getTable(output);
+		this.input = input;
+		this.output = output;
 		
 		// Formula
 		this.kind = ColumnKind.USER;

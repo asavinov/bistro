@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UtilsData {
+    // Values:
+    // We assume that input data has the correct type corresonding to the column declared data type. If not then it must be converted before use. Otherwise the behavior is not determined.
+    // We can think of and provide in future two versions of methods: safe and unsafe. Safe method do all the necessary checks (and maybe conversions in the case of no ambiguity). Unsafe methods assume that all these schecks have been performed before.
+    // For example, if column is not nullable then for unsafe methods, it is the task of the user to guarantee that, while safe methods will check values for null before use.
 
     //
     // Primitive data types
@@ -141,6 +145,12 @@ public class UtilsData {
     }
 
 
+    //
+    // Comparing numeric objects of different types
+    //
+
+    // Cast to some basic type and then create something common like double
+    //if( ((Number) recordValue).doubleValue() != ((Number) columnValue).doubleValue() ) { found = false; break; }
 
 
     public static List<String> recommendTypes(List<String> columnNames, List<Record> records) {

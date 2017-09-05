@@ -64,21 +64,36 @@ public class Tests {
     //   - build sequence of evaluation using dependency graph
     //   - evaluator sequentially by checking evaluate errors
 
-    @Test
-    public void exampleOneTest() { // Schema operations
-    }
+    // CONVENIENCE:
+    // Important for demo purposes - maybe better to develop custom column types for import/export
+    // - Load schema from CSV string/file
+    // - Load data from CSV string/file
+    // - Load data from JSON collection/object
 
     @Test
-    public void tableDataTest() { // Manual operations table id ranges
-        // Population: add, delete id to/from table
-        //   Problem: we cannot do it for columns - ColumnData should not support add/delete but maybe only update id range. So ColumnData is essentially immutable and can be resampled only from thier input Table.
-        //   Question: how columns store their range of inputs if it has to be shared? Option 1: use input table range. Option 2: each column has its range.
-        //   Problem: we do not want to delete intermediate values (maybe only mark them as deleted).
-        //     Solution 1: We do not have add and delete - we have extend range (add) and shrink range (delete).
-        //     Solution 2: In future, allow for individual deletes and maybe inserts.
+    public void schemaTest() // Schema operations
+    {
+        // Create and configure: schema, tables, columns
+        Schema s = new Schema("My Schema");
 
-        // Get result range from table. Check for validity after operations.
-        // Note: do not use records - they are treated as setting multiple columns simultaniously - not for add/delete
+        Table t = s.createTable("T");
+
+        Column c1 = s.createColumn("A", t, s.getTable("Double"));
+        Column c2 = s.createColumn("B", t, s.getTable("String"));
+        Column c3 = s.createColumn("C", t, s.getTable("Double"));
+
+        s.deleteColumn(c2);
+        assertEquals(2, t.getColumns().size());
+
+        s.deleteTable(t);
+        assertEquals(2, s.getTables().size());
+
+        // Column type rules and principles.
+        // Where do we have them? Enums, names, predefined Table classes. Schema initialization with all primitive tables.
+        // Are custom primitive tables allowed? What does it mean to declare itself primitive table? Only name? Or some implementation?
+        // Check impossibility to create a custom Table with primitive name (name uniqueness?)
+        // Get range, add, remove of primitive types.
+
     }
 
     /**
@@ -90,11 +105,11 @@ public class Tests {
      * Getting or setting several columns simultaniously using Map (of column names or column references).
      */
     @Test
-    public void columnDataTest() { // Manual operations table id ranges
+    public void dataTest() { // Manual operations table id ranges
         // Prepopulate table for experiments with column data
         Schema s = new Schema("My Schema");
         Table t = s.createTable("My Table");
-        Column c1 = s.createColumn("My Table", "My Column", "Double"); // <-- Should not we objects? Name use should be limited, indeed.
+        Column c1 = s.createColumn("My Column", "My Table", "Double"); // <-- Should not we objects? Name use should be limited, indeed.
 
         long id = t.add();
         assertEquals(0, id);
@@ -102,7 +117,7 @@ public class Tests {
         c1.setValue(id2, 1.0);
         assertEquals(1.0, (double)c1.getValue(id2), Double.MIN_VALUE);
 
-        Column c2 = s.createColumn("My Table", "My Column 2", "String");
+        Column c2 = s.createColumn("My Column 2", "My Table", "String");
         long id3 = t.add();
         c2.setValue(id3, "StringValue");
         assertEquals("StringValue", (String)c2.getValue(id3));
@@ -113,32 +128,60 @@ public class Tests {
         // Records.
         // Working with multiple columns (records)
         long id4 = t.add();
-        List<Column> cols = new ArrayList<>(Arrays.asList(c1,c2));
-        List<Object> vals = new ArrayList<>(Arrays.asList(2.0,"StringValue 2"));
+        List<Column> cols = Arrays.asList(c1,c2);
+        List<Object> vals = Arrays.asList(2.0,"StringValue 2");
         t.setValues(id4, cols, vals);
         assertEquals(2.0, (double)c1.getValue(id4), Double.MIN_VALUE);
         assertEquals("StringValue 2", (String)c2.getValue(id4));
 
         // Record search
+        vals = Arrays.asList(2.0,"StringValue 2");
+        long found_id = t.find(cols, vals, false); // Record exist
+        assertEquals(id4, found_id);
 
-        // TODO: Wrong Record/Map: check correct exception
+        vals = Arrays.asList(2.0,"Non-existing value");
+        found_id = t.find(cols, vals, false); // Record does not exist
+        assertTrue(found_id < 0);
 
-        // TODO: Wrong ids: check exception for wrong ids
+        vals = Arrays.asList(5.0,"String value 5"); // Record does not exist
+        found_id = t.find(cols, vals, true); // Add if not found
+        assertEquals(4, found_id);
 
-        // Data type conversion while setting/getting: use different types and formats and options.
-        // Check right conversion or right exceptions. Rely on our UtilsData for conversion and specify/document what has to happen.
-        // Working with NULLs, NaN etc.
-
-        // Change column type (leads to ColumnData migration with all the data in the case of USER)
+        vals = Arrays.asList(5L,"String value 5"); // Record exist but we specify different type (integer instead of double)
+        found_id = t.find(cols, vals, false);
+        assertTrue(found_id < 0); // Not found because of different types: Long is not comparable with Double
     }
 
     @Test
-    public void exampleThreeTest() { // Manual operations with table data (records). Develop convenient record object and operations (maybe with JSON).
+    public void calcTest() {
+        // Prepopulate table for experiments with column data
+        Schema s = new Schema("My Schema");
+        Table t = s.createTable("My Table");
+        Column c1 = s.createColumn("My Column", "My Table", "Double"); // <-- Should not we objects? Name use should be limited, indeed.
+
+        // TODO: 1) Simply UDE interface by leaving one error type etc.
+        // TODO: 2) Split UdeJava into two Udes and one base UdeExprBase
+
+        // TODO: 1) Use one evaluator field
+        // TODO: 2) Remove definitions - formulas are not stored anywhere (only in UdeExpr) and they are deprecated
+        // TODO: 3) Introduce setCalc/Accu/Link instead of of setEvaluator*
+
+        // ParameterPaths
+        // setCalc(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
+        // setCalc(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
+
+        // UdeLambda(lambda, paramPaths) - its evaluate method calls the provided lambda as a parameter
+        // UdeEvalex, UdeExp4j, UdeMathparser, UdeJavaScript extend UdeExprBase - specific are type conversion (e.g., from strings) or dynamic typing like JS
+        // MyUde(paramPath_names/objects) - user implementation
+
+        // evaluate <- No translation. But translation errors/exception are possible of course.
+
+        // Check dependencies. Although it is not public.
 
     }
 
     @Test
-    public void exampleFourTest() { // Calc columns: define in different ways
+    public void linkTest() {
 
     }
 
@@ -146,20 +189,20 @@ public class Tests {
 
 
     @Test
-    public void schemaTest()
+    public void schemaAndDataTest()
     {
     	// Create and configure: schema, tables, columns
         schema = new Schema("My Schema");
         Table table = schema.createTable("T");
 
         // Data column will get its data from pushed records (input column)
-        Column columnA = schema.createColumn("T", "A", "Double");
+        Column columnA = schema.createColumn("A", "T", "Double");
 
         // Calculated column. It has a user-defined evaluation method (plug-in, mapping, coel etc.)
         // This column can read its own and other column values, and it knows about new/valid/old record ranges 
         // It is expected to write/update its own value
         // If necessary, it can update its type/output by pushing records to its type/output table and using the returned row id for writing into itself
-        Column columnB = schema.createColumn("T", "B", "Double");
+        Column columnB = schema.createColumn("B", "T", "Double");
         //String descr = "{ `class`:`org.conceptoriented.sc.core.EvaluatorB`, `dependencies`:[`A`] }";
         //columnB.setDescriptor(descr.replace('`', '"'));
 
@@ -276,8 +319,8 @@ public class Tests {
     protected Schema createCalcSchema() {
     	schema = new Schema("My Schema");
         Table table = schema.createTable("T");
-        Column columnA = schema.createColumn("T", "A", "Double");
-        Column columnB = schema.createColumn("T", "B", "Double");
+        Column columnA = schema.createColumn("A", "T", "Double");
+        Column columnB = schema.createColumn("B", "T", "Double");
         columnB.setKind(ColumnKind.CALC);
         
         Record record = new Record();
@@ -377,8 +420,8 @@ public class Tests {
         //
         Table t1 = schema.createTable("T");
 
-        Column c1 = schema.createColumn("T", "A", "Double");
-        Column c2 = schema.createColumn("T", "B", "String");
+        Column c1 = schema.createColumn("A", "T", "Double");
+        Column c2 = schema.createColumn("B", "T", "String");
 
         // Add one or more records to the table
         Record.addToTable(t1, Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
@@ -388,10 +431,10 @@ public class Tests {
         //
         Table t2 = schema.createTable("T2");
 
-        Column c3 = schema.createColumn("T2", "A", "Double");
-        Column c4 = schema.createColumn("T2", "B", "String");
+        Column c3 = schema.createColumn("A", "T2", "Double");
+        Column c4 = schema.createColumn("B", "T2", "String");
 
-        Column c5 = schema.createColumn("T2", "C", "T");
+        Column c5 = schema.createColumn("C", "T2", "T");
         c5.setKind(ColumnKind.LINK);
 
         // Add one or more records to the table
@@ -480,10 +523,10 @@ public class Tests {
         //
         Table t1 = schema.createTable("T");
 
-        Column tid = schema.createColumn("T", "Id", "Double");
+        Column tid = schema.createColumn("Id", "T", "Double");
 
         // Define accu column
-        Column ta = schema.createColumn("T", "A", "Double");
+        Column ta = schema.createColumn("A", "T", "Double");
         ta.setKind(ColumnKind.ACCU);
 
         Record.addToTable(t1, Record.fromJson("{ Id: 5.0 }"));
@@ -495,10 +538,10 @@ public class Tests {
         //
         Table t2 = schema.createTable("T2");
 
-        Column t2id = schema.createColumn("T2", "Id", "Double");
+        Column t2id = schema.createColumn("Id", "T2", "Double");
 
         // Define group column
-        Column t2g = schema.createColumn("T2", "G", "T");
+        Column t2g = schema.createColumn("G", "T2", "T");
         t2g.setKind(ColumnKind.LINK);
 
         Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
@@ -597,9 +640,9 @@ public class Tests {
         Table table = schema.createTable("T");
 
         // Data column will get its data from pushed records (input column)
-        Column columnA = schema.createColumn("T", "A", "Double");
+        Column columnA = schema.createColumn("A", "T", "Double");
 
-        Column columnB = schema.createColumn("T", "B", "Double");
+        Column columnB = schema.createColumn("B", "T", "Double");
         //columnB.setDescriptor("{ \"class\":\"org.conceptoriented.sc.core.EvaluatorB\" }");
     }
 

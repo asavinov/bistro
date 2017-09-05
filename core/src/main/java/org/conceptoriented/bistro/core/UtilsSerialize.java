@@ -34,6 +34,22 @@ public class UtilsSerialize {
         return ret;
     }
 
+    public static List<Column> createColumns(String input, List<String> names, List<String> outputs) {
+        Schema schema = null; // Previous this
+
+        List<Column> cols = new ArrayList<Column>();
+
+        for(int i=0; i<names.size(); i++) {
+            Column col = schema.getColumn(input, names.get(i));
+            if(col != null) continue; // Already exists
+
+            col = schema.createColumn(names.get(i), input, outputs.get(i));
+            cols.add(col);
+        }
+
+        return cols;
+    }
+
     //
     // Schema creation and serialization (migrated from Schema)
     //
@@ -150,7 +166,7 @@ public class UtilsSerialize {
         Table tab = schema.createTable(tableName);
 
         // Append columns
-        schema.createColumns(tab.getName(), colNames, colTypes);
+        UtilsSerialize.createColumns(tab.getName(), colNames, colTypes);
 
         // Append records to this table
         Record.add(tab, records, null);
@@ -179,7 +195,7 @@ public class UtilsSerialize {
         // Append columns if necessary
         if(paramsObj.optBoolean("createColumns")) {
             List<String> colTypes = UtilsData.recommendTypes(colNames, records);
-            schema.createColumns(tab.getName(), colNames, colTypes);
+            UtilsSerialize.createColumns(tab.getName(), colNames, colTypes);
         }
 
         // Append records to this table
@@ -290,7 +306,7 @@ public class UtilsSerialize {
         // Create
 
         if(isValid) {
-            col = schema.createColumn(input.getName(), name, output.getName());
+            col = schema.createColumn(name, input, output);
 
             col.setKind(kind);
 

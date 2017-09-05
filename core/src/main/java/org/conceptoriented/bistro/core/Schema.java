@@ -48,9 +48,7 @@ public class Schema {
 		this.tables.add(tab);
 		return tab;
 	}
-    public void deleteTable(String id) {
-		Table tab = getTableById(id);
-
+    public void deleteTable(Table tab) {
 		// Remove input columns
 		List<Column> inColumns = this.columns.stream().filter(x -> x.getInput().equals(tab)).collect(Collectors.<Column>toList());
 		this.columns.removeAll(inColumns);
@@ -92,26 +90,17 @@ public class Schema {
         return ret;
 	}
 
-	public Column createColumn(String input, String name, String output) {
+	public Column createColumn(String name, Table  input, Table output) {
 		Column col = new Column(this, name, input, output);
 		this.columns.add(col);
 		return col;
 	}
-	public List<Column> createColumns(String input, List<String> names, List<String> outputs) {
-		List<Column> cols = new ArrayList<Column>();
-		
-		for(int i=0; i<names.size(); i++) {
-			Column col = this.getColumn(input, names.get(i));
-			if(col != null) continue; // Already exists
-
-			col = this.createColumn(input, names.get(i), outputs.get(i));
-			cols.add(col);
-		}
-
-		return cols;
+	public Column createColumn(String name, String input, String output) {
+		Column col = new Column(this, name, this.getTable(input), this.getTable(output));
+		this.columns.add(col);
+		return col;
 	}
-	public void deleteColumn(String id) {
-		Column col = this.getColumnById(id);
+	public void deleteColumn(Column col) {
 		this.columns.remove(col);
 	}
 

@@ -2,6 +2,7 @@ package org.conceptoriented.bistro.core;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -49,6 +50,10 @@ public class ColumnData {
 
 	protected void setValue(long id, Object value) {
 		this.values[id2offset(id)] = value;
+	}
+
+	protected void setValue(Object value) {
+		Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
 	}
 
     // TODO: Maybe return the newly added (valid) range
