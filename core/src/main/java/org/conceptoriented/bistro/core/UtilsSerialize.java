@@ -283,7 +283,7 @@ public class UtilsSerialize {
         // We do not process status (it is always result of the backend)
         // We do not process dirty (it is always result of the backend)
 
-        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.AUTO;
+        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.NONE;
 
         String calcFormula = obj.has("calcFormula") && !obj.isNull("calcFormula") ? obj.getString("calcFormula") : "";
 
@@ -311,12 +311,12 @@ public class UtilsSerialize {
             col.setKind(kind);
 
             // Always create a new definition object
-            col.setDefinitionCalc(new ColumnDefinitionCalc(calcFormula, col.expressionKind));
-            col.setDefinitionLink(new ColumnDefinitionLink(linkFormula, col.expressionKind));
-            col.setDefinitionAccu(new ColumnDefinitionAccu(initFormula, accuFormula, null, accuTable, accuPath, col.expressionKind));
+            //col.setDefinitionCalc(new ColumnDefinitionCalc(calcFormula, col.expressionKind));
+            //col.setDefinitionLink(new ColumnDefinitionLink(linkFormula, col.expressionKind));
+            //col.setDefinitionAccu(new ColumnDefinitionAccu(initFormula, accuFormula, null, accuTable, accuPath, col.expressionKind));
 
             if(!col.isDerived()) { // Columns without formula (non-evalatable) are clean
-                col.setFormulaChange(false);
+                col.isChanged = false;
             }
 
             return col;
@@ -358,7 +358,7 @@ public class UtilsSerialize {
         // We do not process status (it is always result of the backend)
         // We do not process dirty (it is always result of the backend)
 
-        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.AUTO;
+        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.NONE;
 
         String calcFormula = obj.has("calcFormula") && !obj.isNull("calcFormula") ? obj.getString("calcFormula") : "";
 
@@ -392,12 +392,12 @@ public class UtilsSerialize {
         if(obj.has("kind")) column.setKind(kind);
 
         // Always create a new definition object
-        if(obj.has("calcFormula"))
-            column.setDefinitionCalc(new ColumnDefinitionCalc(calcFormula, column.expressionKind));
-        if(obj.has("linkFormula"))
-            column.setDefinitionLink(new ColumnDefinitionLink(linkFormula, column.expressionKind));
-        if(obj.has("initFormula") || obj.has("accuFormula") || obj.has("initTable") || obj.has("initPath"))
-            column.setDefinitionAccu(new ColumnDefinitionAccu(initFormula, accuFormula, null, accuTable, accuPath, column.expressionKind));
+        //if(obj.has("calcFormula"))
+        //    column.setDefinitionCalc(new ColumnDefinitionCalc(calcFormula, column.expressionKind));
+        //if(obj.has("linkFormula"))
+        //    column.setDefinitionLink(new ColumnDefinitionLink(linkFormula, column.expressionKind));
+        //if(obj.has("initFormula") || obj.has("accuFormula") || obj.has("initTable") || obj.has("initPath"))
+        //    column.setDefinitionAccu(new ColumnDefinitionAccu(initFormula, accuFormula, null, accuTable, accuPath, column.expressionKind));
     }
 
     public static List<String> readColumnNamesFromCsvFile(String fileName) {
@@ -443,16 +443,16 @@ public class UtilsSerialize {
 
         String jkind = "`kind`:" + column.kind.getValue() + "";
 
-        String jcalc = "`calcFormula`: " + JSONObject.valueToString(column.getDefinitionCalc() == null ? "" : column.getDefinitionCalc().getFormula()) + "";
+        //String jcalc = "`calcFormula`: " + JSONObject.valueToString(column.getDefinitionCalc() == null ? "" : column.getDefinitionCalc().getFormula()) + "";
 
-        String jlink = "`linkFormula`: " + JSONObject.valueToString(column.getDefinitionLink() == null ? "" : column.getDefinitionLink().getFormula()) + "";
+        //String jlink = "`linkFormula`: " + JSONObject.valueToString(column.getDefinitionLink() == null ? "" : column.getDefinitionLink().getFormula()) + "";
 
-        String jinit = "`initFormula`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getInitFormula()) + "";
-        String jaccu = "`accuFormula`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuFormula()) + "";
-        String jatbl = "`accuTable`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuTable()) + "";
-        String japath = "`accuPath`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuPath()) + "";
+        //String jinit = "`initFormula`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getInitFormula()) + "";
+        //String jaccu = "`accuFormula`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuFormula()) + "";
+        //String jatbl = "`accuTable`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuTable()) + "";
+        //String japath = "`accuPath`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuPath()) + "";
 
-        String json = jid + ", " + jname + ", " + jin + ", " + jout + ", " + jdirty + ", " + jstatus + ", " + jkind + ", " + jcalc + ", " + jlink + ", " + jinit + ", " + jaccu + ", " + jatbl + ", " + japath;
+        String json = jid + ", " + jname + ", " + jin + ", " + jout + ", " + jdirty + ", " + jstatus + ", " + jkind;
 
         return ("{" + json + "}").replace('`', '"');
     }

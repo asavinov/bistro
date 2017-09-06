@@ -36,6 +36,17 @@ public class ColumnEvaluatorLink extends ColumnEvaluatorBase {
 		return ret;
 	}
 
+	public ColumnEvaluatorLink(Column column, List<Column> columns, List<UDE> udes) {
+		super(column);
+
+		List<Pair<Column,UDE>> ude_pairs = new ArrayList<>();
+		for(int i=0; i<columns.size(); i++) {
+			ude_pairs.add(Pair.of(columns.get(i), udes.get(i)));
+		}
+
+		this.udes.addAll(ude_pairs);
+	}
+
 	public ColumnEvaluatorLink(Column column, List<Pair<Column,UDE>> udes) {
 		super(column);
 		this.udes.addAll(udes);

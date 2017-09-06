@@ -39,6 +39,8 @@ public interface UDE {
 	 */
 	public void setParamPaths(List<NamePath> paths);
 	public List<NamePath> getParamPaths();
+
+	public void setResolvedParamPaths(List<ColumnPath> paths);
 	public List<ColumnPath> getResolvedParamPaths();
 	/**
 	 * Each parameter has a description which can be retrieved by means of this method. 
@@ -46,15 +48,14 @@ public interface UDE {
 	 */
 	//public List<String> getParamDescriptions();
 
-
-	public void translate(String formula);
-	public List<BistroError> getTranslateErrors();
-
 	/**
 	 * Compute output value using the provide input values. 
 	 * The first parameter is the current output value (or null).
 	 * Note that all parameters are output values of different paths for one and the same input id.
 	 */
+	public void translate(String formula);
+	public List<BistroError> getTranslateErrors();
+
 	public Object evaluate(Object[] params, Object out);
 	public BistroError getEvaluateError();
 }

@@ -74,4 +74,14 @@ public class NamePath {
 		}
 	}
 
+	public NamePath(List<String> names) {
+		this.names.addAll(names);
+	}
+
+	public NamePath(String name) {
+		this.names.add(name);
+	}
+
+	public NamePath() {
+	}
 }

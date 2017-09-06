@@ -5,6 +5,8 @@ import org.conceptoriented.bistro.core.expr.ColumnDefinitionCalc;
 import org.conceptoriented.bistro.core.expr.ColumnDefinitionLink;
 import org.conceptoriented.bistro.core.expr.ExpressionKind;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -121,7 +123,7 @@ public class Column {
 		this.kind = kind;
 	}
 	public boolean isDerived() {
-		if(this.kind == ColumnKind.CALC || this.kind == ColumnKind.ACCU || this.kind == ColumnKind.LINK || this.kind == ColumnKind.CLASS) {
+		if(this.kind == ColumnKind.CALC || this.kind == ColumnKind.ACCU || this.kind == ColumnKind.LINK) {
 			return true;
 		}
 		return false;
@@ -130,7 +132,7 @@ public class Column {
 	//
 	// Three formula types
 	//
-	
+/* We do not have formulas - they could be represented in extensions or associated objects if necessary - column is only for computations using objects that are able to compute
 	// It is used for all definition types (by default) but every definition has its own expression kind
 	public ExpressionKind expressionKind = ExpressionKind.EXP4J;
 
@@ -165,7 +167,8 @@ public class Column {
 		this.definitionAccu = definition;
 		this.setFormulaChange(true);
 	}
-	
+*/
+
 	//
 	// Formula dirty status (own or inherited)
 	//
@@ -176,6 +179,7 @@ public class Column {
 	 * It is an aggregated status for new, deleted or changed formulas.
 	 * It is own status of this columns only (not inherited/propagated).
 	 */
+/* Since we do not deal with formulas, we do not track their status of any kind - it has to be replaced by data status
 	public boolean isFormulaDirty() {
 		return this.formulaChange || this.formulaNew || this.formulaDelete;
 	}
@@ -197,6 +201,7 @@ public class Column {
 	public void setFormulaDelete(boolean dirty) {
 		this.formulaDelete = dirty;
 	}
+*/
 
 	//
 	// Formula (translate) dependencies
@@ -205,19 +210,19 @@ public class Column {
 	/**
 	 * All other columns it directly depends on. These columns are directly used in its formula to compute output.
 	 */
-	protected List<Column> dependencies = new ArrayList<Column>();
+	private List<Column> dependencies = new ArrayList<Column>();
 	public List<Column> getDependencies() {
 		return this.dependencies;
 	}
-	public void setDependencies(List<Column> deps) {
+	private void setDependencies(List<Column> deps) {
 		resetDependencies();
 		this.dependencies.addAll(deps);
 	}
-	public void resetDependencies() {
+	private void resetDependencies() {
 		this.dependencies.clear();
 	}
 
-	public List<Column> getDependencies(List<Column> cols) { // Get all unique dependencies of the specified columns (expand dependence tree nodes)
+	private List<Column> getDependencies(List<Column> cols) { // Get all unique dependencies of the specified columns (expand dependence tree nodes)
 		List<Column> ret = new ArrayList<Column>();
 		for(Column col : cols) {
 			List<Column> deps = col.getDependencies();
@@ -228,7 +233,7 @@ public class Column {
 		return ret;
 	}
 
-	public boolean isStartingColumn() { // True if this column has no dependencies (e.g., constant expression) or is free (user, non-derived) column
+	protected boolean isStartingColumn() { // True if this column has no dependencies (e.g., constant expression) or is free (user, non-derived) column
 		if(!this.isDerived()) {
 			return true;
 		}
@@ -246,7 +251,7 @@ public class Column {
 				if(dep == this) {
 					return new BistroError(BistroErrorCode.DEPENDENCY_CYCLE_ERROR, "Cyclic dependency.", "This column formula depends on itself directly or indirectly.");
 				}
-				BistroError de = dep.getTranslateError();
+				BistroError de = dep.getError();
 				if(de != null && de.code != BistroErrorCode.NONE) {
 					return new BistroError(BistroErrorCode.TRANSLATE_PROPAGATION_ERROR, "Error in column " + dep.getName(), "This column formula depends on a column with errors.");
 				}
@@ -255,64 +260,253 @@ public class Column {
 		return null;
 	}
 	public BistroError getThisOrDependenceError() {
-		BistroError ret = this.getTranslateError();
+		BistroError ret = this.getError();
 		if(ret != null && ret.code != BistroErrorCode.NONE) {
 			return ret; // Error in this column
 		}
 		return this.getDependenceError();
 	}
 
-	public boolean isDependenceDirty() { // =needEvaluate. True if one of the dependencies (recursively) is dirty (formula change)
+	public boolean isDependenceDirty() { // =needEvaluate. Inherited dirty status
 		for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) { // Loop on expansion layers of dependencies
 			for(Column dep : deps) {
 				if(dep == this) {
 					return true; // Cyclic dependency is also an error and hence dirty
 				}
-				BistroError de = dep.getTranslateError();
+				BistroError de = dep.getError();
 				if(de != null && de.code != BistroErrorCode.NONE) {					return true; // Any error must be treated as dirty status (propagated further down)
 				}
-				if(dep.isFormulaDirty()) return true;
+				if(dep.isChanged) return true;
 			}
 		}
 		return false; // All dependencies are up-to-date
 	}
 	public boolean isThisOrDependenceDirty() {
-		return this.isFormulaDirty() || this.isDependenceDirty();
+		return this.isChanged || this.isDependenceDirty();
 	}
 
-	//
-	// Translation status
-	// Translation errors are produced and stored in different objects like many evaluators or local fields (e.g., for links) so the final status is collected
-	//
-	
-	private List<BistroError> translateErrors = new ArrayList<BistroError>();
-	public List<BistroError> getTranslateErrors() { // Empty list in the case of no errors
-		return this.translateErrors;
-	}
-	public BistroError getTranslateError() { // Get single (the first) error (there could be many errors detected)
-		List<BistroError> ret = this.getTranslateErrors();
-		if(ret == null || ret.size() == 0) return null;
-		return ret.get(0);
-	}
-	public boolean hasTranslateErrors() { // Is successfully translated and can be used for evaluation
-		if(this.translateErrors.size() == 0) return false;
-		else return true;
-	}
 
-	//
-	// Translate
-	//
-	
-	ColumnEvaluatorCalc evaluatorCalc;
-	public void setEvaluatorCalc(ColumnEvaluatorCalc eval) { this.evaluatorCalc = eval; this.expressionKind = ExpressionKind.NONE; }
-	ColumnEvaluatorLink evaluatorLink;
-	public void setEvaluatorLink(ColumnEvaluatorLink eval) { this.evaluatorLink = eval; this.expressionKind = ExpressionKind.NONE; }
-	ColumnEvaluatorAccu evaluatorAccu;
-	public void setEvaluatorAccu(ColumnEvaluatorAccu eval) { this.evaluatorAccu = eval; this.expressionKind = ExpressionKind.NONE; }
+    //
+    // Errors
+    //
 
-	// Generate Evaluator* from ColumnDefinition*
-	// TODO: What if Evaluator* is provided directly without Formulas/Definition?
-	// - setEvaluator means direct, setFormula means translation
+    private List<BistroError> errors = new ArrayList<BistroError>();
+    public List<BistroError> getErrors() { // Empty list in the case of no errors
+        return this.errors;
+    }
+    public BistroError getError() {
+        if(getErrors().size() == 0) return null;
+        return this.errors.get(this.errors.size()-1);
+    }
+    public boolean hasErrors() {
+        if(getErrors().size() == 0) return false;
+        else return true;
+    }
+
+    // TODO: Simply UDE interface by leaving one error type etc.
+    // TODO: Simply UDE interface by removing translate and evaluate. Only evaluate. Translation is done etiher in construtor or when formula is set. Think about setting formula only in a setter (not in constructor).
+    // TODO: UDE currently has two versions of parameter paths: names and objects. Do we really need both of them?
+    // TODO: Split UdeJava into two Udes and one base UdeExprBase
+    //   UdeEvalex, UdeExp4j, UdeMathparser, UdeJavaScript extend UdeExprBase - specific are type conversion (e.g., from strings) or dynamic typing like JS
+    // TODO: Introduce constant UDE, for example, for initializers like 0.0 and EQUAL UDE for copying field/path values to output without any expression.
+    // TODO: Define UdeLambda and then the corresponding calc/link/accu methods with lambda as parameters
+    //   UdeLambda(lambda, paramPaths)
+
+    // TODO: 2) Currently definitions are used becaues they have the logic of formula translation and evaluator creation.
+    //   Think about removing them completely definitions. Indeed, we create them temporarily (as a wrapper), translate and then delete
+
+    // TODO: Rework dependency management. Probably make the protected (they are needed only for evaluation). Simplilfy graph computation: to evaluate this column, we search for dirty (isChanged) and hasErrors.
+
+    // ISSUE: Currently, link dependencies include also output table columns (lhs columns). If we link to them then they have to be computed (is it really so - they might be USER column). If we append then we do not care - we will append anyway.
+    //   For example, can we link to derived (calculated) columns in the output table? Does it make sense?
+
+    // Patterns:
+    // 1) calculate(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
+    // 2) calculate(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
+
+    //
+    // Calcuate. Convert input parameters into an Evaluator object and ealuate it in the case of immediate (eager) action.
+    //
+
+    public void calculate(UDE ude) { // Provide instance of custom UDE which has already paths
+        this.evaluator = null;
+        this.resetDependencies();
+
+        this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
+
+        if(this.evaluator != null && !this.hasErrors()) {
+            this.kind = ColumnKind.CALC;
+            this.setDependencies(this.evaluator.getDependencies());
+        }
+    }
+
+    public void calculate(String clazz, String formula) { // Specify UDE class/selector and formula parameter for this class
+        this.evaluator = null;
+        this.resetDependencies();
+
+        if(clazz.equals("EXP4J")) {
+
+            // TODO: It is workaround - remove definition by copying its translation mechanism
+            ColumnDefinitionCalc def = new ColumnDefinitionCalc(formula, ExpressionKind.EXP4J);
+
+            this.evaluator = def.translate(this);
+
+            this.errors.addAll(def.getErrors());
+            if(this.evaluator != null && !this.hasErrors()) {
+                this.kind = ColumnKind.CALC;
+                this.setDependencies(this.evaluator.getDependencies());
+            }
+        }
+        else {
+            ; // TODO: Error - UDE class not available/implemented
+        }
+    }
+
+    public void calculate(Class clazz, List<ColumnPath> paths) { // Specify UDE class and parameter paths
+        this.evaluator = null;
+        this.resetDependencies();
+
+        // Instantiate
+        UDE ude = null;
+        try {
+            Constructor[] ccc = clazz.getConstructors();
+            ude = (UDE)clazz.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        ude.setResolvedParamPaths(paths); // Set parameter paths (or use constructor)
+
+        this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
+
+        if(this.evaluator != null && !this.hasErrors()) {
+            this.kind = ColumnKind.CALC;
+            this.setDependencies(this.evaluator.getDependencies());
+        }
+    }
+
+    //
+    // Link
+    //
+
+    public void link(List<Column> columns, List<UDE> udes) { // Custom rhs UDEs for each lhs column
+        this.evaluator = null;
+        this.resetDependencies();
+
+        this.evaluator = new ColumnEvaluatorLink(this, columns, udes);
+
+        if(this.evaluator != null && !this.hasErrors()) {
+            this.kind = ColumnKind.CALC;
+            this.setDependencies(this.evaluator.getDependencies());
+        }
+    }
+
+    public void link(String clazz, List<String> names, List<String> formulas) { // Column names in the output table and expressions in the input table
+        this.evaluator = null;
+        this.resetDependencies();
+
+        if(clazz.equals("EQUAL")) {
+            ; // TODO: Implement UdeEqual expression which simply returns value of the specified column
+        }
+        else if(clazz.equals("EXP4J")) {
+
+            // TODO: It is workaround - remove definition by copying its translation mechanism from ColumnDefinition::translate()
+            String tupleFormula = "{";
+            for(int i=0; i<names.size(); i++) {
+                tupleFormula += "["+names.get(i)+"]="+formulas.get(i) + ";";
+            }
+            tupleFormula = tupleFormula.substring(0,tupleFormula.length()-1);
+            tupleFormula += "}";
+            ColumnDefinitionLink def = new ColumnDefinitionLink(tupleFormula, ExpressionKind.EXP4J);
+
+            this.evaluator = def.translate(this);
+
+            this.errors.addAll(def.getErrors());
+            if(this.evaluator != null && !this.hasErrors()) {
+                this.kind = ColumnKind.CALC;
+                this.setDependencies(this.evaluator.getDependencies());
+            }
+        }
+        else {
+            ; // TODO: Error - UDE class not available/implemented
+        }
+    }
+
+    //
+    // Accumulate
+    //
+
+    public void accumulate(UDE initUde, UDE accuUde, UDE finUde, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
+        this.evaluator = null;
+        this.resetDependencies();
+
+        this.evaluator = new ColumnEvaluatorAccu(this, initUde, accuUde, finUde, accuPath);
+
+        if(this.evaluator != null && !this.hasErrors()) {
+            this.kind = ColumnKind.CALC;
+            this.setDependencies(this.evaluator.getDependencies());
+        }
+    }
+
+    public void accumulate(String clazz, String initFormula, String accuFormula, String finFormula, String tableName, NamePath groupPath) { // Specify UDE class/selector and formulas
+        this.evaluator = null;
+        this.resetDependencies();
+
+        if(clazz.equals("EXP4J")) {
+
+            // TODO: It is workaround - remove definition by copying its translation mechanism
+            String path = "{";
+            for(int i=0; i<groupPath.names.size(); i++) {
+                path += "["+groupPath.names.get(i)+"].";
+            }
+            path = path.substring(0,path.length()-1);
+            ColumnDefinitionAccu def = new ColumnDefinitionAccu(initFormula, accuFormula, finFormula, tableName, path, ExpressionKind.EXP4J);
+
+            this.evaluator = def.translate(this);
+
+            this.errors.addAll(def.getErrors());
+            if(this.evaluator != null && !this.hasErrors()) {
+                this.kind = ColumnKind.CALC;
+                this.setDependencies(this.evaluator.getDependencies());
+            }
+        }
+        else {
+            ; // TODO: Error - UDE class not available/implemented
+        }
+    }
+
+    //
+    // Evaluate
+    //
+
+    ColumnEvaluator evaluator; // It is built by calculate-link-accumulate methods (in the case of success)
+
+    public void evaluate() {
+        this.errors.clear(); // TODO: It must be clean before we can start evaluation - otherwise evaluation cannot start
+
+        if(this.getKind() == ColumnKind.NONE) {
+            ;
+        }
+        // TODO: All branches are the same - merge them into one branch
+        else if(this.getKind() == ColumnKind.CALC) {
+            this.evaluator.evaluate();
+            this.errors.addAll(this.evaluator.getErrors());
+        }
+        else if(this.getKind() == ColumnKind.LINK) {
+            this.evaluator.evaluate();
+            this.errors.addAll(this.evaluator.getErrors());
+        }
+        else if(this.getKind() == ColumnKind.ACCU) {
+            this.evaluator.evaluate();
+            this.errors.addAll(this.evaluator.getErrors());
+        }
+
+        this.isChanged = false;
+    }
+
+/*
 	public void translate() {
 
 		this.translateErrors.clear();
@@ -351,52 +545,7 @@ public class Column {
 
 		this.setDependencies(columns);
 	}
-
-	//
-	// Evaluation status
-	// Translation errors are produced and stored in different objects like many evaluators or local fields (e.g., for links) so the final status is collected
-	//
-
-	private List<BistroError> evaluateErrors = new ArrayList<BistroError>();
-	public List<BistroError> getEvaluateErrors() { // Empty list in the case of no errors
-		return this.evaluateErrors;
-	}
-	public BistroError getEvaluateError() { // Get single (the first) error (there could be many errors detected)
-		if(this.evaluateErrors == null || this.evaluateErrors.size() == 0) return null;
-		return this.evaluateErrors.get(0);
-	}
-	public boolean hasEvaluateErrors() { // Is successfully evaluated
-		if(getEvaluateErrors().size() == 0) return false;
-		else return true;
-	}
-
-	//
-	// Evaluate column
-	//
-
-	public void evaluate() {
-		this.evaluateErrors.clear();
-		
-		if(this.getKind() == ColumnKind.CALC) {
-			this.evaluatorCalc.evaluate();
-			this.evaluateErrors.addAll(this.evaluatorCalc.getErrors());
-			if(this.hasEvaluateErrors()) return;
-		}
-		else if(this.getKind() == ColumnKind.LINK) {
-			this.evaluatorLink.evaluate();
-			this.evaluateErrors.addAll(this.evaluatorLink.getErrors());
-			if(this.hasEvaluateErrors()) return;
-		}
-		else if(this.getKind() == ColumnKind.ACCU) {
-			this.evaluatorAccu.evaluate();
-			this.evaluateErrors.addAll(this.evaluatorAccu.getErrors());
-			if(this.hasEvaluateErrors()) return;
-		}
-
-		this.isChanged = false;
-
-		this.setFormulaClean(); // Mark up-to-date if successful
-	}
+*/
 
 	//
 	// Serialization and construction
@@ -427,8 +576,7 @@ public class Column {
 		this.output = output;
 		
 		// Formula
-		this.kind = ColumnKind.USER;
-		this.expressionKind = ExpressionKind.EXP4J; // By default
+		this.kind = ColumnKind.NONE;
 
 		// Data
 		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);

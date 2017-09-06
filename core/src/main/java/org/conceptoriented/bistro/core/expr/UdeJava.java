@@ -49,6 +49,7 @@ public class UdeJava implements UDE {
 		}
 		return paths;
 	}
+	@Override public void setResolvedParamPaths(List<ColumnPath> paths) { ; } // Param paths are extracted from formula
 	@Override
 	public List<ColumnPath> getResolvedParamPaths() {
 		List<ColumnPath> paths = new ArrayList<ColumnPath>();

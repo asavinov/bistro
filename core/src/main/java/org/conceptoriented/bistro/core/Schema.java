@@ -112,11 +112,12 @@ public class Schema {
 	 * Parse, bind and build all column formulas in the schema. 
 	 * Generate dependencies.
 	 */
+	@Deprecated
 	public void translate() {
 		// Translate individual columns
 		for(Column col : this.columns) {
 			if(!col.isDerived()) continue;
-			col.translate();
+			//col.translate();
 		}
 	}
 
@@ -141,7 +142,7 @@ public class Schema {
 				if(!col.isDerived()) continue;
 				// TODO: Detect also evaluate errors that could have happened before in this same evaluate loop and prevent this column from evaluation
 				// Evaluate errors have to be also taken into account when generating next layer of columns
-				BistroError de = col.getTranslateError();
+				BistroError de = col.getError();
 				if(de == null || de.code == BistroErrorCode.NONE) {
 					col.evaluate();
 				}
@@ -188,12 +189,12 @@ public class Schema {
 			if(deps == null) continue; // Something wrong
 
 			// If it has errors then exclude it (cannot be evaluated)
-			if(col.getTranslateError() != null && col.getTranslateError().code != BistroErrorCode.NONE) {
+			if(col.hasErrors()) {
 				continue;
 			}
 
 			// If one of its dependencies has errors then exclude it (cannot be evaluated)
-			Column errCol = deps.stream().filter(x -> x.getTranslateError() != null && x.getTranslateError().code != BistroErrorCode.NONE).findAny().orElse(null);
+			Column errCol = deps.stream().filter(x -> x.hasErrors()).findAny().orElse(null);
 			if(errCol != null) continue;
 			
 			if(previousColumns.containsAll(deps)) { // All deps have to be evaluated (non-dirty)

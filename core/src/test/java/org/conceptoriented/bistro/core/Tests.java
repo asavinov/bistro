@@ -22,8 +22,6 @@ public class Tests {
     public static void setUpClass() {
     }
 
-    Schema schema;
-
     @Before
     public void setUp() {
     }
@@ -154,369 +152,178 @@ public class Tests {
 
     @Test
     public void calcTest() {
-        // Prepopulate table for experiments with column data
-        Schema s = new Schema("My Schema");
-        Table t = s.createTable("My Table");
-        Column c1 = s.createColumn("My Column", "My Table", "Double"); // <-- Should not we objects? Name use should be limited, indeed.
+        Schema s = this.createCalcSchema();
+        Column ta = s.getColumn("T", "A");
+        Column tb = s.getColumn("T", "B");
 
-        // TODO: 1) Simply UDE interface by leaving one error type etc.
-        // TODO: 2) Split UdeJava into two Udes and one base UdeExprBase
+        // Use formulas
+        tb.calculate("EXP4J", "2 * [A] + 1");
+        tb.evaluate();
 
-        // TODO: 1) Use one evaluator field
-        // TODO: 2) Remove definitions - formulas are not stored anywhere (only in UdeExpr) and they are deprecated
-        // TODO: 3) Introduce setCalc/Accu/Link instead of of setEvaluator*
+        assertTrue( tb.getDependencies().contains(ta) ); // Check correctness of dependencies
 
-        // ParameterPaths
-        // setCalc(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
-        // setCalc(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
+        assertEquals(11.0, (Double)tb.getValue(0), Double.MIN_VALUE);
+        assertEquals(Double.NaN, tb.getValue(1));
+        assertEquals(13.0, (Double)tb.getValue(2), Double.MIN_VALUE);
 
-        // UdeLambda(lambda, paramPaths) - its evaluate method calls the provided lambda as a parameter
-        // UdeEvalex, UdeExp4j, UdeMathparser, UdeJavaScript extend UdeExprBase - specific are type conversion (e.g., from strings) or dynamic typing like JS
-        // MyUde(paramPath_names/objects) - user implementation
+        // Use objects
+        List<ColumnPath> paths = Arrays.asList( new ColumnPath(Arrays.asList(ta)) );
+        tb.calculate(CustomCalcUde.class, paths);
+        tb.evaluate();
 
-        // evaluate <- No translation. But translation errors/exception are possible of course.
+        assertTrue( tb.getDependencies().contains(ta) ); // Check correctness of dependencies
 
-        // Check dependencies. Although it is not public.
-
+        assertEquals(11.0, (Double)tb.getValue(0), Double.MIN_VALUE);
+        assertEquals(Double.NaN, tb.getValue(1));
+        assertEquals(13.0, (Double)tb.getValue(2), Double.MIN_VALUE);
     }
+
+    Schema createCalcSchema() {
+    	Schema s = new Schema("My Schema");
+        Table t = s.createTable("T");
+        Column ta = s.createColumn("A", "T", "Double");
+        Column tb = s.createColumn("B", "T", "Double");
+
+        t.add();
+        t.add();
+        t.add();
+        ta.setValue(0, 5.0);
+        ta.setValue(1, null);
+        ta.setValue(2, 6.0);
+
+        return s;
+    }
+
 
     @Test
     public void linkTest() {
+        Schema s = createLinkSchema();
+        Table t = s.getTable("T");
+        Table t2 = s.getTable("T2");
+        Column t2c = t2.getColumn("C");
 
-    }
-
-
-
-
-    @Test
-    public void schemaAndDataTest()
-    {
-    	// Create and configure: schema, tables, columns
-        schema = new Schema("My Schema");
-        Table table = schema.createTable("T");
-
-        // Data column will get its data from pushed records (input column)
-        Column columnA = schema.createColumn("A", "T", "Double");
-
-        // Calculated column. It has a user-defined evaluation method (plug-in, mapping, coel etc.)
-        // This column can read its own and other column values, and it knows about new/valid/old record ranges 
-        // It is expected to write/update its own value
-        // If necessary, it can update its type/output by pushing records to its type/output table and using the returned row id for writing into itself
-        Column columnB = schema.createColumn("B", "T", "Double");
-        //String descr = "{ `class`:`org.conceptoriented.sc.core.EvaluatorB`, `dependencies`:[`A`] }";
-        //columnB.setDescriptor(descr.replace('`', '"'));
-
-        // Add one or more records to the table
-        Record record = new Record();
-
-        record.set("A", 5.0);
-        Record.addToTable(table, record);
-
-        record.set("A", 10.0);
-        Record.addToTable(table, record);
-
-        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
-        schema.evaluate();
-        
-        record.set("A", 20.0);
-        Record.addToTable(table, record);
-
-        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
-        schema.evaluate();
-        
-        // Check the result
-
-    }
-
-
-
-    @Test
-    public void evalexTest()
-    {
-    	BigDecimal result = null;
-    	
-    	com.udojava.evalex.Expression e = new com.udojava.evalex.Expression("1+1/3");
-    	e.setPrecision(2);
-    	e.setRoundingMode(java.math.RoundingMode.UP);
-    	result = e.eval();
-    	
-    	e = new com.udojava.evalex.Expression("SQRT(a^2 + b^2)");
-    	List<String> usedVars = e.getUsedVariables();
-
-    	e.getExpressionTokenizer(); // Does not detect errors
-    	
-    	e.setVariable("a", "2.4"); // Can work with strings (representing numbers)
-    	e.setVariable("b", new BigDecimal(9.253));
-
-    	// Validate
-    	try {
-        	e.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
-    	}
-    	catch(com.udojava.evalex.Expression.ExpressionException ee) {
-    		System.out.println(ee);
-    	}
-
-    	result = e.eval();
-		
-		result = new com.udojava.evalex.Expression("random() > 0.5").eval();
-
-		//e = new com.udojava.evalex.Expression("MAX('aaa', 'bbb')");
-		// We can define custom functions but they can take only numbers (as constants). 
-		// EvalEx does not have string parameters (literals). 
-		// It does not recognize quotes. So maybe simply introduce string literals even if they will be converted into numbers, that is, just like string in setVariable.
-		// We need to change tokenizer by adding string literals in addition to numbers and then their processing.
-		
-		e.eval();
-    }
-
-    @Test
-    public void calcFormulaTest() 
-    {
-    	Schema schema = createCalcSchema();
-        Column columnA = schema.getColumn("T", "A");
-        Column columnB = schema.getColumn("T", "B");
-
-        columnB.setDefinitionCalc(new ColumnDefinitionCalc("2 * [A] + 1", ExpressionKind.EXP4J));
-
-        columnB.translate();
-        
-        // Check correctness of dependencies
-        List<Column> depsB = columnB.getDependencies();
-        assertTrue( depsB.contains(columnA) );
-
-        columnB.evaluate();
-
-        assertEquals(11.0, (Double)columnB.getValue(0), 0.00001);
-        assertEquals(Double.NaN, columnB.getValue(1));
-        assertEquals(13.0, (Double)columnB.getValue(2), 0.00001);
-    }
-
-    @Test
-    public void calcUdeTest() // Test custom class for calc column 
-    {
-    	Schema schema = createCalcSchema();
-        Column columnA = schema.getColumn("T", "A");
-        Column columnB = schema.getColumn("T", "B");
-        
-        // Create ColumnEvaluatorCalc by using a custom Java class as UserDefinedExpression
-        List<ColumnPath> inputPaths = Arrays.asList( new ColumnPath(Arrays.asList(columnA)) ); // Bind to column objects directly (without names)
-        UDE ude = new CustomCalcUde(inputPaths);
-        ColumnEvaluatorCalc eval = new ColumnEvaluatorCalc(columnB, ude);
-        columnB.setEvaluatorCalc(eval);
-
-        columnB.translate(); // Only to extract dependencies
+        // Use formulas
+        t2c.link("EXP4J", Arrays.asList("A","B"), Arrays.asList("[A]","[B]")); // [A]=[A]; [B]=[B]
+        t2c.evaluate();
 
         // Check correctness of dependencies
-        List<Column> depsB = columnB.getDependencies();
-        assertTrue( depsB.contains(columnA) );
+        List<Column> t2c_deps = t2c.getDependencies();
+        assertTrue( t2c_deps.contains( s.getColumn("T2", "A") ) );
+        assertTrue( t2c_deps.contains( s.getColumn("T2", "B") ) );
 
-        columnB.evaluate();
+        assertEquals(0L, t2c.getValue(0)); // Existing
+        assertEquals(1L, t2c.getValue(1)); // Appended
 
-        assertEquals(11.0, (Double)columnB.getValue(0), 0.00001);
-        assertEquals(Double.NaN, columnB.getValue(1));
-        assertEquals(13.0, (Double)columnB.getValue(2), 0.00001);
-    }
-    protected Schema createCalcSchema() {
-    	schema = new Schema("My Schema");
-        Table table = schema.createTable("T");
-        Column columnA = schema.createColumn("A", "T", "Double");
-        Column columnB = schema.createColumn("B", "T", "Double");
-        columnB.setKind(ColumnKind.CALC);
-        
-        Record record = new Record();
-        record.set("A", 5.0);
-        Record.addToTable(table, record);
-        record.set("A", null);
-        Record.addToTable(table, record);
-        record.set("A", 6);
-        Record.addToTable(table, record);
+        // Use UDE instances
+        List<Column> columns = Arrays.asList( s.getColumn("T", "A"), s.getColumn("T", "B") );
+        List<UDE> udes = Arrays.asList(new UdeJava("[A]", t2), new UdeJava("[B]", t2));
 
-        return schema;
-    }
-    class CustomCalcUde implements UDE {
-    	
-    	@Override public void setParamPaths(List<NamePath> paths) {}
-    	@Override public List<NamePath> getParamPaths() { return null; }
-
-    	List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
-    	@Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
-
-    	@Override public void translate(String formula) {}
-    	@Override public List<BistroError> getTranslateErrors() { return null; }
-
-    	@Override public Object evaluate(Object[] params, Object out) { 
-    		double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
-    		return 2.0 * param + 1.0; // "2 * [A] + 1" 
-		}
-    	@Override public BistroError getEvaluateError() { return null; }
-    	
-    	public CustomCalcUde(List<ColumnPath> inputPaths) {
-    		this.inputPaths.addAll(inputPaths);
-    	}
-    }
-
-
-
-    @Test
-    public void linkFormulaTest()
-    {
-    	Schema schema = createLinkSchema();
-
-        Column c5 = schema.getColumn("T2", "C");
-
-    	c5.setDefinitionLink(new ColumnDefinitionLink(" { [A] = [A]; [B] = [B] } ", ExpressionKind.EXP4J));
-
-        c5.translate();
+        t2c.link(columns, udes);
 
         // Check correctness of dependencies
-        List<Column> depsC5 = c5.getDependencies();
-        assertTrue( depsC5.contains( schema.getColumn("T2", "A") ) );
-        assertTrue( depsC5.contains( schema.getColumn("T2", "B") ) );
+        t2c_deps = t2c.getDependencies();
+        assertTrue( t2c_deps.contains( s.getColumn("T2", "A") ) );
+        assertTrue( t2c_deps.contains( s.getColumn("T2", "B") ) );
 
-        c5.evaluate();
-
-        assertEquals(0L, c5.getValue(0));
-        assertEquals(1L, c5.getValue(1));
+        assertEquals(0L, t2c.getValue(0)); // Existing
+        assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
     }
-    
-    @Test
-    public void linkUdeTest()
-    {
-    	Schema schema = createLinkSchema();
 
-        Column c5 = schema.getColumn("T2", "C");
-
-        // Define evaluator for this formula: " { [A] = [A]; [B] = [B] } "
-        Column c1 = schema.getColumn("T", "A");
-        Column c2 = schema.getColumn("T", "B");
-        UDE expr1 = new UdeJava("[A]", c1.getInput());
-        UDE expr2 = new UdeJava("[B]", c2.getInput());
-
-        List<Pair<Column,UDE>> udes = new ArrayList<Pair<Column,UDE>>();
-        udes.add(Pair.of(schema.getColumn("T2", "A"), expr1));
-        udes.add(Pair.of(schema.getColumn("T2", "B"), expr2));
-        
-        ColumnEvaluatorLink eval = new ColumnEvaluatorLink(c5, udes);
-        c5.setEvaluatorLink(eval);
-
-        c5.translate();
-
-        // Check correctness of dependencies
-        List<Column> depsC5 = c5.getDependencies();
-        assertTrue( depsC5.contains( schema.getColumn("T2", "A") ) );
-        assertTrue( depsC5.contains( schema.getColumn("T2", "B") ) );
-
-        c5.evaluate();
-
-        assertEquals(0L, c5.getValue(0));
-        assertEquals(1L, c5.getValue(1));
-    }
     Schema createLinkSchema() {
     	// Create and configure: schema, tables, columns
-        schema = new Schema("My Schema");
+        Schema s = new Schema("My Schema");
 
         //
-        // Table 1 (type table)
+        // Table 1 (type table to link to)
         //
-        Table t1 = schema.createTable("T");
+        Table t1 = s.createTable("T");
 
-        Column c1 = schema.createColumn("A", "T", "Double");
-        Column c2 = schema.createColumn("B", "T", "String");
+        Column t1a = s.createColumn("A", "T", "Double");
+        Column t1b = s.createColumn("B", "T", "String");
 
-        // Add one or more records to the table
-        Record.addToTable(t1, Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
+        // Add one record to link to
+        t1.add();
+        t1a.setValue(0,5.0); t1b.setValue(0,"bbb");
 
         //
-        // Table 2
+        // Table 2 (referencing table to link records from)
         //
-        Table t2 = schema.createTable("T2");
+        Table t2 = s.createTable("T2");
 
-        Column c3 = schema.createColumn("A", "T2", "Double");
-        Column c4 = schema.createColumn("B", "T2", "String");
+        Column t2a = s.createColumn("A", "T2", "Double");
+        Column t2b = s.createColumn("B", "T2", "String");
 
-        Column c5 = schema.createColumn("C", "T2", "T");
-        c5.setKind(ColumnKind.LINK);
+        Column t2c = s.createColumn("C", "T2", "T");
 
-        // Add one or more records to the table
-        Record.addToTable(t2, Record.fromJson("{ A: 5.0, B: \"bbb\" }"));
-        Record.addToTable(t2, Record.fromJson("{ A: 10.0, B: \"ccc\" }"));
+        // Add two records to link from
+        t2.add();
+        t2a.setValue(0,5.0); t2b.setValue(0,"bbb");
+        t2.add();
+        t2a.setValue(1,10.0); t2b.setValue(1,"ccc");
 
-        return schema;
+        return s;
     }
 
 
-
     @Test
-    public void accuFormulaTest()
+    public void accuTest()
     {
-        schema = this.createAccuSchema();
+        Schema s = this.createAccuSchema();
 
-        // Link (group) formula
-        Column t2g = schema.getColumn("T2", "G");
-        t2g.setDefinitionLink(new ColumnDefinitionLink(" { [Id] = [Id] } ", ExpressionKind.EXP4J));
-        
-        // Accu formula
-        Column ta = schema.getColumn("T", "A");
-        ta.setDefinitionAccu(new ColumnDefinitionAccu("", " [out] + 2.0 * [Id] ", null, "T2", "[G]", ExpressionKind.EXP4J));
+        // Accu (group) formula
+        Column ta = s.getColumn("T", "A");
+        Column t2g = s.getColumn("T2", "G");
+        t2g.evaluate(); // TODO: In fact, it has to be evaluated automatically as dirty column below
 
-        //
-        // Translate and evaluate
-        //
-        schema.translate();
+        // Create custom accu expression and bind to certain parameter paths
+        UDE accuUde = new CustomAccuUde(Arrays.asList( new ColumnPath( s.getColumn("T2", "Id") ) ));
+
+        ta.accumulate(new UdeJava("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
+        ta.evaluate();
 
         // Check correctness of dependencies
-        List<Column> depsTa = ta.getDependencies();
-        assertTrue( depsTa.contains( schema.getColumn("T2", "Id") ) ); // Used in formula
-        assertTrue( depsTa.contains( schema.getColumn("T2", "G") ) ); // Group path
+        List<Column> ta_deps = ta.getDependencies();
+        assertTrue( ta_deps.contains( s.getColumn("T2", "Id") ) ); // Used in formula
+        assertTrue( ta_deps.contains( s.getColumn("T2", "G") ) ); // Group path
 
-        schema.evaluate();
+        assertEquals(20.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
+
+
+        // The same accu expression but translated from a formula
+        accuUde = new UdeJava(" [out] + 2.0 * [Id] ", s.getTable("T2"));;
+
+        ta.accumulate(new UdeJava("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
+        ta.evaluate();
+
+        // Check correctness of dependencies
+        ta_deps = ta.getDependencies();
+        assertTrue( ta_deps.contains( s.getColumn("T2", "Id") ) ); // Used in formula
+        assertTrue( ta_deps.contains( s.getColumn("T2", "G") ) ); // Group path
+
+        assertEquals(20.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
+
+
+        // The same using formulas
+        ta.accumulate("EXP4J", "0.0", " [out] + 2.0 * [Id] ", null, "T2", new NamePath("G"));
+        ta.evaluate();
+
+        // Check correctness of dependencies
+        ta_deps = ta.getDependencies();
+        assertTrue( ta_deps.contains( s.getColumn("T2", "Id") ) ); // Used in formula
+        assertTrue( ta_deps.contains( s.getColumn("T2", "G") ) ); // Group path
 
         assertEquals(20.0, ta.getValue(0));
         assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
     }
-    @Test
-    public void accuUdeTest()
-    {
-        schema = this.createAccuSchema();
 
-        // Link (group) formula
-        Column t2g = schema.getColumn("T2", "G");
-        t2g.setDefinitionLink(new ColumnDefinitionLink(" { [Id] = [Id] } ", ExpressionKind.EXP4J));
-        
-        // Accu evaluator
-        Column ta = schema.getColumn("T", "A");
-        
-        UDE initUde = new UdeJava("0.0", schema.getTable("T"));
-
-        //UserDefinedExpression accuUde = new UdeJava(" [out] + 2.0 * [Id] ", schema.getTable("T2"));;
-        List<ColumnPath> inputPaths = Arrays.asList( new ColumnPath( schema.getColumn("T2", "Id") ) );
-        UDE accuUde = new CustomAccuUde(inputPaths);
-
-        ColumnPath accuPathColumns = new ColumnPath(schema.getColumn("T2", "G"));
-        
-        ColumnEvaluatorAccu eval = new ColumnEvaluatorAccu(ta, initUde, accuUde, null, accuPathColumns);
-        ta.setEvaluatorAccu(eval);
-        
-        //
-        // Translate and evaluate
-        //
-        schema.translate();
-
-        // Check correctness of dependencies
-        List<Column> depsTa = ta.getDependencies();
-        assertTrue( depsTa.contains( schema.getColumn("T2", "Id") ) ); // Used in formula
-        assertTrue( depsTa.contains( schema.getColumn("T2", "G") ) ); // Group path
-
-        schema.evaluate();
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-    }
-    protected Schema createAccuSchema() {
+    Schema createAccuSchema() {
     	
-        schema = new Schema("My Schema");
+        Schema schema = new Schema("My Schema");
 
         //
         // Table 1 (group table)
@@ -542,7 +349,7 @@ public class Tests {
 
         // Define group column
         Column t2g = schema.createColumn("G", "T2", "T");
-        t2g.setKind(ColumnKind.LINK);
+        t2g.link("EXP4J", Arrays.asList("Id"), Arrays.asList("[Id]"));
 
         Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
         Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
@@ -551,28 +358,7 @@ public class Tests {
 
         return schema;
     }
-    class CustomAccuUde implements UDE {
-    	
-    	@Override public void setParamPaths(List<NamePath> paths) {}
-    	@Override public List<NamePath> getParamPaths() { return null; }
 
-    	List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
-    	@Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
-
-    	@Override public void translate(String formula) {}
-    	@Override public List<BistroError> getTranslateErrors() { return null; }
-
-    	@Override public Object evaluate(Object[] params, Object out) {
-    		double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
-    		double outVal = out == null ? Double.NaN : ((Number)out).doubleValue();
-    		return outVal + 2.0 * param; // " [out] + 2.0 * [Id] " 
-		}
-    	@Override public BistroError getEvaluateError() { return null; }
-    	
-    	public CustomAccuUde(List<ColumnPath> inputPaths) {
-    		this.inputPaths.addAll(inputPaths);
-    	}
-    }
 
 
 
@@ -603,7 +389,7 @@ public class Tests {
     @Test
     public void csvReadTest()
     {
-        schema = new Schema("My Schema");
+        Schema schema = new Schema("My Schema");
 
         /*
         String path = "src/test/resources/example1/Order Details Status.csv"; // Relative to project directory
@@ -635,7 +421,7 @@ public class Tests {
 		// Now the schema is expected to dynamically load all class definitions for evaluators by using this class loader from this dir
 
 		
-    	schema = new Schema("My Schema");
+    	Schema schema = new Schema("My Schema");
 
         Table table = schema.createTable("T");
 
@@ -646,4 +432,138 @@ public class Tests {
         //columnB.setDescriptor("{ \"class\":\"org.conceptoriented.sc.core.EvaluatorB\" }");
     }
 
+
+
+
+
+    @Test
+    public void OLD_evalexTest()
+    {
+        BigDecimal result = null;
+
+        com.udojava.evalex.Expression e = new com.udojava.evalex.Expression("1+1/3");
+        e.setPrecision(2);
+        e.setRoundingMode(java.math.RoundingMode.UP);
+        result = e.eval();
+
+        e = new com.udojava.evalex.Expression("SQRT(a^2 + b^2)");
+        List<String> usedVars = e.getUsedVariables();
+
+        e.getExpressionTokenizer(); // Does not detect errors
+
+        e.setVariable("a", "2.4"); // Can work with strings (representing numbers)
+        e.setVariable("b", new BigDecimal(9.253));
+
+        // Validate
+        try {
+            e.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
+        }
+        catch(com.udojava.evalex.Expression.ExpressionException ee) {
+            System.out.println(ee);
+        }
+
+        result = e.eval();
+
+        result = new com.udojava.evalex.Expression("random() > 0.5").eval();
+
+        //e = new com.udojava.evalex.Expression("MAX('aaa', 'bbb')");
+        // We can define custom functions but they can take only numbers (as constants).
+        // EvalEx does not have string parameters (literals).
+        // It does not recognize quotes. So maybe simply introduce string literals even if they will be converted into numbers, that is, just like string in setVariable.
+        // We need to change tokenizer by adding string literals in addition to numbers and then their processing.
+
+        e.eval();
+    }
+
+    @Test
+    public void OLD_schemaAndDataTest()
+    {
+        // Create and configure: schema, tables, columns
+        Schema schema = new Schema("My Schema");
+        Table table = schema.createTable("T");
+
+        // Data column will get its data from pushed records (input column)
+        Column columnA = schema.createColumn("A", "T", "Double");
+
+        // Calculated column. It has a user-defined evaluation method (plug-in, mapping, coel etc.)
+        // This column can read its own and other column values, and it knows about new/valid/old record ranges
+        // It is expected to write/update its own value
+        // If necessary, it can update its type/output by pushing records to its type/output table and using the returned row id for writing into itself
+        Column columnB = schema.createColumn("B", "T", "Double");
+        //String descr = "{ `class`:`org.conceptoriented.sc.core.EvaluatorB`, `dependencies`:[`A`] }";
+        //columnB.setDescriptor(descr.replace('`', '"'));
+
+        // Add one or more records to the table
+        Record record = new Record();
+
+        record.set("A", 5.0);
+        Record.addToTable(table, record);
+
+        record.set("A", 10.0);
+        Record.addToTable(table, record);
+
+        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
+        schema.evaluate();
+
+        record.set("A", 20.0);
+        Record.addToTable(table, record);
+
+        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
+        schema.evaluate();
+
+        // Check the result
+
+    }
+
+}
+
+class CustomCalcUde implements UDE {
+
+    @Override public void setParamPaths(List<NamePath> paths) {}
+    @Override public List<NamePath> getParamPaths() { return null; }
+
+    List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    @Override public void setResolvedParamPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
+    @Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
+
+    @Override public void translate(String formula) {}
+    @Override public List<BistroError> getTranslateErrors() { return null; }
+
+    @Override public Object evaluate(Object[] params, Object out) {
+        double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
+        return 2.0 * param + 1.0; // "2 * [A] + 1"
+    }
+    @Override public BistroError getEvaluateError() { return null; }
+
+    public CustomCalcUde() {
+    }
+    public CustomCalcUde(List<ColumnPath> inputPaths) {
+        this.setResolvedParamPaths(inputPaths);
+    }
+}
+
+class CustomAccuUde implements UDE {
+
+    @Override public void setParamPaths(List<NamePath> paths) {}
+    @Override public List<NamePath> getParamPaths() { return null; }
+
+    List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    @Override public void setResolvedParamPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
+    @Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
+
+    @Override public void translate(String formula) {}
+    @Override public List<BistroError> getTranslateErrors() { return null; }
+
+    @Override public Object evaluate(Object[] params, Object out) {
+        double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
+        double outVal = out == null ? Double.NaN : ((Number)out).doubleValue();
+        return outVal + 2.0 * param; // " [out] + 2.0 * [Id] "
+    }
+    @Override public BistroError getEvaluateError() { return null; }
+
+    public CustomAccuUde() {
+    }
+    public CustomAccuUde(List<ColumnPath> inputPaths) {
+        this.setResolvedParamPaths(inputPaths);
+    }
 }
