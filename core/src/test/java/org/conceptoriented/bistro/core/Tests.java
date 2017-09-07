@@ -26,48 +26,6 @@ public class Tests {
     public void setUp() {
     }
 
-
-    // Calculate-Accumulate-Link (map-reduce-join)
-    // Scenario
-    // - SCHEMA. Create schema, tables and columns:
-    //   - names - by default unique names, if not unique then exception/error creating -> see how elements are created in other frameworks
-    //   - data type/operation/definition - how to specify data type: enum, string, guid. Data type is *native* storage and native represenation/operations.
-    //   - error handling - exceptions/returns - result for operations
-    //   - status handling - fields maybe referencing previous error/exception
-    //   - column kind - by default USER (not derived, manually set values will be overwritten, no evaluation/transaltion)
-    //   - table kind - by default derived - manually added/removed records will be deleted/overwritten
-    // - DEFINE columns. Set column kind and evaluator/formula/expression/lambda
-    //   - setCalc/setAccu/setLink/setUser - kind is changed by setting the evaluator (not separately)
-    //   - Objects (Lambdas, Expressions, Tables/Columns)
-    //     - (EvaluatorCalc/Accu/Link) - directly provide evaluator
-    //     - Expressions (instances of custom classes implementing UDE) and other objects used to instantiate an evaluator
-    //     - Lambdas and other objects used to instantiate an evaluator (directly or by creating expression instances)
-    //   - Syntactic:
-    //     - Definition object used to create an evaluator by translating its formulas and strings into the necessary objects used to create an evaluator
-    //       - We can instantiate and pass the definition object and the system will use its public API to translate
-    //       - We can instantiate definition, do translation and pass the objects
-    //     - Formulas and strings used to create an evaluator (by translating them to the necessary objects)
-    //       - We can pass the strings and the system will do everything
-    //       - We can use the strings to create definition or to create the objects directly (expressions, tables, columns etc.)
-    // - TRANSLATE
-    //   - it is optional and useful only for checking validity, e.g., for UI, but not for batch
-    //   - if we use evaluate method then translation will be anyway performed and errors generated
-    //   - translate formulas if any into expressions
-    //   - use (possibly translated) expressions to created evaluators
-    //   - use (if provided) lambdas to created expressions/evaluators
-    //   - set evaluators (if not set in the case of direct assignment)
-    //   - check dependencies and propagation of errors
-    // - EVALUATE
-    //   - translate
-    //   - build sequence of evaluation using dependency graph
-    //   - evaluator sequentially by checking evaluate errors
-
-    // CONVENIENCE:
-    // Important for demo purposes - maybe better to develop custom column types for import/export
-    // - Load schema from CSV string/file
-    // - Load data from CSV string/file
-    // - Load data from JSON collection/object
-
     @Test
     public void schemaTest() // Schema operations
     {
@@ -336,9 +294,12 @@ public class Tests {
         Column ta = schema.createColumn("A", "T", "Double");
         ta.setKind(ColumnKind.ACCU);
 
-        Record.addToTable(t1, Record.fromJson("{ Id: 5.0 }"));
-        Record.addToTable(t1, Record.fromJson("{ Id: 10.0 }"));
-        Record.addToTable(t1, Record.fromJson("{ Id: 15.0 }"));
+        t1.add();
+        t1.add();
+        t1.add();
+        tid.setValue(0, 5.0);
+        tid.setValue(1, 10.0);
+        tid.setValue(2, 15.0);
 
         //
         // Table 2 (fact table)
@@ -351,10 +312,14 @@ public class Tests {
         Column t2g = schema.createColumn("G", "T2", "T");
         t2g.link("EXP4J", Arrays.asList("Id"), Arrays.asList("[Id]"));
 
-        Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
-        Record.addToTable(t2, Record.fromJson("{ Id: 5.0 }"));
-        Record.addToTable(t2, Record.fromJson("{ Id: 10.0 }"));
-        Record.addToTable(t2, Record.fromJson("{ Id: 20.0 }"));
+        t2.add();
+        t2.add();
+        t2.add();
+        t2.add();
+        t2id.setValue(0, 5.0);
+        t2id.setValue(1, 5.0);
+        t2id.setValue(2, 10.0);
+        t2id.setValue(3, 20.0);
 
         return schema;
     }
@@ -437,7 +402,7 @@ public class Tests {
 
 
     @Test
-    public void OLD_evalexTest()
+    public void evalexTest()
     {
         BigDecimal result = null;
 
@@ -473,46 +438,6 @@ public class Tests {
         // We need to change tokenizer by adding string literals in addition to numbers and then their processing.
 
         e.eval();
-    }
-
-    @Test
-    public void OLD_schemaAndDataTest()
-    {
-        // Create and configure: schema, tables, columns
-        Schema schema = new Schema("My Schema");
-        Table table = schema.createTable("T");
-
-        // Data column will get its data from pushed records (input column)
-        Column columnA = schema.createColumn("A", "T", "Double");
-
-        // Calculated column. It has a user-defined evaluation method (plug-in, mapping, coel etc.)
-        // This column can read its own and other column values, and it knows about new/valid/old record ranges
-        // It is expected to write/update its own value
-        // If necessary, it can update its type/output by pushing records to its type/output table and using the returned row id for writing into itself
-        Column columnB = schema.createColumn("B", "T", "Double");
-        //String descr = "{ `class`:`org.conceptoriented.sc.core.EvaluatorB`, `dependencies`:[`A`] }";
-        //columnB.setDescriptor(descr.replace('`', '"'));
-
-        // Add one or more records to the table
-        Record record = new Record();
-
-        record.set("A", 5.0);
-        Record.addToTable(table, record);
-
-        record.set("A", 10.0);
-        Record.addToTable(table, record);
-
-        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
-        schema.evaluate();
-
-        record.set("A", 20.0);
-        Record.addToTable(table, record);
-
-        // Evaluate schema by updating its schema. Mark new records as clean and finally remove records for deletion.
-        schema.evaluate();
-
-        // Check the result
-
     }
 
 }

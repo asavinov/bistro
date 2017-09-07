@@ -1,9 +1,11 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.deprecated;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.core.expr.ExpressionKind;
+import org.conceptoriented.bistro.core.expr.QNameBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,6 +15,7 @@ import org.json.JSONObject;
  * This objects are supposed to be used to represent formulas edited by the user and stored in columns. The system then translates then into an executable form (evaluators).
  * This class has to directly or indirectly encode all names needed for computing certain column kind like main table name, parameter path names, and maybe additional parameters like whether to add records.
  */
+@Deprecated
 public interface ColumnDefinition {
 	// Transform syntactic representation to object representation by producing the necessary internal objects like Udes, tables, columns etc.
 	public ColumnEvaluator translate(Column column);
@@ -70,7 +73,7 @@ abstract class ColumnDefinitionBase implements ColumnDefinition {
 		String className = ColumnDefinitionCalc.getDescriptorClass(descriptor);
 		List<NamePath> params = ColumnDefinitionCalc.getDescriptorParameterPaths(descriptor);
 		if(className == null | params == null) {
-			this.errors.add(new BistroError(BistroErrorCode.PARSE_ERROR, "Parse error.", "Cannot find class name or parameters: " + descriptor));
+			this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Parse error.", "Cannot find class name or parameters: " + descriptor));
 			return null;
 		}
 		

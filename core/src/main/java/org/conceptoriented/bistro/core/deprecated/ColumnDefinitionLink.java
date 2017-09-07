@@ -1,4 +1,4 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.deprecated;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.core.expr.ExpressionKind;
+import org.conceptoriented.bistro.core.expr.UdeJava;
 
 /**
  * Representation of a calc column using numeric expression libraries like exp4j (library can be chosen as an option).
@@ -46,7 +48,7 @@ public class ColumnDefinitionLink extends ColumnDefinitionBase {
 				// Left hand side (column of the type table)
 				Column assignColumn = schema.getColumn(outputTable.getName(), mmbr.getKey());
 				if(assignColumn == null) { // Binding error
-					this.errors.add(new BistroError(BistroErrorCode.BIND_ERROR, "Binding error.", "Cannot find column: " + assignColumn));
+					this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find column: " + assignColumn));
 					return null;
 				}
 
@@ -81,7 +83,7 @@ public class ColumnDefinitionLink extends ColumnDefinitionBase {
 		int close = this.formula.lastIndexOf("}");
 
 		if(open < 0 || close < 0 || open >= close) {
-			this.linkTranslateStatus = new BistroError(BistroErrorCode.PARSE_ERROR, "Parse error.", "Problem with curly braces. Tuple expression is a list of assignments in curly braces.");
+			this.linkTranslateStatus = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Parse error.", "Problem with curly braces. Tuple expression is a list of assignments in curly braces.");
 			return null;
 		}
 
@@ -105,7 +107,7 @@ public class ColumnDefinitionLink extends ColumnDefinitionBase {
 				continue;
 			}
 			else if(level < 0) {
-				this.linkTranslateStatus = new BistroError(BistroErrorCode.PARSE_ERROR, "Parse error.", "Problem with curly braces. Opening and closing curly braces must match.");
+				this.linkTranslateStatus = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Parse error.", "Problem with curly braces. Opening and closing curly braces must match.");
 				return null;
 			}
 			
@@ -123,7 +125,7 @@ public class ColumnDefinitionLink extends ColumnDefinitionBase {
 		for(String member : members) {
 			int eq = member.indexOf("=");
 			if(eq < 0) {
-				this.linkTranslateStatus = new BistroError(BistroErrorCode.PARSE_ERROR, "Parse error.", "No equality sign. Tuple expression is a list of assignments.");
+				this.linkTranslateStatus = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Parse error.", "No equality sign. Tuple expression is a list of assignments.");
 				return null;
 			}
 			String lhs = member.substring(0, eq).trim();

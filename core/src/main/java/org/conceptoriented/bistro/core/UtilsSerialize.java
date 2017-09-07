@@ -4,9 +4,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.io.Files;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import org.conceptoriented.bistro.core.expr.ColumnDefinitionCalc;
-import org.conceptoriented.bistro.core.expr.ColumnDefinitionAccu;
-import org.conceptoriented.bistro.core.expr.ColumnDefinitionLink;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -75,7 +72,7 @@ public class UtilsSerialize {
 
         String name = obj.getString("name");
         if(!UtilsNames.validElementName(name)) {
-            throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating schema. ", "Name contains invalid characters. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating schema. ", "Name contains invalid characters. ");
         }
 
         //
@@ -100,7 +97,7 @@ public class UtilsSerialize {
         if(obj.has("name")) {
             String name = obj.getString("name");
             if(!UtilsNames.validElementName(name)) {
-                throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating column. ", "Name contains invalid characters. ");
+                throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating column. ", "Name contains invalid characters. ");
             }
         }
 
@@ -130,10 +127,10 @@ public class UtilsSerialize {
 
         Table tab = schema.getTable(name);
         if(tab != null) {
-            throw new BistroError(BistroErrorCode.CREATE_ELEMENT, "Error creating table. ", "Name already exists. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_CREATION_ERROR, "Error creating table. ", "Name already exists. ");
         }
         if(!UtilsNames.validElementName(name)) {
-            throw new BistroError(BistroErrorCode.CREATE_ELEMENT, "Error creating table. ", "Name contains invalid characters. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_CREATION_ERROR, "Error creating table. ", "Name contains invalid characters. ");
         }
 
         //
@@ -214,7 +211,7 @@ public class UtilsSerialize {
         String id = obj.getString("id");
         Table tab = schema.getTableById(id);
         if(tab == null) {
-            throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating table. ", "Table not found. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating table. ", "Table not found. ");
         }
 
         //
@@ -224,10 +221,10 @@ public class UtilsSerialize {
             String name = obj.getString("name");
             Table t = schema.getTable(name);
             if(t != null && t != tab) {
-                throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating table. ", "Name already exists. ");
+                throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating table. ", "Name already exists. ");
             }
             if(!UtilsNames.validElementName(name)) {
-                throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating table. ", "Name contains invalid characters. ");
+                throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating table. ", "Name contains invalid characters. ");
             }
         }
 
@@ -274,10 +271,10 @@ public class UtilsSerialize {
         String name = obj.getString("name");
         Column col = schema.getColumn(input.getName(), name);
         if(col != null) {
-            throw new BistroError(BistroErrorCode.CREATE_ELEMENT, "Error creating column. ", "Name already exists. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_CREATION_ERROR, "Error creating column. ", "Name already exists. ");
         }
         if(!UtilsNames.validElementName(name)) {
-            throw new BistroError(BistroErrorCode.CREATE_ELEMENT, "Error creating column. ", "Name contains invalid characters. ");
+            throw new BistroError(BistroErrorCode.ELEMENT_CREATION_ERROR, "Error creating column. ", "Name contains invalid characters. ");
         }
 
         // We do not process status (it is always result of the backend)
@@ -348,10 +345,10 @@ public class UtilsSerialize {
             String name = obj.getString("name");
             Column col = schema.getColumn(column.getInput().getName(), name);
             if(col != null && col != column) {
-                throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating column. ", "Name already exists. ");
+                throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating column. ", "Name already exists. ");
             }
             if(!UtilsNames.validElementName(name)) {
-                throw new BistroError(BistroErrorCode.UPATE_ELEMENT, "Error updating column. ", "Name contains invalid characters. ");
+                throw new BistroError(BistroErrorCode.ELEMENT_UPDATE_ERROR, "Error updating column. ", "Name contains invalid characters. ");
             }
         }
 

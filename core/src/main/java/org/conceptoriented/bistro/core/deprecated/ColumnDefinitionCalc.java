@@ -1,6 +1,8 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.deprecated;
 
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.core.expr.ExpressionKind;
+import org.conceptoriented.bistro.core.expr.UdeJava;
 
 /**
  * Representation of a calc column using numeric expression libraries like exp4j (library can be chosen as an option).

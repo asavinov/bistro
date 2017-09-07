@@ -22,19 +22,16 @@ public class BistroError extends Exception {
 		String message = "";
 		switch(code) {
 
-			case NOT_FOUND_IDENTITY:
-				message = "Identity not found. Session expired. Enable cookies. Reload page.";
+			case NAME_RESOLUTION_ERROR:
+				message = "Name not found.";
 				break;
-			case GET_ELEMENT:
-				message = "Error getting an element.";
-				break;
-			case CREATE_ELEMENT:
+			case ELEMENT_CREATION_ERROR:
 				message = "Error creating an element.";
 				break;
-			case UPATE_ELEMENT:
+			case ELEMENT_UPDATE_ERROR:
 				message = "Error updating an element.";
 				break;
-			case DELETE_ELEMENT:
+			case ELEMENT_DELETE_ERROR:
 				message = "Error deleting an element.";
 				break;
 			default:

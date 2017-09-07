@@ -1,8 +1,8 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.deprecated;
 
 import org.conceptoriented.bistro.core.*;
-
-import java.util.List;
+import org.conceptoriented.bistro.core.expr.ExpressionKind;
+import org.conceptoriented.bistro.core.expr.UdeJava;
 
 /**
  * Representation of a accu column using numeric expression libraries like exp4j (library can be chosen as an option).
@@ -45,13 +45,13 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 		// Accu table and link (group) path
 		Table accuTable = schema.getTable(this.accuTable);
 		if(accuTable == null) { // Binding error
-			this.errors.add(new BistroError(BistroErrorCode.BIND_ERROR, "Binding error.", "Cannot find table: " + accuTable));
+			this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find table: " + accuTable));
 			return null;
 		}
 		NamePath accuLinkPath = UdeJava.parsePath(this.accuPath); // TODO: path should be given in any syntactic convention and hence no resolution using this convention - change path to a collection/array or one column only
 		accuPathColumns = accuLinkPath.resolveColumns(accuTable);
 		if(accuPathColumns == null) { // Binding error
-			this.errors.add(new BistroError(BistroErrorCode.BIND_ERROR, "Binding error.", "Cannot find columns: " + this.accuPath));
+			this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find columns: " + this.accuPath));
 			return null;
 		}
 
