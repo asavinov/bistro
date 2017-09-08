@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.core.expr.ExpressionKind;
 import org.conceptoriented.bistro.core.expr.QNameBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -8,8 +8,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.core.expr.ExpressionKind;
-import org.conceptoriented.bistro.core.expr.UdeJava;
+import org.conceptoriented.bistro.core.expr.UdeExp4j;
 
 /**
  * Representation of a calc column using numeric expression libraries like exp4j (library can be chosen as an option).
@@ -40,7 +39,7 @@ public class ColumnDefinitionLink extends ColumnDefinitionBase {
 			for(Entry<String,String> mmbr : mmbrs.entrySet()) { // For each tuple member (assignment) create an expression
 
 				// Right hand side
-				UdeJava expr = new UdeJava(mmbr.getValue(), inputTable);
+				UdeExp4j expr = new UdeExp4j(mmbr.getValue(), inputTable);
 				
 				this.errors.addAll(expr.getTranslateErrors());
 				if(this.hasErrors()) return null; // Cannot proceed

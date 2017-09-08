@@ -1,8 +1,7 @@
 package org.conceptoriented.bistro.core.deprecated;
 
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.core.expr.ExpressionKind;
-import org.conceptoriented.bistro.core.expr.UdeJava;
+import org.conceptoriented.bistro.core.expr.*;
 
 /**
  * Representation of a calc column using numeric expression libraries like exp4j (library can be chosen as an option).
@@ -24,7 +23,7 @@ public class ColumnDefinitionCalc extends ColumnDefinitionBase {
 		UDE expr = null; // We need only one expression
 
 		if(this.formulaKind == ExpressionKind.EXP4J || this.formulaKind == ExpressionKind.EVALEX) {
-			expr = new UdeJava(this.formula, inputTable);
+			expr = new UdeExp4j(this.formula, inputTable);
 		}
 		else if(this.formulaKind == ExpressionKind.UDE) {
 			expr = super.createInstance(this.formula,null);

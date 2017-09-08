@@ -66,20 +66,39 @@ Command line:
 # TODO
 
 ## General
-* Remove enum ExpressionKind. Use class name instead and simultaniously switch to using separate classes UdeExpr4j etc. 
-* Rework dependency management. Probably make the protected (they are needed only for evaluation). Simplilfy graph computation: to evaluate this column, we search for dirty (isChanged) and hasErrors.
-* Test evaluation in the case of complex dependencies and check two the errors: cycles, translation errors (also inherited), evaluation errors (during evaluation) etc.
+
+* Rework dependency management.
+  * Simplilfy/modularize graph computation: to evaluate this column, we search for dirty (isChanged) and hasErrors.
+  * Test evaluation in the case of complex dependencies and check two the errors: cycles, translation errors (also inherited), evaluation errors (during evaluation) etc.
+  * Hide from users and modularize inside. It is used only at translation (just before evaluation for planning). And also for error reporting. The basis is what UDEs and then Evaluator provide.
+
 * Error handling in calc-link-accu. Simultaniously, simplify error handling in UDE classes, maybe remove two types of errors.
+  * Exceptions or error state? When translation/structure errors are reported and how they are supposed to be checked by the user?
+  * We need user oriented view on error handling.
+  * Introduce last resort exception catch in the case of null-pointer or whatever system-level problems in user code. Surround user code with exceptions.
+  * Check validity of parameters whenever possible and document what is expected, for example, empty list/array or null.
+
+* Arrays instead of lists in high level public methods. They are easier to define and can be declared as variable arguments.
 
 ## UDE
+* So we need to distinguish these clases which can be subclasses of some basic UDE:
+  * normal UDE: evaluator is implemented by the class method
+  * Lambda UDE: evaluator is provided as a function with certain signature
+  * Formula UDE: evaluator provided syntactically and will be translated/resolved relative to the provided table object
+
 * Simply UDE interface by leaving one error type etc.
 * Simply UDE interface by removing translate and evaluate. Only evaluate. Translation is done etiher in construtor or when formula is set. Think about setting formula only in a setter (not in constructor).
 * UDE currently has two versions of parameter paths: names and objects. Do we really need both of them?
-* Split UdeJava into two Udes and one base UdeExprBase
-  * UdeEvalex, UdeExp4j, UdeMathparser, UdeJavaScript extend UdeExprBase - specific are type conversion (e.g., from strings) or dynamic typing like JS
+
+* Translation calc-link-accu have to use class name to instantiate UDE rather than use selector.
+  * In addition, these UDE classes have to implement either constructor with formula or setters for formulas or translate method.
+
+* Evalex UDE is not always impelmented and not tested.
+
 * Introduce constant UDE, for example, for initializers like 0.0 and EQUAL UDE for copying field/path values to output without any expression.
-* Define UdeLambda and then the corresponding calc/link/accu methods with lambda as parameters
-  * UdeLambda(lambda, paramPaths)
+  * Use case: 1) initializer, determine manaully 2) Within UdeExp4j or other expressions which determine this internally and want simplify computations by avoiding their own expression and reusing simpler way, for example, labmda or another kind of constant return.
+
+* JavaScript UDE
 
 ## Import/export columns
 
@@ -98,7 +117,3 @@ Command line:
 ## Problems
 * Currently, link dependencies include also output table columns (lhs columns). If we link to them then they have to be computed (is it really so - they might be USER column). If we append then we do not care - we will append anyway.
   * For example, can we link to derived (calculated) columns in the output table? Does it make sense?
-
-
-
-

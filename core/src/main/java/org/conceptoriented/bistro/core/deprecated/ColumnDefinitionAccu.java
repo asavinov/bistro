@@ -1,8 +1,7 @@
 package org.conceptoriented.bistro.core.deprecated;
 
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.core.expr.ExpressionKind;
-import org.conceptoriented.bistro.core.expr.UdeJava;
+import org.conceptoriented.bistro.core.expr.*;
 
 /**
  * Representation of a accu column using numeric expression libraries like exp4j (library can be chosen as an option).
@@ -48,7 +47,7 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 			this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find table: " + accuTable));
 			return null;
 		}
-		NamePath accuLinkPath = UdeJava.parsePath(this.accuPath); // TODO: path should be given in any syntactic convention and hence no resolution using this convention - change path to a collection/array or one column only
+		NamePath accuLinkPath = UdeExp4j.parsePath(this.accuPath); // TODO: path should be given in any syntactic convention and hence no resolution using this convention - change path to a collection/array or one column only
 		accuPathColumns = accuLinkPath.resolveColumns(accuTable);
 		if(accuPathColumns == null) { // Binding error
 			this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find columns: " + this.accuPath));
@@ -62,22 +61,22 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 		if(this.formulaKind == ExpressionKind.EXP4J || this.formulaKind == ExpressionKind.EVALEX) {
 			// Initialization (always initialize - even for empty formula)
 			if(this.initFormula == null || this.initFormula.isEmpty()) { // TODO: We need UDE for constants and for equality (equal to the specified column)
-				initExpr = new UdeJava(column.getDefaultValue().toString(), inputTable);
+				initExpr = new UdeExp4j(column.getDefaultValue().toString(), inputTable);
 			}
 			else {
-				initExpr = new UdeJava(this.initFormula, inputTable);
+				initExpr = new UdeExp4j(this.initFormula, inputTable);
 			}
 			this.errors.addAll(initExpr.getTranslateErrors());
 			if(this.hasErrors()) return null; // Cannot proceed
 
 			// Accumulation
-			accuExpr = new UdeJava(this.accuFormula, accuTable);
+			accuExpr = new UdeExp4j(this.accuFormula, accuTable);
 			this.errors.addAll(accuExpr.getTranslateErrors());
 			if(this.hasErrors()) return null; // Cannot proceed
 
 			// Finalization
 			if(this.finFormula != null && !this.finFormula.isEmpty()) {
-				finExpr = new UdeJava(this.finFormula, inputTable);
+				finExpr = new UdeExp4j(this.finFormula, inputTable);
 				this.errors.addAll(finExpr.getTranslateErrors());
 				if(this.hasErrors()) return null; // Cannot proceed
 			}

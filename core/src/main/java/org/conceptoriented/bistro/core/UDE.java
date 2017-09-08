@@ -1,5 +1,6 @@
 package org.conceptoriented.bistro.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,7 +31,11 @@ import java.util.List;
  *   The result is a native expression using its native variables.
  * 
  */
-public interface UDE {
+public interface UDE extends UdeEvaluate {
+    public static String Exp4j = "org.conceptoriented.bistro.core.expr.UdeJava";
+    public static String Evalex = "org.conceptoriented.bistro.core.expr.UdeJava";
+    public static String Mathparser = "org.conceptoriented.bistro.core.expr.UdeMathparser";
+    public static String JavaScript = "org.conceptoriented.bistro.core.expr.UdeJavaScript";
 
 	/**
 	 * For each instance, its parameters are bound to certain column paths (normally primitive).

@@ -10,14 +10,14 @@ import java.util.regex.Pattern;
 /**
  * TODO: add support for http://mathparser.org/
  */
-public class UdeJava implements UDE {
+class UdeJava implements UDE {
 
 	public static String OUT_VARIABLE_NAME = "out";
 
-	private static QNameBuilder parser = new QNameBuilder();
+    public boolean isExp4j = true;
+    public boolean isEvalex = false;
 
-	public boolean isExp4j() { return true; }
-	public boolean isEvalex() { return false; }
+    private static QNameBuilder parser = new QNameBuilder();
 
 	// Formula
 	protected String formula;
@@ -120,10 +120,10 @@ public class UdeJava implements UDE {
 				if(this.isEquality) {
 					; // Do nothing
 				}
-				else if(this.isExp4j()) {
+				else if(this.isExp4j) {
 					this.exp4jExpression.setVariable(dep.paramName, ((Number)value).doubleValue());
 				}
-				else if(this.isEvalex()) {
+				else if(this.isEvalex) {
 					;
 				}
 			}
@@ -141,10 +141,10 @@ public class UdeJava implements UDE {
 				if(this.isEquality) {
 					; // Do nothing
 				}
-				else if(this.isExp4j()) {
+				else if(this.isExp4j) {
 					this.exp4jExpression.setVariable(this.outDependency.paramName, ((Number)out).doubleValue());
 				}
-				else if(this.isEvalex()) {
+				else if(this.isEvalex) {
 					;
 				}
 			}
@@ -160,10 +160,10 @@ public class UdeJava implements UDE {
 			if(this.isEquality) {
 				ret = params[0]; // Only one param exists for equalities
 			}
-			else if(this.isExp4j()) {
+			else if(this.isExp4j) {
 				ret = this.exp4jExpression.evaluate();
 			}
-			else if(this.isEvalex()) {
+			else if(this.isEvalex) {
 				ret = this.evalexExpression.eval();
 			}
 		}
@@ -315,10 +315,10 @@ public class UdeJava implements UDE {
 		this.evalexExpression = null;
 
 		// Build the final (native) expression
-		if(this.isExp4j()) {
+		if(this.isExp4j) {
 			this.exp4jExpression = this.buildExp4jExpression();
 		}
-		else if(this.isEvalex()) {
+		else if(this.isEvalex) {
 			this.evalexExpression = this.buildEvalexExpression();
 		}
 	}

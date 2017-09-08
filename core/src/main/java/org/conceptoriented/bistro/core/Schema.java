@@ -27,7 +27,7 @@ public class Schema {
 	// Tables
 	//
 	
-	private List<Table> tables = new ArrayList<Table>();
+	private List<Table> tables = new ArrayList<>();
 	public List<Table> getTables() {
 		return this.tables;
 	}
@@ -65,7 +65,7 @@ public class Schema {
 	// Columns
 	//
 
-	private List<Column> columns = new ArrayList<Column>();
+	private List<Column> columns = new ArrayList<>();
 	public List<Column> getColumns() {
 		return this.columns;
 	}
@@ -105,38 +105,29 @@ public class Schema {
 	}
 
 	//
-	// Translation (parse and bind formulas, prepare for evaluation)
-	//
-	
-	/**
-	 * Parse, bind and build all column formulas in the schema. 
-	 * Generate dependencies.
-	 */
-	@Deprecated
-	public void translate() {
-		// Translate individual columns
-		for(Column col : this.columns) {
-			if(!col.isDerived()) continue;
-			//col.translate();
-		}
-	}
-
-	//
 	// Evaluate (re-compute dirty, selected or all function outputs)
 	//
 	
 	/**
-	 * Evaluate all columns of the schema which can be evaluated and need evaluation (dirty output).
-	 * 
-	 * The order of column evaluation is determined by the dependency graph.
-	 * Can evaluate depends on the error status: translate errors, evaluate errors, self-dependence errors, and these errors in dependencies.
-	 * Need evaluate depends on formula changes, data output changes, set changes, and these changes in dependencies.
-	 * 
-	 * Finally, the status of each evaluated column is cleaned (made up-to-date). 
+	 * Evaluate all columns of the schema. Only dirty columns without errors will be evaluated taking into account their dependencies.
 	 */
 	public void evaluate() {
-		
-		List<Column> done = new ArrayList<Column>();
+
+		// Breadth-first
+		// The strategy is to start from completely independent columns (does it include all canEvaluate columns or only having no deps).
+		// Then evaluate them, add to finished and find next layer of columns which canEvaluate.
+		// canEvaluate takes into account the ability, that is, the conditions: all deps are clean (isChanged inherited), no errors (translate, cycles, inherited)
+		// needEvaluate = isChanged
+
+		// The opposite approach is to start from the goal(s) and then evaluate recursively or find layers recirsively.
+		// If this column canEvaluate then do it (and return to the previous layer, maybe the initial/last one).
+		// If it cannot be evaluated because of errors then return without evaluation by storing this error here (inherited error).
+		// If it cannot be evaluated because of dirty dependencies then get a list of these dirty deps.
+		// For each dirty dep in the loop, call the evaluate method, which will check if its canEvaluate is because of dirty deps (or errors).
+		// If it is because of dirty deps then it will try to evaluate them.
+		// If all dirty deps are evaluated, then return success, otherwise return failure which will mean that the previous will also return failure.
+
+		List<Column> done = new ArrayList<>();
 		for(List<Column> cols = this.getStartingColumns(); cols.size() > 0; cols = this.getNextColumnsEvaluatable(done)) { // Loop on expansion layers of dependencies forward
 			for(Column col : cols) {
 				if(!col.isDerived()) continue;
@@ -165,7 +156,7 @@ public class Schema {
 		return res;
 	}
 	protected List<Column> getNextColumns(List<Column> previousColumns) { // Get columns with all their dependencies in the specified list
-		List<Column> ret = new ArrayList<Column>();
+		List<Column> ret = new ArrayList<>();
 		
 		for(Column col : this.columns) {
 
@@ -181,7 +172,7 @@ public class Schema {
 		return ret;
 	}
 	protected List<Column> getNextColumnsEvaluatable(List<Column> previousColumns) { // Get columns with all their dependencies in the specified list and having no translation errors (own or inherited)
-		List<Column> ret = new ArrayList<Column>();
+		List<Column> ret = new ArrayList<>();
 		
 		for(Column col : this.columns) {
 			if(previousColumns.contains(col)) continue;  // Already in the list. Ccan it really happen without cycles?

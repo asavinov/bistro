@@ -1,7 +1,8 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.deprecated;
 
 // It actually determines what class of UDE to use/instantiate so we could simply use UDE class name instead
 // We could also use properties to pass this info, e.g., as default values in Schema, Table, Column
+@Deprecated
 public enum ExpressionKind {
 	NONE(0), // No formula. For example, use directly evaluator object 
 

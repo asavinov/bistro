@@ -115,7 +115,7 @@ public class Tests {
         Column tb = s.getColumn("T", "B");
 
         // Use formulas
-        tb.calculate("EXP4J", "2 * [A] + 1");
+        tb.calculate(UDE.Exp4j, "2 * [A] + 1");
         tb.evaluate();
 
         assertTrue( tb.getDependencies().contains(ta) ); // Check correctness of dependencies
@@ -127,6 +127,16 @@ public class Tests {
         // Use objects
         List<ColumnPath> paths = Arrays.asList( new ColumnPath(Arrays.asList(ta)) );
         tb.calculate(CustomCalcUde.class, paths);
+        tb.evaluate();
+
+        assertTrue( tb.getDependencies().contains(ta) ); // Check correctness of dependencies
+
+        assertEquals(11.0, (Double)tb.getValue(0), Double.MIN_VALUE);
+        assertEquals(Double.NaN, tb.getValue(1));
+        assertEquals(13.0, (Double)tb.getValue(2), Double.MIN_VALUE);
+
+        // Use lambda
+        tb.calculate( (p,o) -> 2.0*(Double)(p[0]==null?Double.NaN:p[0]) + 1, paths);
         tb.evaluate();
 
         assertTrue( tb.getDependencies().contains(ta) ); // Check correctness of dependencies
@@ -161,7 +171,7 @@ public class Tests {
         Column t2c = t2.getColumn("C");
 
         // Use formulas
-        t2c.link("EXP4J", Arrays.asList("A","B"), Arrays.asList("[A]","[B]")); // [A]=[A]; [B]=[B]
+        t2c.link(UDE.Exp4j, Arrays.asList("A","B"), Arrays.asList("[A]","[B]")); // [A]=[A]; [B]=[B]
         t2c.evaluate();
 
         // Check correctness of dependencies
@@ -174,7 +184,7 @@ public class Tests {
 
         // Use UDE instances
         List<Column> columns = Arrays.asList( s.getColumn("T", "A"), s.getColumn("T", "B") );
-        List<UDE> udes = Arrays.asList(new UdeJava("[A]", t2), new UdeJava("[B]", t2));
+        List<UDE> udes = Arrays.asList(new UdeExp4j("[A]", t2), new UdeExp4j("[B]", t2));
 
         t2c.link(columns, udes);
 
@@ -236,7 +246,7 @@ public class Tests {
         // Create custom accu expression and bind to certain parameter paths
         UDE accuUde = new CustomAccuUde(Arrays.asList( new ColumnPath( s.getColumn("T2", "Id") ) ));
 
-        ta.accumulate(new UdeJava("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
+        ta.accumulate(new UdeExp4j("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
         ta.evaluate();
 
         // Check correctness of dependencies
@@ -250,9 +260,9 @@ public class Tests {
 
 
         // The same accu expression but translated from a formula
-        accuUde = new UdeJava(" [out] + 2.0 * [Id] ", s.getTable("T2"));;
+        accuUde = new UdeExp4j(" [out] + 2.0 * [Id] ", s.getTable("T2"));;
 
-        ta.accumulate(new UdeJava("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
+        ta.accumulate(new UdeExp4j("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
         ta.evaluate();
 
         // Check correctness of dependencies
@@ -266,7 +276,7 @@ public class Tests {
 
 
         // The same using formulas
-        ta.accumulate("EXP4J", "0.0", " [out] + 2.0 * [Id] ", null, "T2", new NamePath("G"));
+        ta.accumulate(UDE.Exp4j, "0.0", " [out] + 2.0 * [Id] ", null, "T2", new NamePath("G"));
         ta.evaluate();
 
         // Check correctness of dependencies
@@ -310,7 +320,7 @@ public class Tests {
 
         // Define group column
         Column t2g = schema.createColumn("G", "T2", "T");
-        t2g.link("EXP4J", Arrays.asList("Id"), Arrays.asList("[Id]"));
+        t2g.link(UDE.Exp4j, Arrays.asList("Id"), Arrays.asList("[Id]"));
 
         t2.add();
         t2.add();
@@ -447,7 +457,7 @@ class CustomCalcUde implements UDE {
     @Override public void setParamPaths(List<NamePath> paths) {}
     @Override public List<NamePath> getParamPaths() { return null; }
 
-    List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    List<ColumnPath> inputPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
     @Override public void setResolvedParamPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
     @Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
 
@@ -472,7 +482,7 @@ class CustomAccuUde implements UDE {
     @Override public void setParamPaths(List<NamePath> paths) {}
     @Override public List<NamePath> getParamPaths() { return null; }
 
-    List<ColumnPath> inputPaths = new ArrayList<ColumnPath>(); // The expression parameters are bound to these input column paths
+    List<ColumnPath> inputPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
     @Override public void setResolvedParamPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
     @Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
 
