@@ -3,13 +3,10 @@ package org.conceptoriented.bistro.core;
 import org.conceptoriented.bistro.core.expr.*;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Column {
 	private Schema schema;
@@ -48,12 +45,6 @@ public class Column {
 	public boolean isKey() {  return this.key; }
 
     //
-    // Data dirty state: added/removed inputs (set population), and change outputs (function updated)
-    //
-
-    protected boolean isChanged = false;
-
-    //
 	// Data (public)
 	//
 
@@ -61,21 +52,19 @@ public class Column {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
+    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isDirty = true; }
 
-    public void setValue(Object value) { this.data.setValue(value); this.isChanged = true; }
+    public void setValue(Object value) { this.data.setValue(value); this.isDirty = true; }
 
     //
     // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
     //
 
-    protected void add() { this.data.add(); this.isChanged = true; }
-	protected void add(long count) { this.data.add(count); this.isChanged = true; }
+    protected void add() { this.data.add(); this.isDirty = true; }
+	protected void add(long count) { this.data.add(count); this.isDirty = true; }
 
-    protected void remove() { this.data.remove(1); this.isChanged = true; }
-    protected void remove(long count) { this.data.remove(count); this.isChanged = true; }
-
-
+    protected void remove() { this.data.remove(1); this.isDirty = true; }
+    protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
 
     @Deprecated // This probably should also moved to UtilsData which knows about all data types, conversions, default values etc.
 	public Object getDefaultValue() { // TODO: Depends on the column type. Maybe move to Data class or to Evaluator/Definition
@@ -109,38 +98,220 @@ public class Column {
     }
 
     //
-	// Formula kind
-	//
-	
-	protected ColumnKind kind;
-	public ColumnKind getKind() {
-		return this.kind;
-	}
-	public void setKind(ColumnKind kind) {
-		this.kind = kind;
-	}
-	public boolean isDerived() {
-		if(this.kind == ColumnKind.CALC || this.kind == ColumnKind.ACCU || this.kind == ColumnKind.LINK) {
-			return true;
-		}
-		return false;
-	}
+    // Data dirty state (~hasDirtyDeep)
+    //
+    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by evaluate procedure - isDirty is also ignored.
+
+    // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
+    // 2) set this output values (this function changes) -> or any of its dependencies recursively
+    // 3) definition change of this -> or any of its dependencies
+    // 4) definition error of this -> or any of its dependencies
+
+    private boolean isDirty = false;
+    public boolean isDirty() {
+        return this.isDirty;
+    }
+    public void setDirty() {
+        this.isDirty = true;
+    }
+
+    protected boolean hasDirtyDeep() { // This plus inherited dirty status
+        if(this.isDirty) return true;
+
+        // Otherwise check if there is a dirty dependency (recursively)
+        for(Column dep : this.getDependencies()) {
+            if(dep.hasDirtyDeep()) return true;
+        }
+
+        return false;
+    }
 
     //
-    // Errors
+    // Dependencies
     //
 
-    private List<BistroError> errors = new ArrayList<>();
-    public List<BistroError> getErrors() { // Empty list in the case of no errors
-        return this.errors;
+    protected List<Column> getDependencies() {
+        if(this.evaluator == null) return new ArrayList<>();
+        return this.evaluator.getDependencies();
     }
-    public BistroError getError() {
-        if(getErrors().size() == 0) return null;
-        return this.errors.get(this.errors.size()-1);
+    // Get all unique dependencies of the specified columns
+    protected List<Column> getDependencies(List<Column> cols) {
+        List<Column> ret = new ArrayList<>();
+        for(Column col : cols) {
+            List<Column> deps = col.getDependencies();
+            for(Column d : deps) {
+                if(!ret.contains(d)) ret.add(d);
+            }
+        }
+        return ret;
     }
-    public boolean hasErrors() {
-        if(getErrors().size() == 0) return false;
-        else return true;
+    // True if this column has no dependencies (e.g., constant expression) or is free (user, non-derived) column
+    protected boolean hasDependencies() {
+        return !this.getDependencies().isEmpty();
+    }
+
+
+    // Get all columns that depend on this column (but may depend also on other columns)
+    protected List<Column> getDependants() {
+        List<Column> res = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Column>toList());
+        return res;
+    }
+/*
+    // Get columns which have all their dependencies covered by (subset of) the specified list
+    protected List<Column> getNextColumns(List<Column> previousColumns) {
+        List<Column> ret = new ArrayList<>();
+
+        for(Column col : this.columns) {
+
+            if(previousColumns.contains(col)) continue; // Already in the list. Ccan it really happen without cycles?
+            List<Column> deps = col.getDependencies();
+            if(deps == null) continue; // Something wrong
+
+            if(previousColumns.containsAll(deps)) { // All column dependencies are in the list
+                ret.add(col);
+            }
+        }
+
+        return ret;
+    }
+*/
+
+    // Checks if this column depends on itself
+    protected boolean isInCyle() {
+        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Column dep : deps) {
+                if(!dep.isDerived()) continue;
+                if(dep == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //
+    // Execution errors (produced after each new evaluation)
+    //
+
+    private List<BistroError> evaluationErrors = new ArrayList<>();
+    public List<BistroError> getEvaluationErrors() { // Empty list in the case of no errors
+        return this.evaluationErrors;
+    }
+
+    protected boolean hasEvaluationErrorsDeep() {
+        if(evaluationErrors.size() > 1) return true; // Check this column
+
+        // Otherwise check evaluationErrors in dependencies (recursively)
+        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Column dep : deps) {
+                if(dep.hasEvaluationErrorsDeep()) return true;
+            }
+        }
+
+        return false;
+    }
+
+    //
+    // Evaluate
+    //
+
+    ColumnEvaluator evaluator; // It is instantiated by cal-link-accu methods (or translate errors are added)
+
+    // The strategy is to start from the goal (this column), recursively evaluate all dependencies and finally evaluate this column
+    public void evaluate() {
+
+        // Skip non-derived columns - they do not participate in evaluation
+        if(!this.isDerived()) {
+            if(this.isDirty()) {
+                this.getDependants().forEach(x -> x.setDirty());
+            }
+            this.isDirty = false;
+            return;
+        }
+
+        // Clear all evaluation errors before any new evaluation
+        this.evaluationErrors.clear();
+
+        // If there are some definition errors then no possibility to evaluate (including cycles)
+        if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
+            return;
+        }
+        // No definition errors - canEvaluate true
+
+        // If everything is up-to-date then there is no need to evaluate
+        if(!this.hasDirtyDeep()) { // this.needEvaluate false
+            return;
+        }
+        // There exists dirty status - needEvaluate true
+
+        // Evaluate dependencies recursively
+        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Column dep : deps) {
+                dep.evaluate(); // Whether it is really evaluated depends on the need (dirty status etc.)
+            }
+        }
+
+        // If there were some evaluation errors
+        if(this.hasEvaluationErrorsDeep()) { // this.canEvaluate false
+            return;
+        }
+        // No errors while evaluating dependencies
+
+        // All dependencies are ok so this column can be evaluated
+        this.evaluator.evaluate();
+
+        this.evaluationErrors.addAll(this.evaluator.getErrors());
+
+        if(this.evaluationErrors.size() == 0) {
+            this.isDirty = false; // Clean the state (remove dirty flag)
+        }
+        else {
+            this.isDirty = true; // Evaluation failed
+        }
+    }
+
+    //
+    // Formula kind
+    //
+
+    protected ColumnKind kind;
+    public ColumnKind getKind() {
+        return this.kind;
+    }
+    public void setKind(ColumnKind kind) {
+        this.kind = kind;
+        this.definitionErrors.clear();
+        this.evaluationErrors.clear();
+        this.evaluator = null;
+        this.isDirty = true;
+    }
+    public boolean isDerived() {
+        if(this.kind == ColumnKind.CALC || this.kind == ColumnKind.ACCU || this.kind == ColumnKind.LINK) {
+            return true;
+        }
+        return false;
+    }
+
+    //
+    // Definition errors. Produced after each new definition
+    //
+
+    private List<BistroError> definitionErrors = new ArrayList<>();
+    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
+        return this.definitionErrors;
+    }
+
+    public boolean hasDefinitionErrorsDeep() { // Recursively
+        if(this.definitionErrors.size() > 0) return true; // Check this column
+
+        // Otherwise check errors in dependencies (recursively)
+        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Column dep : deps) {
+                if(dep.hasDefinitionErrorsDeep()) return true;
+            }
+        }
+
+        return false;
     }
 
     // Patterns:
@@ -152,37 +323,29 @@ public class Column {
     //
 
     public void calculate(UDE ude) { // Provide instance of custom UDE which has already paths
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.CALC); // Reset definition
 
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
-        if(this.evaluator != null && !this.hasErrors()) {
-            this.kind = ColumnKind.CALC;
-            this.setDependencies(this.evaluator.getDependencies());
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void calculate(String clazz, String formula) { // Specify UDE class/selector and formula parameter for this class
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.CALC); // Reset definition
 
         if(clazz.equals(UDE.Exp4j)) {
 
             UDE expr = new UdeExp4j(formula, this.input);
 
-            if(expr == null) {
-                this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Translate error.", "Cannot translate expression. " + formula));
-                return;
-            }
-            this.errors.addAll(expr.getTranslateErrors());
-            if(this.hasErrors()) return;
+            this.definitionErrors.addAll(expr.getTranslateErrors());
+            if(this.definitionErrors.size() > 1) return;
 
             this.evaluator = new ColumnEvaluatorCalc(this, expr);
 
-            if(this.evaluator != null && !this.hasErrors()) {
-                this.kind = ColumnKind.CALC;
-                this.setDependencies(this.evaluator.getDependencies());
+            if(this.isInCyle()) {
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             }
         }
         else {
@@ -191,8 +354,7 @@ public class Column {
     }
 
     public void calculate(Class clazz, List<ColumnPath> paths) { // Specify UDE class and parameter paths
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.CALC); // Reset definition
 
         // Instantiate specified class
         UDE ude = null;
@@ -209,15 +371,13 @@ public class Column {
 
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
-        if(this.evaluator != null && !this.hasErrors()) {
-            this.kind = ColumnKind.CALC;
-            this.setDependencies(this.evaluator.getDependencies());
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void calculate(UdeEvaluate lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.CALC); // Reset definition
 
         UDE ude = new UdeLambda(lambda);
 
@@ -225,9 +385,8 @@ public class Column {
 
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
-        if(this.evaluator != null && !this.hasErrors()) {
-            this.kind = ColumnKind.CALC;
-            this.setDependencies(this.evaluator.getDependencies());
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
@@ -236,20 +395,17 @@ public class Column {
     //
 
     public void link(List<Column> columns, List<UDE> udes) { // Custom rhs UDEs for each lhs column
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.LINK); // Reset definition
 
         this.evaluator = new ColumnEvaluatorLink(this, columns, udes);
 
-        if(this.evaluator != null && !this.hasErrors()) {
-            this.kind = ColumnKind.LINK;
-            this.setDependencies(this.evaluator.getDependencies());
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void link(String clazz, List<String> names, List<String> formulas) { // Column names in the output table and expressions in the input table
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.LINK); // Reset definition
 
         if(clazz.equals("EQUAL")) {
             ; // TODO: Implement UdeEqual expression which simply returns value of the specified column
@@ -270,20 +426,15 @@ public class Column {
             List<UDE> exprs = new ArrayList<>();
             for(String formula : formulas) {
                 UDE expr = new UdeExp4j(formula, this.input);
-                if(expr == null) {
-                    // TODO: Add error
-                    return;
-                }
-                this.errors.addAll(expr.getTranslateErrors());
-                if(this.hasErrors()) return;
+                this.definitionErrors.addAll(expr.getTranslateErrors());
+                if(this.definitionErrors.size() > 1) return;
                 exprs.add(expr);
             }
 
             this.evaluator = new ColumnEvaluatorLink(this, columns, exprs);
 
-            if(this.evaluator != null && !this.hasErrors()) {
-                this.kind = ColumnKind.LINK;
-                this.setDependencies(this.evaluator.getDependencies());
+            if(this.isInCyle()) {
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             }
         }
         else {
@@ -296,20 +447,17 @@ public class Column {
     //
 
     public void accumulate(UDE initUde, UDE accuUde, UDE finUde, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.ACCU); // Reset definition
 
         this.evaluator = new ColumnEvaluatorAccu(this, initUde, accuUde, finUde, accuPath);
 
-        if(this.evaluator != null && !this.hasErrors()) {
-            this.kind = ColumnKind.ACCU;
-            this.setDependencies(this.evaluator.getDependencies());
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void accumulate(String clazz, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify UDE class/selector and formulas
-        this.evaluator = null;
-        this.resetDependencies();
+        this.setKind(ColumnKind.ACCU); // Reset definition
 
         if(clazz.equals(UDE.Exp4j)) {
 
@@ -318,12 +466,12 @@ public class Column {
             // Accu table and link (group) path
             Table accuTable = schema.getTable(accuTableName);
             if(accuTable == null) { // Binding error
-                this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find table: " + accuTableName));
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find table: " + accuTableName));
                 return;
             }
             accuPathColumns = accuLinkPath.resolveColumns(accuTable);
             if(accuPathColumns == null) { // Binding error
-                this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find columns: " + accuLinkPath.toString()));
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find columns: " + accuLinkPath.toString()));
                 return;
             }
 
@@ -336,21 +484,21 @@ public class Column {
             else {
                 initExpr = new UdeExp4j(initFormula, this.input);
             }
-            this.errors.addAll(initExpr.getTranslateErrors());
-            if(this.hasErrors()) return; // Cannot proceed
+            this.definitionErrors.addAll(initExpr.getTranslateErrors());
+            if(this.definitionErrors.size() > 1) return; // Cannot proceed
 
             // Accumulation
             UDE accuExpr = null;
             accuExpr = new UdeExp4j(accuFormula, accuTable);
-            this.errors.addAll(accuExpr.getTranslateErrors());
-            if(this.hasErrors()) return; // Cannot proceed
+            this.definitionErrors.addAll(accuExpr.getTranslateErrors());
+            if(this.definitionErrors.size() > 1) return; // Cannot proceed
 
             // Finalization
             UDE finExpr = null;
             if(finFormula != null && !finFormula.isEmpty()) {
                 finExpr = new UdeExp4j(finFormula, this.input);
-                this.errors.addAll(finExpr.getTranslateErrors());
-                if(this.hasErrors()) return; // Cannot proceed
+                this.definitionErrors.addAll(finExpr.getTranslateErrors());
+                if(this.definitionErrors.size() > 1) return; // Cannot proceed
             }
 
             // Errors
@@ -359,130 +507,24 @@ public class Column {
                 if(initExpr == null) frml = initFormula;
                 else if(accuExpr == null) frml = accuFormula;
                 else if(finExpr == null) frml = finFormula;
-                this.errors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Translate error.", "Cannot create expression. " + frml));
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Translate error.", "Cannot create expression. " + frml));
                 return;
             }
 
-            this.errors.addAll(initExpr.getTranslateErrors());
-            this.errors.addAll(accuExpr.getTranslateErrors());
-            // this.errors.addAll(finExpr.getTranslateErrors()); // TODO: Fix uncertainty with null expression in the case of no formula and in the case of errors
-            if(this.hasErrors()) return; // Cannot proceed
+            this.definitionErrors.addAll(initExpr.getTranslateErrors());
+            this.definitionErrors.addAll(accuExpr.getTranslateErrors());
+            // this.definitionErrors.addAll(finExpr.getTranslateErrors()); // TODO: Fix uncertainty with null expression in the case of no formula and in the case of errors
+            if(this.definitionErrors.size() > 1) return; // Cannot proceed
 
             this.evaluator = new ColumnEvaluatorAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
 
-            if(this.evaluator != null && !this.hasErrors()) {
-                this.kind = ColumnKind.ACCU;
-                this.setDependencies(this.evaluator.getDependencies());
+            if(this.isInCyle()) {
+                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             }
         }
         else {
             ; // TODO: Error - UDE class not available/implemented
         }
-    }
-
-    //
-    // Evaluate
-    //
-
-    ColumnEvaluator evaluator; // It is built by calculate-link-accumulate methods (in the case of success)
-
-    public void evaluate() {
-        if(this.hasErrors()) { // TODO: We need to check only translate errors - if there were evaluate errors then we can retry
-            return;
-        }
-        this.errors.clear();
-
-        if(this.getKind() == ColumnKind.NONE) {
-            return; // It is not evaluatable column
-        }
-
-        this.evaluator.evaluate(); // Concrete evaluation procedure depends on the Evaluator subclass: calc, link, accu.
-
-        this.errors.addAll(this.evaluator.getErrors());
-
-        this.isChanged = false; // Clean the state (remove dirty flag)
-    }
-
-
-    // Maybe remove dedicated field for deps because anyway they are simply read from evaluator.
-    // If necessary, read them from evaluator.
-
-    /**
-     * All other columns it directly depends on. These columns are directly used in its formula to compute output.
-     */
-    private List<Column> dependencies = new ArrayList<>();
-    public List<Column> getDependencies() {
-        return this.dependencies;
-    }
-    private void setDependencies(List<Column> deps) {
-        resetDependencies();
-        this.dependencies.addAll(deps);
-    }
-    private void resetDependencies() {
-        this.dependencies.clear();
-    }
-
-    private List<Column> getDependencies(List<Column> cols) { // Get all unique dependencies of the specified columns (expand dependence tree nodes)
-        List<Column> ret = new ArrayList<>();
-        for(Column col : cols) {
-            List<Column> deps = col.getDependencies();
-            for(Column d : deps) {
-                if(!ret.contains(d)) ret.add(d);
-            }
-        }
-        return ret;
-    }
-
-    protected boolean isStartingColumn() { // True if this column has no dependencies (e.g., constant expression) or is free (user, non-derived) column
-        if(!this.isDerived()) {
-            return true;
-        }
-        else if(this.dependencies.isEmpty()) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    public BistroError getDependenceError() { // =canEvaluate. Return one error in the dependencies (recursively) including cyclic dependency error
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) { // Loop on expansion layers of dependencies
-            for(Column dep : deps) {
-                if(dep == this) {
-                    return new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column formula depends on itself directly or indirectly.");
-                }
-                BistroError de = dep.getError();
-                if(de != null && de.code != BistroErrorCode.NONE) {
-                    return new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Error in column " + dep.getName(), "This column formula depends on a column with errors.");
-                }
-            }
-        }
-        return null;
-    }
-    public BistroError getThisOrDependenceError() {
-        BistroError ret = this.getError();
-        if(ret != null && ret.code != BistroErrorCode.NONE) {
-            return ret; // Error in this column
-        }
-        return this.getDependenceError();
-    }
-
-    public boolean isDependenceDirty() { // =needEvaluate. Inherited dirty status
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) { // Loop on expansion layers of dependencies
-            for(Column dep : deps) {
-                if(dep == this) {
-                    return true; // Cyclic dependency is also an error and hence dirty
-                }
-                BistroError de = dep.getError();
-                if(de != null && de.code != BistroErrorCode.NONE) {					return true; // Any error must be treated as dirty status (propagated further down)
-                }
-                if(dep.isChanged) return true;
-            }
-        }
-        return false; // All dependencies are up-to-date
-    }
-    public boolean isThisOrDependenceDirty() {
-        return this.isChanged || this.isDependenceDirty();
     }
 
     //

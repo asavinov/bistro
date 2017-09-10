@@ -312,10 +312,6 @@ public class UtilsSerialize {
             //col.setDefinitionLink(new ColumnDefinitionLink(linkFormula, col.expressionKind));
             //col.setDefinitionAccu(new ColumnDefinitionAccu(initFormula, accuFormula, null, accuTable, accuPath, col.expressionKind));
 
-            if(!col.isDerived()) { // Columns without formula (non-evalatable) are clean
-                col.isChanged = false;
-            }
-
             return col;
         }
         else {
@@ -435,8 +431,8 @@ public class UtilsSerialize {
         String joutid = "`id`: `" + column.getOutput().getId() + "`";
         String jout = "`output`: {" + joutid + "}";
 
-        String jstatus = "`status`: " + (column.getThisOrDependenceError() != null ? column.getThisOrDependenceError().toJson() : "null");
-        String jdirty = "`dirty`: " + (column.isThisOrDependenceDirty() ? "true" : "false"); // We transfer deep dirty including this column
+        //String jstatus = "`status`: " + (column.getThisOrDependenceError() != null ? column.getThisOrDependenceError().toJson() : "null");
+        //String jdirty = "`dirty`: " + (column.isThisOrDependenceDirty() ? "true" : "false"); // We transfer deep dirty including this column
 
         String jkind = "`kind`:" + column.kind.getValue() + "";
 
@@ -449,7 +445,7 @@ public class UtilsSerialize {
         //String jatbl = "`accuTable`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuTable()) + "";
         //String japath = "`accuPath`: " + JSONObject.valueToString(column.getDefinitionAccu() == null ? "" : column.getDefinitionAccu().getAccuPath()) + "";
 
-        String json = jid + ", " + jname + ", " + jin + ", " + jout + ", " + jdirty + ", " + jstatus + ", " + jkind;
+        String json = jid + ", " + jname + ", " + jin + ", " + jout + ", " + jkind;
 
         return ("{" + json + "}").replace('`', '"');
     }

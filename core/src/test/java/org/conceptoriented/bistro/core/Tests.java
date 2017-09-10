@@ -237,17 +237,17 @@ public class Tests {
     public void accuTest()
     {
         Schema s = this.createAccuSchema();
+        Table t2 = s.getTable("T2");
 
         // Accu (group) formula
         Column ta = s.getColumn("T", "A");
         Column t2g = s.getColumn("T2", "G");
-        t2g.evaluate(); // TODO: In fact, it has to be evaluated automatically as dirty column below
 
         // Create custom accu expression and bind to certain parameter paths
         UDE accuUde = new CustomAccuUde(Arrays.asList( new ColumnPath( s.getColumn("T2", "Id") ) ));
 
         ta.accumulate(new UdeExp4j("0.0", s.getTable("T")), accuUde, null, new ColumnPath(t2g));
-        ta.evaluate();
+        ta.evaluate(); // It has to also evaluate the accu (group) columns
 
         // Check correctness of dependencies
         List<Column> ta_deps = ta.getDependencies();
@@ -287,6 +287,10 @@ public class Tests {
         assertEquals(20.0, ta.getValue(0));
         assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
+
+        t2.getColumn("Id").setValue(2, 5.0);
+        s.evaluate(); // Both t2g and ta have to be evaluated
+        assertEquals(30.0, ta.getValue(0));
     }
 
     Schema createAccuSchema() {
@@ -424,14 +428,14 @@ public class Tests {
         e = new com.udojava.evalex.Expression("SQRT(a^2 + b^2)");
         List<String> usedVars = e.getUsedVariables();
 
-        e.getExpressionTokenizer(); // Does not detect errors
+        e.getExpressionTokenizer(); // Does not detect definitionErrors
 
         e.setVariable("a", "2.4"); // Can work with strings (representing numbers)
         e.setVariable("b", new BigDecimal(9.253));
 
         // Validate
         try {
-            e.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
+            e.toRPN(); // Generates prefixed representation but can be used to check definitionErrors (variables have to be set in order to correctly determine parse definitionErrors)
         }
         catch(com.udojava.evalex.Expression.ExpressionException ee) {
             System.out.println(ee);

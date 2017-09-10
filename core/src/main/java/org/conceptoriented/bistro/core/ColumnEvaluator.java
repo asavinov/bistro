@@ -5,31 +5,15 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-
-//ColumnDefinitionCalc - it is a syntactic/serializable form using strings: formula(s), column/table names, Java class names etc. 
-// -> translate and build ColumnEvaluatorCalc object by generating the necessary Java objects: UDEs, column/table references etc.
-
-// UDE - it describes the logic of computing single output from multiple inputs and binding of these inputs
-// It is either generated from some syntactic form (formula or class name plus bindings in descriptor), or provided by the user as an object with specific column references as binding
-// In most cases, it is an intermediate object but the classes could be in a library
-
-// column/table references, Java objects etc. (what is needed to instantiate Evaluator
-//-> one or more UDE and other objects (tables, group paths etc.) are used to instantiate an evaluator
-
-//ColumnEvaluatorCalc -> Evaluator knows how to evaluate the whole column using certain logic 
-// For this specific logic, it needs the corresponding objects: UDEs, column/tables etc.
-// These objects can be instantiated and provided programmatically, or they could be translated from the corresponding definition automatically.
-// From the evaluator, we also get dependencies which are needed to determine the sequence of evaluations and propagations.
-
-
 /**
- * This class is an object representation of a derived column. It implements the logic of computation and knows how to compute all output values for certain column kind.
- * It knows the following aspects: 
+ * This class knows how to produce output values for all inputs using the provided expressions.
+ * It implementat a certain logic of computations which is specific for each definition kind.
+ * It knows the following aspects:
  * - Looping: the main (loop) table and other tables needed for evaluation of this column definition
  * - Reading inputs: column paths which are used to compute the output including expression parameters or group path for accumulation
  * - Writing output: how to find the output and write it to this column data
  * This class is unaware of the following aspects:
- * - Serialization and syntax of formulas. This class uses only Java objects
+ * - Serialization and syntax of formulas. It uses only expression objects which provide one method for computing single output.
  * - How to parse, bind or build native computing elements (expressions) 
  */
 public interface ColumnEvaluator {
@@ -42,15 +26,15 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 
 	Column column;
 	
-	List<BistroError> errors = new ArrayList<BistroError>();
+	List<BistroError> definitionErrors = new ArrayList<BistroError>();
 	@Override
 	public List<BistroError> getErrors() {
-		return this.errors;
+		return this.definitionErrors;
 	}
 
 	protected void evaluateExpr(UDE expr, ColumnPath accuLinkPath) {
 		
-		errors.clear(); // Clear state
+		definitionErrors.clear(); // Clear state
 
 		Table mainTable = accuLinkPath == null ? this.column.getInput() : accuLinkPath.getInput(); // Loop/scan table
 
@@ -81,7 +65,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 			// Evaluate
 			result = expr.evaluate(paramValues, out);
 			if(expr.getEvaluateError() != null) {
-				errors.add(expr.getEvaluateError());
+				definitionErrors.add(expr.getEvaluateError());
 				return;
 			}
 
@@ -93,7 +77,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 
 	protected void evaluateLink(List<Pair<Column,UDE>> exprs) {
 
-		errors.clear(); // Clear state
+		definitionErrors.clear(); // Clear state
 
 		Table typeTable = this.column.getOutput();
 
@@ -145,7 +129,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 				UDE expr = mmbr.getRight();
 				Object result = expr.evaluate(paramValues, null);
 				if(expr.getEvaluateError() != null) {
-					errors.add(expr.getEvaluateError());
+					definitionErrors.add(expr.getEvaluateError());
 					return;
 				}
 
