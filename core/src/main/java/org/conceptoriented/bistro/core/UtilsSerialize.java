@@ -280,7 +280,7 @@ public class UtilsSerialize {
         // We do not process status (it is always result of the backend)
         // We do not process dirty (it is always result of the backend)
 
-        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.NONE;
+        DefinitionType kind = obj.has("definitionType") ? DefinitionType.fromInt(obj.getInt("definitionType")) : DefinitionType.NONE;
 
         String calcFormula = obj.has("calcFormula") && !obj.isNull("calcFormula") ? obj.getString("calcFormula") : "";
 
@@ -305,7 +305,7 @@ public class UtilsSerialize {
         if(isValid) {
             col = schema.createColumn(name, input, output);
 
-            col.setKind(kind);
+            col.setDefinitionType(kind);
 
             // Always create a new definition object
             //col.setDefinitionCalc(new ColumnDefinitionCalc(calcFormula, col.expressionKind));
@@ -351,7 +351,7 @@ public class UtilsSerialize {
         // We do not process status (it is always result of the backend)
         // We do not process dirty (it is always result of the backend)
 
-        ColumnKind kind = obj.has("kind") ? ColumnKind.fromInt(obj.getInt("kind")) : ColumnKind.NONE;
+        DefinitionType kind = obj.has("definitionType") ? DefinitionType.fromInt(obj.getInt("definitionType")) : DefinitionType.NONE;
 
         String calcFormula = obj.has("calcFormula") && !obj.isNull("calcFormula") ? obj.getString("calcFormula") : "";
 
@@ -382,7 +382,7 @@ public class UtilsSerialize {
         if(obj.has("output")) column.setOutput(output);
         if(obj.has("name")) column.setName(obj.getString("name"));
 
-        if(obj.has("kind")) column.setKind(kind);
+        if(obj.has("definitionType")) column.setDefinitionType(kind);
 
         // Always create a new definition object
         //if(obj.has("calcFormula"))
@@ -434,7 +434,7 @@ public class UtilsSerialize {
         //String jstatus = "`status`: " + (column.getThisOrDependenceError() != null ? column.getThisOrDependenceError().toJson() : "null");
         //String jdirty = "`dirty`: " + (column.isThisOrDependenceDirty() ? "true" : "false"); // We transfer deep dirty including this column
 
-        String jkind = "`kind`:" + column.kind.getValue() + "";
+        String jkind = "`definitionType`:" + column.definitionType.getValue() + "";
 
         //String jcalc = "`calcFormula`: " + JSONObject.valueToString(column.getDefinitionCalc() == null ? "" : column.getDefinitionCalc().getFormula()) + "";
 

@@ -10,7 +10,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
+
 import org.conceptoriented.bistro.core.expr.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -306,7 +306,7 @@ public class Tests {
 
         // Define accu column
         Column ta = schema.createColumn("A", "T", "Double");
-        ta.setKind(ColumnKind.ACCU);
+        ta.setDefinitionType(DefinitionType.ACCU);
 
         t1.add();
         t1.add();

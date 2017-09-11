@@ -21,8 +21,8 @@ data migration, extract-transform-load (ETL), big data processing, stream analyt
 * error handling - exceptions/returns - result for operations
 * status handling - fields maybe referencing previous error/exception
 
-* column kind - by default USER (not derived, manually set values will be overwritten, no evaluation/transaltion)
-* table kind - by default derived - manually added/removed records will be deleted/overwritten
+* column definitionType - by default USER (not derived, manually set values will be overwritten, no evaluation/transaltion)
+* table definitionType - by default derived - manually added/removed records will be deleted/overwritten
 
 ## Three types of derived columns
 
@@ -81,22 +81,27 @@ Command line:
 * Arrays instead of lists in high level public methods. They are easier to define and can be declared as variable arguments.
 
 ## UDE
-* So we need to distinguish these clases which can be subclasses of some basic UDE:
-  * normal UDE: evaluator is implemented by the class method
-  * Lambda UDE: evaluator is provided as a function with certain signature
-  * Formula UDE: evaluator provided syntactically and will be translated/resolved relative to the provided table object
+* So we need to distinguish these clases depending on how the main procedure is given (they can be subclasses of some basic UDE):
+  * normal UDE: evaluator is implemented by the class method. 
+    * Parameterization via path setters (strings or objects).
+  * Lambda UDE: evaluator is provided as a function with certain signature.
+    * Lambda parameter
+    * Parameterization via path setters (strings or objects).
+  * Formula UDE: evaluator provided syntactically and will be translated/resolved relative to the provided table object.
+    * Formula parameter for procedure (and dependencies) 
+    * Table object this formulas belongs to for resolution of dependencies
 
 * Simply UDE interface by leaving one error type etc.
 * Simply UDE interface by removing translate and evaluate. Only evaluate. Translation is done etiher in construtor or when formula is set. Think about setting formula only in a setter (not in constructor).
 * UDE currently has two versions of parameter paths: names and objects. Do we really need both of them?
 
-* Translation calc-link-accu have to use class name to instantiate UDE rather than use selector.
+* Translation of formulas in calc-link-accu have to use class name to instantiate UDE rather than use selector.
   * In addition, these UDE classes have to implement either constructor with formula or setters for formulas or translate method.
 
-* Evalex UDE is not always impelmented and not tested.
+* Evalex UDE is not always impelmented and not tested but only a placeholder exists.
 
 * Introduce constant UDE, for example, for initializers like 0.0 and EQUAL UDE for copying field/path values to output without any expression.
-  * Use case: 1) initializer, determine manaully 2) Within UdeExp4j or other expressions which determine this internally and want simplify computations by avoiding their own expression and reusing simpler way, for example, labmda or another kind of constant return.
+  * Use case: 1) initializer, determine manaully 2) Within UdeExp4j or other expressions which determine this internally and want simplify computations by avoiding their own expression and reusing simpler way, for example, labmda or another definitionType of constant return.
 
 * JavaScript UDE
 

@@ -7,7 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This class knows how to produce output values for all inputs using the provided expressions.
- * It implementat a certain logic of computations which is specific for each definition kind.
+ * It implementat a certain logic of computations which is specific for each definition definitionType.
  * It knows the following aspects:
  * - Looping: the main (loop) table and other tables needed for evaluation of this column definition
  * - Reading inputs: column paths which are used to compute the output including expression parameters or group path for accumulation

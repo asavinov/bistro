@@ -6,7 +6,7 @@ package org.conceptoriented.bistro.core.deprecated;
 public enum ExpressionKind {
 	NONE(0), // No formula. For example, use directly evaluator object 
 
-	AUTO(10), // Auto. Formula kind has to be determined automatically using other parameters. 
+	AUTO(10), // Auto. Formula definitionType has to be determined automatically using other parameters.
 
 	EXP4J(20), // Like "[Column 1] + [Column 2] / 2.0"
 	EVALEX(30),

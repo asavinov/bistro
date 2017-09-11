@@ -132,7 +132,9 @@ public class Column {
 
     protected List<Column> getDependencies() {
         if(this.evaluator == null) return new ArrayList<>();
-        return this.evaluator.getDependencies();
+        List<Column> deps = this.evaluator.getDependencies();
+        if(deps == null) return new ArrayList<>();
+        return deps;
     }
     // Get all unique dependencies of the specified columns
     protected List<Column> getDependencies(List<Column> cols) {
@@ -145,42 +147,17 @@ public class Column {
         }
         return ret;
     }
-    // True if this column has no dependencies (e.g., constant expression) or is free (user, non-derived) column
-    protected boolean hasDependencies() {
-        return !this.getDependencies().isEmpty();
-    }
 
-
-    // Get all columns that depend on this column (but may depend also on other columns)
+    // Get all columns that (directly) depend on this column
     protected List<Column> getDependants() {
         List<Column> res = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Column>toList());
         return res;
     }
-/*
-    // Get columns which have all their dependencies covered by (subset of) the specified list
-    protected List<Column> getNextColumns(List<Column> previousColumns) {
-        List<Column> ret = new ArrayList<>();
-
-        for(Column col : this.columns) {
-
-            if(previousColumns.contains(col)) continue; // Already in the list. Ccan it really happen without cycles?
-            List<Column> deps = col.getDependencies();
-            if(deps == null) continue; // Something wrong
-
-            if(previousColumns.containsAll(deps)) { // All column dependencies are in the list
-                ret.add(col);
-            }
-        }
-
-        return ret;
-    }
-*/
 
     // Checks if this column depends on itself
     protected boolean isInCyle() {
         for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
             for(Column dep : deps) {
-                if(!dep.isDerived()) continue;
                 if(dep == this) {
                     return true;
                 }
@@ -190,7 +167,7 @@ public class Column {
     }
 
     //
-    // Execution errors (produced after each new evaluation)
+    // Execution errors (cleaned, and then produced after each new evaluation)
     //
 
     private List<BistroError> evaluationErrors = new ArrayList<>();
@@ -204,7 +181,8 @@ public class Column {
         // Otherwise check evaluationErrors in dependencies (recursively)
         for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
             for(Column dep : deps) {
-                if(dep.hasEvaluationErrorsDeep()) return true;
+                if(dep == this) return true;
+                if(dep.getEvaluationErrors().size() > 0) return true;
             }
         }
 
@@ -271,22 +249,22 @@ public class Column {
     }
 
     //
-    // Formula kind
+    // Formula definitionType
     //
 
-    protected ColumnKind kind;
-    public ColumnKind getKind() {
-        return this.kind;
+    protected DefinitionType definitionType;
+    public DefinitionType getDefinitionType() {
+        return this.definitionType;
     }
-    public void setKind(ColumnKind kind) {
-        this.kind = kind;
+    public void setDefinitionType(DefinitionType definitionType) {
+        this.definitionType = definitionType;
         this.definitionErrors.clear();
         this.evaluationErrors.clear();
         this.evaluator = null;
         this.isDirty = true;
     }
     public boolean isDerived() {
-        if(this.kind == ColumnKind.CALC || this.kind == ColumnKind.ACCU || this.kind == ColumnKind.LINK) {
+        if(this.definitionType == DefinitionType.CALC || this.definitionType == DefinitionType.ACCU || this.definitionType == DefinitionType.LINK) {
             return true;
         }
         return false;
@@ -307,7 +285,8 @@ public class Column {
         // Otherwise check errors in dependencies (recursively)
         for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
             for(Column dep : deps) {
-                if(dep.hasDefinitionErrorsDeep()) return true;
+                if(dep == this) return true;
+                if(dep.getDefinitionErrors().size() > 0) return true;
             }
         }
 
@@ -323,7 +302,7 @@ public class Column {
     //
 
     public void calculate(UDE ude) { // Provide instance of custom UDE which has already paths
-        this.setKind(ColumnKind.CALC); // Reset definition
+        this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
@@ -333,7 +312,7 @@ public class Column {
     }
 
     public void calculate(String clazz, String formula) { // Specify UDE class/selector and formula parameter for this class
-        this.setKind(ColumnKind.CALC); // Reset definition
+        this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
         if(clazz.equals(UDE.Exp4j)) {
 
@@ -354,7 +333,7 @@ public class Column {
     }
 
     public void calculate(Class clazz, List<ColumnPath> paths) { // Specify UDE class and parameter paths
-        this.setKind(ColumnKind.CALC); // Reset definition
+        this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
         // Instantiate specified class
         UDE ude = null;
@@ -377,7 +356,7 @@ public class Column {
     }
 
     public void calculate(UdeEvaluate lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
-        this.setKind(ColumnKind.CALC); // Reset definition
+        this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
         UDE ude = new UdeLambda(lambda);
 
@@ -395,7 +374,7 @@ public class Column {
     //
 
     public void link(List<Column> columns, List<UDE> udes) { // Custom rhs UDEs for each lhs column
-        this.setKind(ColumnKind.LINK); // Reset definition
+        this.setDefinitionType(DefinitionType.LINK); // Reset definition
 
         this.evaluator = new ColumnEvaluatorLink(this, columns, udes);
 
@@ -405,7 +384,7 @@ public class Column {
     }
 
     public void link(String clazz, List<String> names, List<String> formulas) { // Column names in the output table and expressions in the input table
-        this.setKind(ColumnKind.LINK); // Reset definition
+        this.setDefinitionType(DefinitionType.LINK); // Reset definition
 
         if(clazz.equals("EQUAL")) {
             ; // TODO: Implement UdeEqual expression which simply returns value of the specified column
@@ -447,7 +426,7 @@ public class Column {
     //
 
     public void accumulate(UDE initUde, UDE accuUde, UDE finUde, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
-        this.setKind(ColumnKind.ACCU); // Reset definition
+        this.setDefinitionType(DefinitionType.ACCU); // Reset definition
 
         this.evaluator = new ColumnEvaluatorAccu(this, initUde, accuUde, finUde, accuPath);
 
@@ -457,7 +436,7 @@ public class Column {
     }
 
     public void accumulate(String clazz, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify UDE class/selector and formulas
-        this.setKind(ColumnKind.ACCU); // Reset definition
+        this.setDefinitionType(DefinitionType.ACCU); // Reset definition
 
         if(clazz.equals(UDE.Exp4j)) {
 
@@ -556,7 +535,7 @@ public class Column {
 		this.output = output;
 		
 		// Formula
-		this.kind = ColumnKind.NONE;
+		this.definitionType = DefinitionType.NONE;
 
 		// Data
 		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
