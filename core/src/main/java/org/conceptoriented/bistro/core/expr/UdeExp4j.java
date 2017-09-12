@@ -2,7 +2,8 @@ package org.conceptoriented.bistro.core.expr;
 
 import org.conceptoriented.bistro.core.Table;
 
-public class UdeExp4j extends UdeJava {
+public class UdeExp4j extends UdeFormula {
+
     public UdeExp4j() {
         super();
         isExp4j = true;

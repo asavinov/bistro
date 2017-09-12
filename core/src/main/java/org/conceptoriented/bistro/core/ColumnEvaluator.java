@@ -3,7 +3,7 @@ package org.conceptoriented.bistro.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.conceptoriented.bistro.core.expr.UDE;
 
 /**
  * This class knows how to produce output values for all inputs using the provided expressions.
@@ -26,7 +26,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 
 	Column column;
 	
-	List<BistroError> definitionErrors = new ArrayList<BistroError>();
+	List<BistroError> definitionErrors = new ArrayList<>();
 	@Override
 	public List<BistroError> getErrors() {
 		return this.definitionErrors;
@@ -63,9 +63,11 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 			out = this.column.getValue(g); // [ACCU-specific] [FIN-specific]
 
 			// Evaluate
-			result = expr.evaluate(paramValues, out);
-			if(expr.getEvaluateError() != null) {
-				definitionErrors.add(expr.getEvaluateError());
+			try {
+				result = expr.evaluate(paramValues, out);
+			}
+			catch(BistroError e) {
+				definitionErrors.add(e);
 				return;
 			}
 
@@ -74,93 +76,70 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 		}
 	}
 
+    protected void evaluateLink(List<Column> columns, List<UDE> exprs) {
 
-	protected void evaluateLink(List<Pair<Column,UDE>> exprs) {
+        definitionErrors.clear(); // Clear state
 
-		definitionErrors.clear(); // Clear state
+        Table typeTable = this.column.getOutput();
 
-		Table typeTable = this.column.getOutput();
+        Table mainTable = this.column.getInput();
+        // Currently we make full scan by re-evaluating all existing input ids
+        Range mainRange = this.column.getInput().getIdRange();
 
-		Table mainTable = this.column.getInput();
-		// Currently we make full scan by re-evaluating all existing input ids
-		Range mainRange = this.column.getInput().getIdRange();
+        // Each item in this lists is for one member expression
+        // We use lists and not map because want to use common index (faster) for access and not key (slower) which is important for frequent accesses in a long loop.
+        List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
+        List< Object[] > rhsParamValues = new ArrayList<>();
+        List< Object > rhsResults = new ArrayList<>(); // Record of values used for search (produced by expressions and having same length as column list)
 
-		// Each item in this lists is for one member expression 
-		// We use lists and not map because want to use common index (faster) for access and not key (slower) which is important for frequent accesses in a long loop.
-		List< List<ColumnPath> > rhsParamPaths = new ArrayList< List<ColumnPath> >();
-		List< Object[] > rhsParamValues = new ArrayList< Object[] >();
-		List< Object > rhsResults = new ArrayList< Object >();
+        // Initialize these lists for each member expression
+        for(UDE ude : exprs) {
+            int paramCount = ude.getParamPaths().size();
 
-		// Record used for search
-		List<Column> columns = new ArrayList<>();
-		List<Object> values = new ArrayList<>();
+            rhsParamPaths.add( ude.getResolvedParamPaths() );
+            rhsParamValues.add( new Object[ paramCount ] );
+            rhsResults.add( null );
+        }
 
-		// Initialize items of these lists for each member expression
-		for(Pair<Column,UDE> mmbr : exprs) {
-			UDE eval = mmbr.getRight();
-			int paramCount = eval.getParamPaths().size();
+        for(long i=mainRange.start; i<mainRange.end; i++) {
 
-			rhsParamPaths.add( eval.getResolvedParamPaths() );
-			rhsParamValues.add( new Object[ paramCount ] );
-			rhsResults.add( null );
-		}
+            // Evaluate ALL child rhs expressions by producing an array/record of their results
+            for(int udeNo = 0; udeNo < columns.size(); udeNo++) {
 
-		for(long i=mainRange.start; i<mainRange.end; i++) {
+                List<ColumnPath> paramPaths = rhsParamPaths.get(udeNo);
+                Object[] paramValues = rhsParamValues.get(udeNo);
 
-			// Reset record
-			columns.clear();
-			values.clear();
+                // Read all parameter values (assuming that this column output is not used in link columns)
+                int paramNo = 0;
+                for(ColumnPath paramPath : paramPaths) {
+                    paramValues[paramNo] = paramPath.getValue(i);
+                    paramNo++;
+                }
 
-			// Evaluate ALL child rhs expressions by producing an array of their results
-			int mmbrNo = 0;
-			for(Pair<Column,UDE> mmbr : exprs) {
+                // Evaluate this member expression
+                UDE expr = exprs.get(udeNo);
+                Object result;
+                try {
+                    result = expr.evaluate(paramValues, null);
+                } catch (BistroError e) {
+                    definitionErrors.add(e);
+                    return;
+                }
 
-				List<ColumnPath> paramPaths = rhsParamPaths.get(mmbrNo);
-				Object[] paramValues = rhsParamValues.get(mmbrNo);
-				
-				// Read all parameter values (assuming that this column output is not used in link columns)
-				int paramNo = 0;
-				for(ColumnPath paramPath : paramPaths) {
-					paramValues[paramNo] = paramPath.getValue(i);
-					paramNo++;
-				}
+                rhsResults.set(udeNo, result);
+            }
 
-				// Evaluate this member expression
-				UDE expr = mmbr.getRight();
-				Object result = expr.evaluate(paramValues, null);
-				if(expr.getEvaluateError() != null) {
-					definitionErrors.add(expr.getEvaluateError());
-					return;
-				}
+            // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
+            Object out = typeTable.find(columns, rhsResults, true);
 
-				rhsResults.set(mmbrNo, result);
+            // Update output
+            this.column.setValue(i, out);
+        }
 
-				// Set field in the record
-				columns.add(mmbr.getKey());
-				values.add(result);
-
-				mmbrNo++; // Iterate
-			}
-
-			// Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-			Object out = typeTable.find(columns, values, true);
-			
-			// Update output
-			this.column.setValue(i, out);
-		}
-
-	}
-
-	protected void evaluateExprDefault() {
-		Range mainRange = this.column.getInput().getIdRange(); // All dirty/new rows
-		Object defaultValue = this.column.getDefaultValue();
-		for(long i=mainRange.start; i<mainRange.end; i++) {
-			this.column.setValue(i, defaultValue);
-		}
-	}
+    }
 
 	protected List<Column> getExpressionDependencies(UDE expr) { // Get parameter paths from expression and extract (unique) columns from them
-		List<Column> columns = new ArrayList<Column>();
+		List<Column> columns = new ArrayList<>();
 		
 		List<ColumnPath> paths = expr.getResolvedParamPaths();
 		for(ColumnPath path : paths) {
@@ -178,4 +157,3 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 	}
 
 }
-

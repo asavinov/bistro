@@ -4,9 +4,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.conceptoriented.bistro.core.NamePath;
-import org.conceptoriented.bistro.core.expr.QNameBaseVisitor;
-import org.conceptoriented.bistro.core.expr.QNameLexer;
-import org.conceptoriented.bistro.core.expr.QNameParser;
 
 public class QNameBuilder extends QNameBaseVisitor<NamePath> {
 

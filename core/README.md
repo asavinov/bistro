@@ -61,16 +61,14 @@ Command line:
 
 # Change Log
 
+* v0.2.0 (2017-09-03) - Major refactoring and cleaning by focusing on new API
 * v0.1.0 (2017-09-03) - Initial commit
 
 # TODO
 
 ## General
 
-* Rework dependency management.
-  * Simplilfy/modularize graph computation: to evaluate this column, we search for dirty (isChanged) and hasErrors.
-  * Test evaluation in the case of complex dependencies and check two the errors: cycles, translation errors (also inherited), evaluation errors (during evaluation) etc.
-  * Hide from users and modularize inside. It is used only at translation (just before evaluation for planning). And also for error reporting. The basis is what UDEs and then Evaluator provide.
+* What to do with two types of paths in UDE: objects and names? Can we use only one?
 
 * Error handling in calc-link-accu. Simultaniously, simplify error handling in UDE classes, maybe remove two types of errors.
   * Exceptions or error state? When translation/structure errors are reported and how they are supposed to be checked by the user?
@@ -82,7 +80,7 @@ Command line:
 
 ## UDE
 * So we need to distinguish these clases depending on how the main procedure is given (they can be subclasses of some basic UDE):
-  * normal UDE: evaluator is implemented by the class method. 
+  * Normal UDE: evaluator is implemented by the class method. 
     * Parameterization via path setters (strings or objects).
   * Lambda UDE: evaluator is provided as a function with certain signature.
     * Lambda parameter

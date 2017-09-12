@@ -8,9 +8,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * This base class is intended to be extended by concrete classes for translating formulas.
+ *
  * TODO: add support for http://mathparser.org/
  */
-class UdeJava implements UDE {
+public class UdeFormula implements UDE {
 
 	public static String OUT_VARIABLE_NAME = "out";
 
@@ -59,58 +61,7 @@ class UdeJava implements UDE {
 		return paths;
 	}
 	@Override
-	public void translate(String formula) {
-		this.translateError = null;
-		this.formula = formula;
-		if(this.formula == null || this.formula.isEmpty()) return;
-
-		try {
-			this.parse();
-		}
-		catch(Exception err) {
-			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Parse error", "Cannot parse the formula.");
-			}
-			return;
-		}
-		if(this.translateError != null) return;
-
-		try {
-			this.bind();
-		}
-		catch(Exception err) {
-			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Bind error", "Cannot resolve symbols.");
-			}
-			return;
-		}
-		if(this.translateError != null) return;
-
-		try {
-			this.build();
-		}
-		catch(Exception err) {
-			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Build error", "Cannot build evaluator object.");
-			}
-			return;
-		}
-		if(this.translateError != null) return;
-	}
-	private BistroError translateError;
-	@Override
-	public List<BistroError> getTranslateErrors() { // Find first error or null for no errors. Is meaningful only after translation.
-		List<BistroError> ret = new ArrayList<BistroError>();
-		if(this.translateError == null || this.translateError.code == BistroErrorCode.NONE) {
-			return ret;
-		}
-		ret.add(this.translateError);
-		return ret;
-	}
-	@Override
-	public Object evaluate(Object[] params, Object out) {
-		this.evaluateError = null;
-
+	public Object evaluate(Object[] params, Object out) throws BistroError {
 		// Set all parameters in native expressions
 		int paramNo = 0;
 		for(ExprDependency dep : this.exprDependencies) {
@@ -128,8 +79,7 @@ class UdeJava implements UDE {
 				}
 			}
 			catch(Exception e) {
-				this.evaluateError = new BistroError(BistroErrorCode.EVALUATE_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage());
-				return null;
+			    throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 			paramNo++;
 		}
@@ -149,8 +99,7 @@ class UdeJava implements UDE {
 				}
 			}
 			catch(Exception e) {
-				this.evaluateError = new BistroError(BistroErrorCode.EVALUATE_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage());
-				return null;
+                throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 		}
 
@@ -168,20 +117,55 @@ class UdeJava implements UDE {
 			}
 		}
 		catch(Exception e) {
-			this.evaluateError = new BistroError(BistroErrorCode.EVALUATE_ERROR, "Evaluate error", "Error evaluating expression. " + e.getMessage());
-			return null;
+			throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error evaluating expression. " + e.getMessage(), e);
 		}
 
 		return ret;
 	}
-	private BistroError evaluateError;
-	@Override
-	public BistroError getEvaluateError() { // Find first error or null for no errors. Is meaningful only after evaluation
-		if(this.evaluateError == null || this.evaluateError.code == BistroErrorCode.NONE) {
-			return null;
-		}
-		return this.evaluateError;
-	}
+
+    //
+    // Translate
+    //
+
+    private BistroError translateError;
+    public void translate(String formula) {
+        this.translateError = null;
+        this.formula = formula;
+        if(this.formula == null || this.formula.isEmpty()) return;
+
+        try {
+            this.parse();
+        }
+        catch(Exception err) {
+            if(this.translateError == null) { // Status has not been set by the failed method
+                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Parse error", "Cannot parse the formula.", err);
+            }
+            return;
+        }
+        if(this.translateError != null) return;
+
+        try {
+            this.bind();
+        }
+        catch(Exception err) {
+            if(this.translateError == null) { // Status has not been set by the failed method
+                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve symbols.", err);
+            }
+            return;
+        }
+        if(this.translateError != null) return;
+
+        try {
+            this.build();
+        }
+        catch(Exception err) {
+            if(this.translateError == null) { // Status has not been set by the failed method
+                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Build error", "Cannot build evaluator object.", err);
+            }
+            return;
+        }
+        if(this.translateError != null) return;
+    }
 
 	//
 	// Parse
@@ -283,10 +267,10 @@ class UdeJava implements UDE {
 		return this.isOutputParameter(qname.names.get(0));
 	}
 	private boolean isOutputParameter(String paramName) {
-		if(paramName.equalsIgnoreCase("["+UdeJava.OUT_VARIABLE_NAME+"]")) {
+		if(paramName.equalsIgnoreCase("["+ UdeFormula.OUT_VARIABLE_NAME+"]")) {
 			return true;
 		}
-		else if(paramName.equalsIgnoreCase(UdeJava.OUT_VARIABLE_NAME)) {
+		else if(paramName.equalsIgnoreCase(UdeFormula.OUT_VARIABLE_NAME)) {
 			return true;
 		}
 		return false;
@@ -299,7 +283,7 @@ class UdeJava implements UDE {
 		for(ExprDependency dep : this.exprDependencies) {
 			dep.columns = dep.qname.resolveColumns(this.table);
 			if(dep.columns == null || dep.columns.getLength() < dep.qname.names.size()) {
-				this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Bind error", "Cannot resolve column path " + dep.pathName);
+				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve column path " + dep.pathName);
 				return;
 			}
 		}
@@ -356,7 +340,7 @@ class UdeJava implements UDE {
 			exp = builder.build(); // Here we get parsing exceptions which might need be caught and processed
 		}
 		catch(Exception e) {
-			this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Expression error.", e.getMessage());
+			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression error.", e.getMessage(), e);
 			return null;
 		}
 
@@ -366,7 +350,7 @@ class UdeJava implements UDE {
 		exp.setVariables(vals); // Validation requires variables to be set
 		net.objecthunter.exp4j.ValidationResult res = exp.validate(); // Boolean argument can be used to ignore unknown variables
 		if(!res.isValid()) {
-			this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Expression error.", res.getErrors() != null && res.getErrors().size() > 0 ? res.getErrors().get(0) : "");
+			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression error.", res.getErrors() != null && res.getErrors().size() > 0 ? res.getErrors().get(0) : "");
 			return null;
 		}
 
@@ -404,7 +388,7 @@ class UdeJava implements UDE {
 			exp = new com.udojava.evalex.Expression(transformedFormula);
 		}
 		catch(Exception e) {
-			this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Expression error.", e.getMessage());
+			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression error.", e.getMessage(), e);
 			return null;
 		}
 
@@ -416,7 +400,7 @@ class UdeJava implements UDE {
     		exp.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
     	}
     	catch(com.udojava.evalex.Expression.ExpressionException ee) {
-			this.translateError = new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Expression error.", ee.getMessage());
+			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression error.", ee.getMessage(), ee);
 			return null;
     	}
 
@@ -445,9 +429,26 @@ class UdeJava implements UDE {
 		return buf.toString();
 	}
 
-	public UdeJava() {
+    public static UdeFormula createInstance(String clazz, String formula, Table table) throws BistroError {
+
+        UdeFormula ude = null;
+
+        if(clazz.equals(UDE.Exp4j)) {
+            ude = new UdeExp4j(formula, table);
+        }
+        else if(clazz.equals(UDE.Evalex)) {
+            ude = new UdeEvalex(formula, table);
+        }
+        else {
+            ; // TODO: Error - UDE class not available/implemented
+        }
+
+        return ude;
+    }
+
+    public UdeFormula() {
 	}
-	public UdeJava(String formula, Table table) {
+	public UdeFormula(String formula, Table table) {
 		this.formula = formula;
 		this.table = table;
 

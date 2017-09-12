@@ -1,6 +1,9 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.expr;
 
-import java.util.ArrayList;
+import org.conceptoriented.bistro.core.BistroError;
+import org.conceptoriented.bistro.core.ColumnPath;
+import org.conceptoriented.bistro.core.NamePath;
+
 import java.util.List;
 
 /**
@@ -32,8 +35,8 @@ import java.util.List;
  * 
  */
 public interface UDE extends UdeEvaluate {
-    public static String Exp4j = "org.conceptoriented.bistro.core.expr.UdeJava";
-    public static String Evalex = "org.conceptoriented.bistro.core.expr.UdeJava";
+    public static String Exp4j = "org.conceptoriented.bistro.core.expr.UdeExp4j";
+    public static String Evalex = "org.conceptoriented.bistro.core.expr.UdeEvalex";
     public static String Mathparser = "org.conceptoriented.bistro.core.expr.UdeMathparser";
     public static String JavaScript = "org.conceptoriented.bistro.core.expr.UdeJavaScript";
 
@@ -53,14 +56,5 @@ public interface UDE extends UdeEvaluate {
 	 */
 	//public List<String> getParamDescriptions();
 
-	/**
-	 * Compute output value using the provide input values. 
-	 * The first parameter is the current output value (or null).
-	 * Note that all parameters are output values of different paths for one and the same input id.
-	 */
-	public void translate(String formula);
-	public List<BistroError> getTranslateErrors();
-
-	public Object evaluate(Object[] params, Object out);
-	public BistroError getEvaluateError();
+	public Object evaluate(Object[] params, Object out) throws BistroError;
 }

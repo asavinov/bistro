@@ -1,5 +1,7 @@
 package org.conceptoriented.bistro.core;
 
+import org.conceptoriented.bistro.core.expr.UDE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
 	public void evaluate() {
 		// Initialization
 		if(this.initExpr == null) { // Default
-			super.evaluateExprDefault();
+			super.column.setValue(); // Reset
 		}
 		else {
 			super.evaluateExpr(this.initExpr, null);

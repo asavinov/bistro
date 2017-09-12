@@ -1,6 +1,5 @@
 package org.conceptoriented.bistro.core;
 
-// TODO: add generic error which means no classification and the cause is stored as system level exception object in the corresponding field
 public enum BistroErrorCode {
 	NONE(0), 
 
@@ -10,8 +9,8 @@ public enum BistroErrorCode {
 	ELEMENT_UPDATE_ERROR(30),
 	ELEMENT_DELETE_ERROR(40),
 
-	TRANSLATE_ERROR(50),
-	EVALUATE_ERROR(70),
+	DEFINITION_ERROR(50),
+	EVALUATION_ERROR(70),
 
 	GENERAL(1000),
 	;

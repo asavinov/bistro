@@ -1,10 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -52,8 +48,11 @@ public class ColumnData {
 		this.values[id2offset(id)] = value;
 	}
 
-	protected void setValue(Object value) {
+	protected void setValue(Object value) { // All
 		Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
+	}
+	protected void setValue() { // All default value (depends on the column data type)
+		this.setValue(defaultValue);
 	}
 
     // TODO: Maybe return the newly added (valid) range
@@ -71,6 +70,8 @@ public class ColumnData {
 		// Move cells backward after deletion
 		//System.arraycopy(this.values, (int)offset, this.values, 0, (int)this.getLength());
 	}
+
+	Object defaultValue = null;
 
 	public ColumnData(long start, long end) {
 		this.id = UUID.randomUUID();

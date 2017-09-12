@@ -1,5 +1,7 @@
 package org.conceptoriented.bistro.core;
 
+import org.conceptoriented.bistro.core.expr.UDE;
+
 import java.util.List;
 
 /**
@@ -13,7 +15,7 @@ public class ColumnEvaluatorCalc extends ColumnEvaluatorBase {
 	public void evaluate() {
 		// Evaluate calc expression
 		if(this.ude == null) { // Default
-			super.evaluateExprDefault();
+			super.column.setValue(); // Reset
 		}
 		else {
 			super.evaluateExpr(ude, null);

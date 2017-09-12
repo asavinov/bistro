@@ -15,14 +15,18 @@ public class UdeLambda implements UDE {
     @Override public void setResolvedParamPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
     @Override public List<ColumnPath> getResolvedParamPaths() { return inputPaths; }
 
-    @Override public void translate(String formula) {}
-    @Override public List<BistroError> getTranslateErrors() { return null; }
-
     UdeEvaluate evaluateLambda;
-    @Override public Object evaluate(Object[] params, Object out) {
+    @Override public Object evaluate(Object[] params, Object out) throws BistroError {
         return evaluateLambda.evaluate(params, out);
     }
-    @Override public BistroError getEvaluateError() { return null; }
+
+    public static UdeLambda createInstance(UdeEvaluate lambda) throws BistroError {
+        UdeLambda ude = new UdeLambda(lambda);
+        if(lambda == null) {
+            throw new BistroError(BistroErrorCode.DEFINITION_ERROR, "Error creating expression", "Lambda cannot be null.");
+        }
+        return ude;
+    }
 
     public UdeLambda() {
     }

@@ -90,12 +90,24 @@ public class Schema {
         return ret;
 	}
 
+    public Column createColumn(String name, Table  input) {
+	    return this.createColumn(name, input, null);
+    }
 	public Column createColumn(String name, Table  input, Table output) {
+	    if(output == null) {
+            output = this.getTable("Object");
+        }
 		Column col = new Column(this, name, input, output);
 		this.columns.add(col);
 		return col;
 	}
+    public Column createColumn(String name, String input) {
+	    return this.createColumn(name, input, null);
+    }
 	public Column createColumn(String name, String input, String output) {
+	    if(output == null || output.isEmpty()) {
+	        output = "Object";
+        }
 		Column col = new Column(this, name, this.getTable(input), this.getTable(output));
 		this.columns.add(col);
 		return col;
@@ -180,8 +192,7 @@ public class Schema {
 		this.name = name;
 		
 		// Create primitive tables
-		Table doubleType = createTable("Double");
-		Table stringType = createTable("String");
+		Table objectType = createTable("Object");
 	}
 
 }

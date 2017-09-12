@@ -1,6 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.conceptoriented.bistro.core.expr.UDE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,23 +10,25 @@ import java.util.List;
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
 public class ColumnEvaluatorLink extends ColumnEvaluatorBase {
-	List<Pair<Column,UDE>> udes = new ArrayList<Pair<Column,UDE>>();
+	List<Column> columns = new ArrayList<>();
+	List<UDE> udes = new ArrayList<>();
 
 	@Override
 	public void evaluate() {
-		super.evaluateLink(udes);
+		super.evaluateLink(this.columns, this.udes);
 	}
 
 	@Override
 	public List<Column> getDependencies() {
-		List<Column> ret = new ArrayList<Column>();
+		List<Column> ret = new ArrayList<>();
 		if(udes == null) return ret;
 
-		for(Pair<Column,UDE> pair : udes) {
-			Column lhs = pair.getLeft();
-			if(!ret.contains(lhs)) ret.add(lhs);
+		for(Column col : this.columns) {
+			if (!ret.contains(col)) ret.add(col);
+		}
 
-			List<Column> deps = super.getExpressionDependencies(pair.getRight());
+		for(UDE ude : this.udes) {
+			List<Column> deps = super.getExpressionDependencies(ude);
 			for(Column col : deps) {
 				if(!ret.contains(col)) {
 					ret.add(col);
@@ -39,16 +41,8 @@ public class ColumnEvaluatorLink extends ColumnEvaluatorBase {
 	public ColumnEvaluatorLink(Column column, List<Column> columns, List<UDE> udes) {
 		super(column);
 
-		List<Pair<Column,UDE>> ude_pairs = new ArrayList<>();
-		for(int i=0; i<columns.size(); i++) {
-			ude_pairs.add(Pair.of(columns.get(i), udes.get(i)));
-		}
-
-		this.udes.addAll(ude_pairs);
-	}
-
-	public ColumnEvaluatorLink(Column column, List<Pair<Column,UDE>> udes) {
-		super(column);
+        this.columns.addAll(columns);
 		this.udes.addAll(udes);
 	}
+
 }

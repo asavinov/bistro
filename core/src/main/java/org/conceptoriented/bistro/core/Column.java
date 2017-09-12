@@ -2,7 +2,6 @@ package org.conceptoriented.bistro.core;
 
 import org.conceptoriented.bistro.core.expr.*;
 
-import java.lang.reflect.Constructor;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
@@ -56,6 +55,8 @@ public class Column {
 
     public void setValue(Object value) { this.data.setValue(value); this.isDirty = true; }
 
+    public void setValue() { this.data.setValue(); this.isDirty = true; }
+
     //
     // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
     //
@@ -65,18 +66,6 @@ public class Column {
 
     protected void remove() { this.data.remove(1); this.isDirty = true; }
     protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
-
-    @Deprecated // This probably should also moved to UtilsData which knows about all data types, conversions, default values etc.
-	public Object getDefaultValue() { // TODO: Depends on the column type. Maybe move to Data class or to Evaluator/Definition
-		Object defaultValue;
-		if(this.getOutput().isPrimitive()) {
-			defaultValue = 0.0;
-		}
-		else {
-			defaultValue = null;
-		}
-		return defaultValue;
-	}
 
     @Deprecated // Convenience method. Should be part of UtilsData with casts/conversions. Replace it everywhere by add() and setValue()
 	public long appendValue(Object value) {
@@ -307,28 +296,26 @@ public class Column {
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
         if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void calculate(String clazz, String formula) { // Specify UDE class/selector and formula parameter for this class
         this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
-        if(clazz.equals(UDE.Exp4j)) {
-
-            UDE expr = new UdeExp4j(formula, this.input);
-
-            this.definitionErrors.addAll(expr.getTranslateErrors());
-            if(this.definitionErrors.size() > 1) return;
-
-            this.evaluator = new ColumnEvaluatorCalc(this, expr);
-
-            if(this.isInCyle()) {
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-            }
+        UDE ude = null;
+        try {
+            ude = UdeFormula.createInstance(clazz, formula, this.input);
         }
-        else {
-            ; // TODO: Error - UDE class not available/implemented
+        catch(BistroError e) {
+            this.definitionErrors.add(e);
+            return;
+        }
+
+        this.evaluator = new ColumnEvaluatorCalc(this, ude);
+
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
@@ -338,12 +325,13 @@ public class Column {
         // Instantiate specified class
         UDE ude = null;
         try {
-            Constructor[] ccc = clazz.getConstructors();
             ude = (UDE)clazz.newInstance();
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression creation error.", "Cannot create instance of the specified expression class.", e));
+            return;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expression creation error.", "Cannot create instance of the specified expression class.", e));
+            return;
         }
 
         ude.setResolvedParamPaths(paths); // Set parameter paths (or use constructor)
@@ -351,21 +339,29 @@ public class Column {
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
         if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void calculate(UdeEvaluate lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
         this.setDefinitionType(DefinitionType.CALC); // Reset definition
 
-        UDE ude = new UdeLambda(lambda);
+        UDE ude = null;
+        try {
+            ude = UdeLambda.createInstance(lambda);
+        }
+        catch(BistroError e) {
+            this.definitionErrors.add(e);
+            return;
+        }
 
         ude.setResolvedParamPaths(paths); // Set parameter paths (or use constructor)
 
         this.evaluator = new ColumnEvaluatorCalc(this, ude); // Create evaluator
 
         if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            return;
         }
     }
 
@@ -379,45 +375,42 @@ public class Column {
         this.evaluator = new ColumnEvaluatorLink(this, columns, udes);
 
         if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void link(String clazz, List<String> names, List<String> formulas) { // Column names in the output table and expressions in the input table
         this.setDefinitionType(DefinitionType.LINK); // Reset definition
 
-        if(clazz.equals("EQUAL")) {
-            ; // TODO: Implement UdeEqual expression which simply returns value of the specified column
+        // Resolve all names
+        List<Column> columns = new ArrayList<>();
+        for(String name : names) {
+            Column col = this.output.getColumn(name);
+            if(col == null) {
+                // TODO: Add error
+                return;
+            }
+            columns.add(col);
         }
-        else if(clazz.equals(UDE.Exp4j)) {
-            // Resolve all names
-            List<Column> columns = new ArrayList<>();
-            for(String name : names) {
-                Column col = this.output.getColumn(name);
-                if(col == null) {
-                    // TODO: Add error
-                    return;
-                }
-                columns.add(col);
-            }
 
-            // Translate all formulas
-            List<UDE> exprs = new ArrayList<>();
-            for(String formula : formulas) {
-                UDE expr = new UdeExp4j(formula, this.input);
-                this.definitionErrors.addAll(expr.getTranslateErrors());
-                if(this.definitionErrors.size() > 1) return;
-                exprs.add(expr);
+        // Translate all formulas
+        List<UDE> udes = new ArrayList<>();
+        for(String formula : formulas) {
+            UdeFormula expr = null;
+            try {
+                expr = UdeFormula.createInstance(clazz, formula, this.input);
             }
-
-            this.evaluator = new ColumnEvaluatorLink(this, columns, exprs);
-
-            if(this.isInCyle()) {
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            catch(BistroError e) {
+                this.definitionErrors.add(e);
+                return;
             }
+            udes.add(expr);
         }
-        else {
-            ; // TODO: Error - UDE class not available/implemented
+
+        this.evaluator = new ColumnEvaluatorLink(this, columns, udes);
+
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
@@ -431,78 +424,63 @@ public class Column {
         this.evaluator = new ColumnEvaluatorAccu(this, initUde, accuUde, finUde, accuPath);
 
         if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
     public void accumulate(String clazz, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify UDE class/selector and formulas
         this.setDefinitionType(DefinitionType.ACCU); // Reset definition
 
-        if(clazz.equals(UDE.Exp4j)) {
+        // Accu table and link (group) path
+        Table accuTable = schema.getTable(accuTableName);
+        if(accuTable == null) { // Binding error
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Binding error.", "Cannot find table: " + accuTableName));
+            return;
+        }
 
-            ColumnPath accuPathColumns = null;
+        // Accu (group) path
+        ColumnPath accuPathColumns = accuLinkPath.resolveColumns(accuTable);
+        if(accuPathColumns == null) { // Binding error
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Binding error.", "Cannot find columns: " + accuLinkPath.toString()));
+            return;
+        }
 
-            // Accu table and link (group) path
-            Table accuTable = schema.getTable(accuTableName);
-            if(accuTable == null) { // Binding error
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find table: " + accuTableName));
+        // Initialization
+        UDE initExpr = null;
+        try {
+            initExpr = UdeFormula.createInstance(clazz, initFormula, this.input);
+        }
+        catch(BistroError e) {
+            this.definitionErrors.add(e);
+            return;
+        }
+
+        // Accumulation
+        UDE accuExpr = null;
+        try {
+            accuExpr = UdeFormula.createInstance(clazz, accuFormula, accuTable); // Note that we use a different table (not this column input)
+        }
+        catch(BistroError e) {
+            this.definitionErrors.add(e);
+            return;
+        }
+
+        // Finalization
+        UDE finExpr = null;
+        if(finFormula != null && !finFormula.isEmpty()) {
+            try {
+                finExpr = UdeFormula.createInstance(clazz, finFormula, this.input);
+            }
+            catch(BistroError e) {
+                this.definitionErrors.add(e);
                 return;
-            }
-            accuPathColumns = accuLinkPath.resolveColumns(accuTable);
-            if(accuPathColumns == null) { // Binding error
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Binding error.", "Cannot find columns: " + accuLinkPath.toString()));
-                return;
-            }
-
-            UDE initExpr = null;
-
-            // Initialization (always initialize - even for empty formula)
-            if(initFormula == null || initFormula.isEmpty()) { // TODO: We need UDE for constants and for equality (equal to the specified column)
-                initExpr = new UdeExp4j(this.getDefaultValue().toString(), this.input);
-            }
-            else {
-                initExpr = new UdeExp4j(initFormula, this.input);
-            }
-            this.definitionErrors.addAll(initExpr.getTranslateErrors());
-            if(this.definitionErrors.size() > 1) return; // Cannot proceed
-
-            // Accumulation
-            UDE accuExpr = null;
-            accuExpr = new UdeExp4j(accuFormula, accuTable);
-            this.definitionErrors.addAll(accuExpr.getTranslateErrors());
-            if(this.definitionErrors.size() > 1) return; // Cannot proceed
-
-            // Finalization
-            UDE finExpr = null;
-            if(finFormula != null && !finFormula.isEmpty()) {
-                finExpr = new UdeExp4j(finFormula, this.input);
-                this.definitionErrors.addAll(finExpr.getTranslateErrors());
-                if(this.definitionErrors.size() > 1) return; // Cannot proceed
-            }
-
-            // Errors
-            if(initExpr == null || accuExpr  == null /* || finExpr == null */) { // TODO: finExpr can be null in the case of no formula. We need to fix this and distinguis between errors and having no formula.
-                String frml = "";
-                if(initExpr == null) frml = initFormula;
-                else if(accuExpr == null) frml = accuFormula;
-                else if(finExpr == null) frml = finFormula;
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Translate error.", "Cannot create expression. " + frml));
-                return;
-            }
-
-            this.definitionErrors.addAll(initExpr.getTranslateErrors());
-            this.definitionErrors.addAll(accuExpr.getTranslateErrors());
-            // this.definitionErrors.addAll(finExpr.getTranslateErrors()); // TODO: Fix uncertainty with null expression in the case of no formula and in the case of errors
-            if(this.definitionErrors.size() > 1) return; // Cannot proceed
-
-            this.evaluator = new ColumnEvaluatorAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
-
-            if(this.isInCyle()) {
-                this.definitionErrors.add(new BistroError(BistroErrorCode.TRANSLATE_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             }
         }
-        else {
-            ; // TODO: Error - UDE class not available/implemented
+
+        this.evaluator = new ColumnEvaluatorAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
+
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 

@@ -1,7 +1,6 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Table {
 	private Schema schema;
@@ -23,7 +22,9 @@ public class Table {
 	}
 	
 	public boolean isPrimitive() {
-		if(name.equalsIgnoreCase("Double") || name.equalsIgnoreCase("Integer") || name.equalsIgnoreCase("String")) return true;
+		if(name.equalsIgnoreCase("Object") || name.equalsIgnoreCase("Double") || name.equalsIgnoreCase("Integer") || name.equalsIgnoreCase("String")) {
+			return true;
+		}
 		return false;
 	}
 
