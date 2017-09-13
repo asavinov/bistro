@@ -1,15 +1,15 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.formula;
 
 import org.conceptoriented.bistro.core.Table;
 
-public class UdeExp4j extends UdeFormula {
+public class FormulaExp4J extends FormulaBase {
 
-    public UdeExp4j() {
+    public FormulaExp4J() {
         super();
         isExp4j = true;
         isEvalex = false;
     }
-    public UdeExp4j(String formula, Table table) {
+    public FormulaExp4J(String formula, Table table) {
         super(formula, table);
         isExp4j = true;
         isEvalex = false;

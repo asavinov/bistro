@@ -1,11 +1,11 @@
-package org.conceptoriented.bistro.core.expr;
+package org.conceptoriented.bistro.core.formula;
 
 import org.conceptoriented.bistro.core.Table;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-public class UdeEvalex extends UdeFormula {
+public class FormulaEvalex extends FormulaBase {
 
     public static void evalexTest()
     {
@@ -36,7 +36,7 @@ public class UdeEvalex extends UdeFormula {
 
         result = new com.udojava.evalex.Expression("random() > 0.5").eval();
 
-        //e = new com.udojava.evalex.Expression("MAX('aaa', 'bbb')");
+        //e = new com.udojava.evalex.Expr("MAX('aaa', 'bbb')");
         // We can define custom functions but they can take only numbers (as constants).
         // EvalEx does not have string parameters (literals).
         // It does not recognize quotes. So maybe simply introduce string literals even if they will be converted into numbers, that is, just like string in setVariable.
@@ -45,12 +45,12 @@ public class UdeEvalex extends UdeFormula {
         e.eval();
     }
 
-    public UdeEvalex() {
+    public FormulaEvalex() {
         super();
         isExp4j = false;
         isEvalex = true;
     }
-    public UdeEvalex(String formula, Table table) {
+    public FormulaEvalex(String formula, Table table) {
         super(formula, table);
         isExp4j = false;
         isEvalex = true;

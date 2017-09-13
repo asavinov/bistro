@@ -3,6 +3,9 @@ package org.conceptoriented.bistro.core;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A sequence of columns where each next column starts from the data type (table) of the previous column.
+ */
 public class ColumnPath {
 
     public List<Column> columns = new ArrayList<>();
@@ -16,26 +19,43 @@ public class ColumnPath {
         return out;
     }
 
-    public int getLength() {
+    public int size() {
         return this.columns.size();
     }
 
     public Table getInput() {
-        // TODO: Check size
+        if(this.columns.size() == 0) return null;
         return this.columns.get(0).getInput();
     }
 
     public Table getOutput() {
-        // TODO: Check size
+        if(this.columns.size() == 0) return null;
         return this.columns.get(this.columns.size()-1).getOutput();
     }
 
-    public ColumnPath resolve(NamePath namePath, Table table) {
-        return this;
+    public static List<Column> getColumns(List<ColumnPath> paths) { // Extract (unique) columns from a list of paths
+        List<Column> columns = new ArrayList<>();
+
+        for(ColumnPath path : paths) {
+            for(Column col : path.columns) {
+                if(!columns.contains(col)) {
+                    columns.add(col);
+                }
+            }
+        }
+        return columns;
     }
 
     public static ColumnPath create(NamePath namePath, Table table) {
-        return new ColumnPath();
+        ColumnPath path = new ColumnPath();
+        for(String name : namePath.names) {
+            Column col = table.getColumn(name);
+            if(col == null) {
+                return path; // This path has shorter length
+            }
+            path.columns.add(col);
+        }
+        return path;
     }
 
     public ColumnPath(List<Column> columns) {

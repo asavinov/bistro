@@ -6,14 +6,6 @@ import java.util.UUID;
 /**
  * It is responsible for explicit representation of a function, that is, a mapping from input ids to output values.
  * This representation can be changed by setting outputs for certain inputs. And it is possible to request outputs.
- * 
- * Another purpose of this class is to represent the dirty state of the function, that is, whether it is up-to-date.
- * The first part of the status is whether some outputs have been changed (each time an output is change, the flag is raised).
- * The second part of the status whether some inputs have been added or removed without being appropriately processed (for each add or remove of the input, this status is changed).
- * For added and removed inputs, their range can be stored, that is, it is possible to retrieve the range of new (added) input id and the range of removed (deleted) input ids.
- * 
- * There are also functions for reseting the corresponding dirty statuses. 
- * Normally dirty status is reset after the corresponding recorded changes have been processed, that is, propagated through the schema to other functions which depend on them.
  */
 public class ColumnData {
 
@@ -28,9 +20,12 @@ public class ColumnData {
 	
 	private Range idRange = new Range(); // All valid input ids for which outputs are stored - other ids are not valid and will produce exception or arbitrary value (garbage)
 
-	private Object[] values; // This array stores the output values
+	private static int INITIAL_SIZE = 10;
+    private static int INCREMENT_SIZE = 5;
+    private Object[] values; // This array stores the output values
+    private Object defaultValue = null;
 
-	private int startIdOffset = 0; // Cell of the array where the start id is stored
+    private int startIdOffset = 0; // Cell of the array where the start id is stored
 
 	private int id2offset(long id) {
 		return this.startIdOffset + ((int) (id - this.idRange.start));
@@ -40,13 +35,9 @@ public class ColumnData {
 	// Data access
 	//
 	
-	protected Object getValue(long id) {
-		return this.values[id2offset(id)];
-	}
+	protected Object getValue(long id) { return this.values[id2offset(id)]; }
 
-	protected void setValue(long id, Object value) {
-		this.values[id2offset(id)] = value;
-	}
+	protected void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
 
 	protected void setValue(Object value) { // All
 		Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
@@ -55,29 +46,48 @@ public class ColumnData {
 		this.setValue(defaultValue);
 	}
 
-    // TODO: Maybe return the newly added (valid) range
 	protected void add() { this.add(1); }
     protected void add(long count) { // Remove the oldest records with lowest ids
-        // TODO: Allocate more or shift back if necessary
-        this.values[id2offset(this.idRange.end)] = null;
-        this.idRange.end++;
+
+		// Check if not enough space and allocate more if necessary
+        int additionalSize = (this.startIdOffset + (int)idRange.getLength() + (int)count) - this.values.length;
+        if(additionalSize > 0) { // More space is needed
+            additionalSize = INCREMENT_SIZE + additionalSize / INCREMENT_SIZE; // How many increments we need to cover the additional size
+            this.values = Arrays.copyOf(this.values, this.values.length + additionalSize);
+        }
+
+        // Initialize
+        Arrays.fill(this.values, this.id2offset(this.idRange.end), this.id2offset(this.idRange.end) + (int)count, this.defaultValue);
+
+        this.idRange.end += count;
     }
 
-    // TODO: Maybe return the old deleted (invalid) range
     protected void remove() { this.remove(1); }
 	protected void remove(long count) { // Remove the oldest records with lowest ids
-		// TODO:
-		// Move cells backward after deletion
-		//System.arraycopy(this.values, (int)offset, this.values, 0, (int)this.getLength());
-	}
 
-	Object defaultValue = null;
+        // Delete
+        this.idRange.start += count;
+        this.startIdOffset += count;
+
+        // Check if there is enough space to free (garbage collection)
+        if(this.startIdOffset > INCREMENT_SIZE) {
+            // Shift values to the beginning
+            System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
+            this.startIdOffset = 0;
+
+            if(this.values.length > INITIAL_SIZE + INITIAL_SIZE) { // Do not make smaller than initial size
+                int additionalSize = this.values.length - (int) idRange.getLength(); // Unused space
+                additionalSize = (additionalSize / INCREMENT_SIZE) * INCREMENT_SIZE; // How much (whole increments) we want to remove
+                this.values = Arrays.copyOf(this.values, this.values.length - additionalSize);
+            }
+        }
+	}
 
 	public ColumnData(long start, long end) {
 		this.id = UUID.randomUUID();
 
 		// Initialize storage
-		this.values = new Object[1000];
+		this.values = new Object[INITIAL_SIZE];
 
 		// Initialize ranges according to the input table (all records new)
 		this.idRange.start = start;

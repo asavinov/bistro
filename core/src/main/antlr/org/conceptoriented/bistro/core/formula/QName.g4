@@ -2,7 +2,7 @@ grammar QName;
 import Common;
 
 @header {
-  package org.conceptoriented.bistro.core.expr;
+  package org.conceptoriented.bistro.core.formula;
 }
 
 // path of names

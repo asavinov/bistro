@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A dot separated sequence of names. 
- * The sequence can start either from schema or from table or from column. 
- * The sequence can continue as a column path.
+ * Ab arbitrary sequence of names which normally represents a column path possibly with a table name as the first elemetn.
  */
 public class NamePath {
 	

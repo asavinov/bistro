@@ -1,7 +1,5 @@
 package org.conceptoriented.bistro.core;
 
-import org.conceptoriented.bistro.core.expr.UDE;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +7,11 @@ import java.util.List;
  * It is an implementation of evaluator for link columns.
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
-public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
+public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 
-	UDE initExpr;
-	UDE accuExpr;
-	UDE finExpr;
+	Expression initExpr;
+	Expression accuExpr;
+	Expression finExpr;
 
 	ColumnPath accuPathColumns;
 
@@ -41,20 +39,20 @@ public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
 
 	@Override
 	public List<Column> getDependencies() {
-		List<Column> ret = new ArrayList<Column>();
+		List<Column> ret = new ArrayList<>();
 
 		if(this.initExpr != null) {
-			for(Column col : super.getExpressionDependencies(this.initExpr)) {
+			for(Column col : ColumnPath.getColumns(this.initExpr.getParameterPaths())) {
 				if(!ret.contains(col)) ret.add(col);
 			}
 		}
 		if(this.accuExpr != null) {
-			for(Column col : super.getExpressionDependencies(this.accuExpr)) {
+			for(Column col : ColumnPath.getColumns(this.accuExpr.getParameterPaths())) {
 				if(!ret.contains(col)) ret.add(col);
 			}
 		}
 		if(this.finExpr != null) {
-			for(Column col : super.getExpressionDependencies(this.finExpr)) {
+			for(Column col : ColumnPath.getColumns(this.finExpr.getParameterPaths())) {
 				if(!ret.contains(col)) ret.add(col);
 			}
 		}
@@ -66,7 +64,7 @@ public class ColumnEvaluatorAccu extends ColumnEvaluatorBase {
 		return ret;
 	}
 
-	public ColumnEvaluatorAccu(Column column, UDE initExpr, UDE accuExpr, UDE finExpr, ColumnPath accuPathColumns) {
+	public ColumnDefinitionAccu(Column column, Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPathColumns) {
 		super(column);
 
 		this.initExpr = initExpr;

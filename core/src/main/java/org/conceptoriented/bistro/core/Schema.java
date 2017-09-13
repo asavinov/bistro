@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Stream schema stores the complete data state and is able to consistently update it. 
- */
 public class Schema {
 	
 	private final UUID id;

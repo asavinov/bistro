@@ -1,6 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-public enum DefinitionType {
+public enum ColumnDefinitionType {
 	NONE(0), // No computations
 	CALC(60), // Calculate column
 	LINK(70), // Link column
@@ -13,16 +13,16 @@ public enum DefinitionType {
 		return value;
 	}
 
-	public static DefinitionType fromInt(int value) {
-	    for (DefinitionType kind : DefinitionType.values()) {
+	public static ColumnDefinitionType fromInt(int value) {
+	    for (ColumnDefinitionType kind : ColumnDefinitionType.values()) {
 	        if (kind.getValue() == value) {
 	            return kind;
 	        }
 	    }
-	    return DefinitionType.NONE;
+	    return ColumnDefinitionType.NONE;
 	 }
 
-	private DefinitionType(int value) {
+	private ColumnDefinitionType(int value) {
 		this.value = value;
 	}
 }

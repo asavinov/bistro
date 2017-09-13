@@ -1,7 +1,5 @@
 package org.conceptoriented.bistro.core;
 
-import org.conceptoriented.bistro.core.expr.UDE;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,26 +7,26 @@ import java.util.List;
  * It is an implementation of evaluator for link columns.
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
-public class ColumnEvaluatorLink extends ColumnEvaluatorBase {
+public class ColumnDefinitionLink extends ColumnDefinitionBase {
 	List<Column> columns = new ArrayList<>();
-	List<UDE> udes = new ArrayList<>();
+	List<Expression> exprs = new ArrayList<>();
 
 	@Override
 	public void evaluate() {
-		super.evaluateLink(this.columns, this.udes);
+		super.evaluateLink(this.columns, this.exprs);
 	}
 
 	@Override
 	public List<Column> getDependencies() {
 		List<Column> ret = new ArrayList<>();
-		if(udes == null) return ret;
+		if(exprs == null) return ret;
 
 		for(Column col : this.columns) {
 			if (!ret.contains(col)) ret.add(col);
 		}
 
-		for(UDE ude : this.udes) {
-			List<Column> deps = super.getExpressionDependencies(ude);
+		for(Expression expr : this.exprs) {
+			List<Column> deps = ColumnPath.getColumns(expr.getParameterPaths());
 			for(Column col : deps) {
 				if(!ret.contains(col)) {
 					ret.add(col);
@@ -38,11 +36,11 @@ public class ColumnEvaluatorLink extends ColumnEvaluatorBase {
 		return ret;
 	}
 
-	public ColumnEvaluatorLink(Column column, List<Column> columns, List<UDE> udes) {
+	public ColumnDefinitionLink(Column column, List<Column> columns, List<Expression> exprs) {
 		super(column);
 
         this.columns.addAll(columns);
-		this.udes.addAll(udes);
+		this.exprs.addAll(exprs);
 	}
 
 }

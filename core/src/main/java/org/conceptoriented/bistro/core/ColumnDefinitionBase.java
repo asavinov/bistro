@@ -3,37 +3,18 @@ package org.conceptoriented.bistro.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.conceptoriented.bistro.core.expr.UDE;
-
-/**
- * This class knows how to produce output values for all inputs using the provided expressions.
- * It implementat a certain logic of computations which is specific for each definition definitionType.
- * It knows the following aspects:
- * - Looping: the main (loop) table and other tables needed for evaluation of this column definition
- * - Reading inputs: column paths which are used to compute the output including expression parameters or group path for accumulation
- * - Writing output: how to find the output and write it to this column data
- * This class is unaware of the following aspects:
- * - Serialization and syntax of formulas. It uses only expression objects which provide one method for computing single output.
- * - How to parse, bind or build native computing elements (expressions) 
- */
-public interface ColumnEvaluator {
-	public void evaluate();
-	public List<BistroError> getErrors();
-	public List<Column> getDependencies();
-}
-
-abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience class for implementing common functions
+public abstract class ColumnDefinitionBase implements ColumnDefinition { // Convenience class for implementing common functions
 
 	Column column;
-	
+
 	List<BistroError> definitionErrors = new ArrayList<>();
 	@Override
 	public List<BistroError> getErrors() {
 		return this.definitionErrors;
 	}
 
-	protected void evaluateExpr(UDE expr, ColumnPath accuLinkPath) {
-		
+	protected void evaluateExpr(Expression expr, ColumnPath accuLinkPath) {
+
 		definitionErrors.clear(); // Clear state
 
 		Table mainTable = accuLinkPath == null ? this.column.getInput() : accuLinkPath.getInput(); // Loop/scan table
@@ -43,7 +24,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 		Range mainRange = mainTable.getIdRange();
 
 		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading values
-		List<ColumnPath> paramPaths = expr.getResolvedParamPaths();
+		List<ColumnPath> paramPaths = expr.getParameterPaths();
 		Object[] paramValues = new Object[paramPaths.size()]; // Will store values for all params
 		Object out; // Current output value
 		Object result; // Will be written to output for each input
@@ -58,7 +39,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 				paramValues[paramNo] = paramPath.getValue(i);
 				paramNo++;
 			}
-			
+
 			// Read current out value
 			out = this.column.getValue(g); // [ACCU-specific] [FIN-specific]
 
@@ -76,7 +57,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 		}
 	}
 
-    protected void evaluateLink(List<Column> columns, List<UDE> exprs) {
+    protected void evaluateLink(List<Column> columns, List<Expression> exprs) {
 
         definitionErrors.clear(); // Clear state
 
@@ -93,10 +74,10 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
         List< Object > rhsResults = new ArrayList<>(); // Record of values used for search (produced by expressions and having same length as column list)
 
         // Initialize these lists for each member expression
-        for(UDE ude : exprs) {
-            int paramCount = ude.getParamPaths().size();
+        for(Expression expr : exprs) {
+            int paramCount = expr.getParameterPaths().size();
 
-            rhsParamPaths.add( ude.getResolvedParamPaths() );
+            rhsParamPaths.add( expr.getParameterPaths() );
             rhsParamValues.add( new Object[ paramCount ] );
             rhsResults.add( null );
         }
@@ -117,7 +98,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
                 }
 
                 // Evaluate this member expression
-                UDE expr = exprs.get(udeNo);
+                Expression expr = exprs.get(udeNo);
                 Object result;
                 try {
                     result = expr.evaluate(paramValues, null);
@@ -138,21 +119,7 @@ abstract class ColumnEvaluatorBase implements ColumnEvaluator { // Convenience c
 
     }
 
-	protected List<Column> getExpressionDependencies(UDE expr) { // Get parameter paths from expression and extract (unique) columns from them
-		List<Column> columns = new ArrayList<>();
-		
-		List<ColumnPath> paths = expr.getResolvedParamPaths();
-		for(ColumnPath path : paths) {
-			for(Column col : path.columns) {
-				if(!columns.contains(col) && col != this.column) {
-					columns.add(col);
-				}
-			}
-		}
-		return columns;
-	}
-
-	public ColumnEvaluatorBase(Column column) {
+	public ColumnDefinitionBase(Column column) {
 		this.column = column;
 	}
 
