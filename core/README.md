@@ -1,4 +1,4 @@
-# Bistro: calculate-accumulate-link 
+# Bistro: Calculate∙Link∙Accumulate
 
 *Bistro* is a novel, general purpose, light-weight data processing engine which changes the way data is being processed. 
 It going to be as simple as a spreadsheet and as powerful as SQL. 
@@ -14,14 +14,12 @@ As a general purpose engine, Bistro can be applied to many problems like data in
 
 ## Create schema (tables and columns)
 
-* names - by default unique names, if not unique then exception/error creating -> see how elements are created in other frameworks
-* data type/operation/definition - how to specify data type: enum, string, guid. Data type is *native* storage and native represenation/operations.
+* names - Case insenstive while resolution and findning
+* data type - currently only one basic data type: Object. 
+The data processing function must themselves guarantee the correctness of operations with the real data type. For example, if Double or String is stored in columns.
 
 * error handling - exceptions/returns - result for operations
 * status handling - fields maybe referencing previous error/exception
-
-* column definitionType - by default USER (not derived, manually set values will be overwritten, no evaluation/transaltion)
-* table definitionType - by default derived - manually added/removed records will be deleted/overwritten
 
 ## Three types of derived columns
 
@@ -36,6 +34,7 @@ Define how column calculates its output using an expression which can be provide
   * Exp4j
   * Evalex
   * JavaScript
+  * Java
 * User defined class implementing the UDE interface along with the specification of column which are used as inputs
 * Lambda and specification of its inputs as a number of column paths
 
