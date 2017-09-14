@@ -1,15 +1,14 @@
 # Bistro: calculate-accumulate-link 
 
-Bistro is a Java library for column-oriented data processing.
-Its unique distribuishing feature is that data processing is described as operations with columns 
-and can be characterized as Calculate-Accumulate-Link (CAL) because of the three column operations.   
-Formally, this means that data transformations are represented as a graph of operations with functions 
-rather then a graph of operations with sets in other formalisms. It is also opposed to the map-reduce 
-data processing paradigm because instead of the map and reduce set operations it uses three 
-column operations: calculate, accumulate and link. The formal basis for the Bistro column-oriented 
-data processing engine is a novel data model called the concept-oriented model.
-As a general purpose engine, Bistro can be applied to many problems like data integration, 
-data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing.
+*Bistro* is a novel, general purpose, light-weight data processing engine which changes the way data is being processed. 
+It going to be as simple as a spreadsheet and as powerful as SQL. 
+At its core, it relies on a *column-oriented* data representation and processing engine which is unique in that its logic is described as a DAG of *column operations* as opposed to table operations in most other frameworks. 
+Computations in Bistro are performed by *evaluating* columns which have custom definitions in terms of other columns. 
+Bistro provides three column definition (operation) types: calculate columns, link columns and accumulate columns. 
+This novel *calculate-link-accumulate* (CLA) data processing paradigm is an alternative to conventional SQL-like languages, map-reduce and other set-oriented approaches. 
+Formally, Bistro is an implementation of the *concept-oriented model* (COM) where the main unit of representation and processing is that of a function. 
+An advantage of this model is that it does not use such operations as join and group-by which are known to be error-prone, difficult to comprehend, require high expertise and might be inefficient when applied to analytical data processing workloads. 
+As a general purpose engine, Bistro can be applied to many problems like data integration, data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing.
 
 # How it works
 
