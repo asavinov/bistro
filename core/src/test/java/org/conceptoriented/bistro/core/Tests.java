@@ -102,20 +102,10 @@ public class Tests {
         Column ta = s.getColumn("T", "A");
         Column tb = s.getColumn("T", "B");
 
-        // Use formulas
-        tb.calculate(Formula.Exp4j, "2 * [A] + 1");
-        tb.evaluate();
-
-        assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
-
-        assertEquals(11.0, (Double) tb.getValue(0), Double.MIN_VALUE);
-        assertEquals(Double.NaN, tb.getValue(1));
-        assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
-
         // Use objects
         List<ColumnPath> paths = Arrays.asList(new ColumnPath(Arrays.asList(ta)));
-        tb.calculate(CustomCalcEval.class, paths);
-        tb.evaluate();
+        tb.calc(CustomCalcEval.class, paths);
+        tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
@@ -124,8 +114,8 @@ public class Tests {
         assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
 
         // Use lambda
-        tb.calculate((p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1, paths);
-        tb.evaluate();
+        tb.calc((p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1, paths);
+        tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
@@ -158,26 +148,19 @@ public class Tests {
         Table t2 = s.getTable("T2");
         Column t2c = t2.getColumn("C");
 
-        // Use formulas
-        t2c.link(Formula.Exp4j, Arrays.asList("A", "B"), Arrays.asList("[A]", "[B]")); // [A]=[A]; [B]=[B]
-        t2c.evaluate();
-
-        // Check correctness of dependencies
-        List<Column> t2c_deps = t2c.getDependencies();
-        assertTrue(t2c_deps.contains(s.getColumn("T2", "A")));
-        assertTrue(t2c_deps.contains(s.getColumn("T2", "B")));
-
-        assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // Appended
-
         // Use Expression instances
-        List<Column> columns = Arrays.asList(s.getColumn("T", "A"), s.getColumn("T", "B"));
-        List<Expression> exprs = Arrays.asList(new FormulaExp4J("[A]", t2), new FormulaExp4J("[B]", t2));
+        List<Column> columns = Arrays.asList(t.getColumn("A"), t.getColumn("B"));
+
+        Expression e1 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("A"))));
+        Expression e2 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("B"))));
+        List<Expression> exprs = Arrays.asList(e1, e2);
 
         t2c.link(columns, exprs);
 
+        t2c.eval();
+
         // Check correctness of dependencies
-        t2c_deps = t2c.getDependencies();
+        List<Column> t2c_deps = t2c.getDependencies();
         assertTrue(t2c_deps.contains(s.getColumn("T2", "A")));
         assertTrue(t2c_deps.contains(s.getColumn("T2", "B")));
 
@@ -236,8 +219,8 @@ public class Tests {
         // Create custom accu expression and bind to certain parameter paths
         Expression accuExpr = new CustomAccuExpr(Arrays.asList(new ColumnPath(s.getColumn("T2", "Id"))));
 
-        ta.accumulate(new FormulaExp4J("0.0", s.getTable("T")), accuExpr, null, new ColumnPath(t2g));
-        ta.evaluate(); // It has to also evaluate the accu (group) columns
+        ta.accu(new FormulaExp4J("0.0", s.getTable("T")), accuExpr, null, new ColumnPath(t2g));
+        ta.eval(); // It has to also eval the accu (group) columns
 
         // Check correctness of dependencies
         List<Column> ta_deps = ta.getDependencies();
@@ -247,43 +230,6 @@ public class Tests {
         assertEquals(20.0, ta.getValue(0));
         assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
-
-
-        // The same accu expression but translated from a formula
-        accuExpr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
-        ;
-
-        ta.accumulate(new FormulaExp4J("0.0", s.getTable("T")), accuExpr, null, new ColumnPath(t2g));
-        ta.evaluate();
-
-        // Check correctness of dependencies
-        ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
-        assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-
-
-        // The same using formulas
-        ta.accumulate(Formula.Exp4j, "0.0", " [out] + 2.0 * [Id] ", null, "T2", new NamePath("G"));
-        ta.evaluate();
-
-        // Check correctness of dependencies
-        ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
-        assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-
-
-        // Test how dirty status is propagated through dependencies
-        t2.getColumn("Id").setValue(2, 5.0); // Change (make dirty) non-derived column
-        s.evaluate(); // Both t2g and ta have to be evaluated
-        assertEquals(30.0, ta.getValue(0));
     }
 
     Schema createAccuSchema() {

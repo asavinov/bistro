@@ -3,7 +3,7 @@ package org.conceptoriented.bistro.core;
 import java.util.List;
 
 /**
- * It is an implementation of evaluator for calc columns.
+ * It is an implementation of definition for calc columns.
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
 public class ColumnDefinitionCalc extends ColumnDefinitionBase {
@@ -11,7 +11,7 @@ public class ColumnDefinitionCalc extends ColumnDefinitionBase {
 	Expression expr;
 
 	@Override
-	public void evaluate() {
+	public void eval() {
 		// Evaluate calc expression
 		if(this.expr == null) { // Default
 			super.column.setValue(); // Reset

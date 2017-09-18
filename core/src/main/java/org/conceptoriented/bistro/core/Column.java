@@ -68,7 +68,7 @@ public class Column {
     //
     // Data dirty state (~hasDirtyDeep)
     //
-    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by evaluate procedure - isDirty is also ignored.
+    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by eval procedure - isDirty is also ignored.
 
     // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
     // 2) set this output values (this function changes) -> or any of its dependencies recursively
@@ -98,9 +98,9 @@ public class Column {
     // Dependencies
     //
 
-    protected List<Column> getDependencies() {
-        if(this.evaluator == null) return new ArrayList<>();
-        List<Column> deps = this.evaluator.getDependencies();
+    public List<Column> getDependencies() {
+        if(this.definition == null) return new ArrayList<>();
+        List<Column> deps = this.definition.getDependencies();
         if(deps == null) return new ArrayList<>();
         return deps;
     }
@@ -161,10 +161,10 @@ public class Column {
     // Evaluate
     //
 
-    ColumnDefinition evaluator; // It is instantiated by cal-link-accu methods (or translate errors are added)
+    ColumnDefinition definition; // It is instantiated by cal-link-accu methods (or translate errors are added)
 
-    // The strategy is to start from the goal (this column), recursively evaluate all dependencies and finally evaluate this column
-    public void evaluate() {
+    // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column
+    public void eval() {
 
         // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
@@ -178,13 +178,13 @@ public class Column {
         // Clear all evaluation errors before any new evaluation
         this.evaluationErrors.clear();
 
-        // If there are some definition errors then no possibility to evaluate (including cycles)
+        // If there are some definition errors then no possibility to eval (including cycles)
         if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
             return;
         }
         // No definition errors - canEvaluate true
 
-        // If everything is up-to-date then there is no need to evaluate
+        // If everything is up-to-date then there is no need to eval
         if(!this.hasDirtyDeep()) { // this.needEvaluate false
             return;
         }
@@ -193,7 +193,7 @@ public class Column {
         // Evaluate dependencies recursively
         for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
             for(Column dep : deps) {
-                dep.evaluate(); // Whether it is really evaluated depends on the need (dirty status etc.)
+                dep.eval(); // Whether it is really evaluated depends on the need (dirty status etc.)
             }
         }
 
@@ -204,9 +204,9 @@ public class Column {
         // No errors while evaluating dependencies
 
         // All dependencies are ok so this column can be evaluated
-        this.evaluator.evaluate();
+        this.definition.eval();
 
-        this.evaluationErrors.addAll(this.evaluator.getErrors());
+        this.evaluationErrors.addAll(this.definition.getErrors());
 
         if(this.evaluationErrors.size() == 0) {
             this.isDirty = false; // Clean the state (remove dirty flag)
@@ -228,7 +228,7 @@ public class Column {
         this.definitionType = definitionType;
         this.definitionErrors.clear();
         this.evaluationErrors.clear();
-        this.evaluator = null;
+        this.definition = null;
         this.isDirty = true;
     }
     public boolean isDerived() {
@@ -262,17 +262,17 @@ public class Column {
     }
 
     // Patterns:
-    // 1) calculate(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
-    // 2) calculate(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
+    // 1) calc(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
+    // 2) calc(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
 
     //
     // Calcuate. Convert input parameters into an Evaluator object and ealuate it in the case of immediate (eager) action.
     //
 
-    public void calculate(Evaluator lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
+    public void calc(Evaluator lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
-        this.evaluator = new ColumnDefinitionCalc(this, lambda, paths); // Create evaluator
+        this.definition = new ColumnDefinitionCalc(this, lambda, paths); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
 
         if(this.isInCyle()) {
@@ -281,7 +281,7 @@ public class Column {
         }
     }
 
-    public void calculate(Class clazz, List<ColumnPath> paths) {
+    public void calc(Class clazz, List<ColumnPath> paths) {
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         // Instantiate the specified class
@@ -295,10 +295,10 @@ public class Column {
 
         Expression expr = null;
         if(instance instanceof Expression) {
-            this.evaluator = new ColumnDefinitionCalc(this, (Expression) instance, paths);
+            this.definition = new ColumnDefinitionCalc(this, (Expression) instance, paths);
         }
         else if(instance instanceof Evaluator) {
-            this.evaluator = new ColumnDefinitionCalc(this, (Evaluator) instance, paths);
+            this.definition = new ColumnDefinitionCalc(this, (Evaluator) instance, paths);
         }
         else {
             // TODO: Error: wrong class
@@ -312,7 +312,7 @@ public class Column {
         }
     }
 
-    public void calculate(String formulaClass, String formula) { // Specify Expression class/selector and formula parameter for this class
+    public void calc(String formulaClass, String formula) { // Specify Expression class/selector and formula parameter for this class
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         Expression expr = null;
@@ -324,7 +324,7 @@ public class Column {
             return;
         }
 
-        this.evaluator = new ColumnDefinitionCalc(this, expr);
+        this.definition = new ColumnDefinitionCalc(this, expr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -338,7 +338,7 @@ public class Column {
     public void link(List<Column> columns, List<Expression> exprs) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
-        this.evaluator = new ColumnDefinitionLink(this, columns, exprs);
+        this.definition = new ColumnDefinitionLink(this, columns, exprs);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -373,7 +373,7 @@ public class Column {
             exprs.add(expr);
         }
 
-        this.evaluator = new ColumnDefinitionLink(this, columns, exprs);
+        this.definition = new ColumnDefinitionLink(this, columns, exprs);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -384,17 +384,17 @@ public class Column {
     // Accumulate
     //
 
-    public void accumulate(Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
+    public void accu(Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        this.evaluator = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPath);
+        this.definition = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPath);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void accumulate(String formulaClass, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify Expression class/selector and formulas
+    public void accu(String formulaClass, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify Expression class/selector and formulas
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
         // Accu table and link (group) path
@@ -443,7 +443,7 @@ public class Column {
             }
         }
 
-        this.evaluator = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
+        this.definition = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

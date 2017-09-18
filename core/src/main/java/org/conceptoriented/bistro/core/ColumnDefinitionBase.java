@@ -19,7 +19,7 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 
 		Table mainTable = accuLinkPath == null ? this.column.getInput() : accuLinkPath.getInput(); // Loop/scan table
 
-		// ACCU: Currently we do full re-evaluate by resetting the accu column outputs and then making full scan through all existing facts
+		// ACCU: Currently we do full re-eval by resetting the accu column outputs and then making full scan through all existing facts
 		// ACCU: The optimal approach is to apply negative accu function for removed elements and then positive accu function for added elements
 		Range mainRange = mainTable.getIdRange();
 

@@ -120,20 +120,20 @@ public class Schema {
 	/**
 	 * Evaluate all columns of the schema. Only dirty columns without definitionErrors will be evaluated taking into account their dependencies.
 	 */
-	public void evaluate() {
+	public void eval() {
 	    for(Column col : this.columns) {
             col.getEvaluationErrors().clear();
         }
 
-		// The strategy is to start from the columns which already can be evaluated, evaluate them, then again generate columns which can be evaluted (by excluding the previous ones) and so on until no columns can be evaluted.
-        // Alternatively, we could get all terminal columns (with no next columns) and evaluate them in a loop
+		// The strategy is to start from the columns which already can be evaluated, eval them, then again generate columns which can be evaluted (by excluding the previous ones) and so on until no columns can be evaluted.
+        // Alternatively, we could get all terminal columns (with no next columns) and eval them in a loop
 		List<Column> done = new ArrayList<>();
 		for(List<Column> cols = this.getEvaluatableColumns(null); cols.size() > 0; cols = this.getEvaluatableColumns(done)) { // Loop on expansion layers of dependencies forward
 			for(Column col : cols) {
                 if(col.isDirty()) { // This status will be cleared after evaluation so we exiplicitly propagate it to the dependents
                     col.getDependants().forEach(x -> x.setDirty());
                 }
-                col.evaluate();
+                col.eval();
 			}
 			done.addAll(cols);
 		}
