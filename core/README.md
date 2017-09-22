@@ -15,6 +15,14 @@ Command line:
 
 ## General
 
+* Simplify definition methods:
+  * Use arrays instead of lists
+  * calc(lambda, column[]) - use a list of columns as a shortcut for list of column paths. Indeed, it is much simpler to provide columns or columnn names instead of paths.
+  * calc(lambda, String[]) - use a list of column names (also list of NamePaths)
+  * Provide an option for default value, for example, 0.0 or NaN instead of null. It then guarantees null-safety which makes lambdas much simpler (not null-checks)
+  * Link columns can be defined without lambda/expressions - using simply equality of columns, that is, we specify columns that have to be equal.
+  * Remove init/finalize from accu completely. Introduce defaultValue method which is important because we can omit initialize (and finalize) from accu. The any column will be reset before it is evaluated. Alternatively, use initial value in accu parameters (instead of lambda).
+
 * Core - make name comparison case-sensitive (like TF, Pandas etc.) Other libs/apps can use their own rules.
 * Formula API and implementation in a separate package. Later move it to a separate project with its own deps (Antlr, string utils for comparison etc.)
 * Maven public artifact
