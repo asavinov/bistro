@@ -84,7 +84,7 @@ public class TestsFormula {
                 new FormulaExp4J("[B]", t2)
         );
 
-        t2c.link(columns, exprs);
+        t2c.link(columns, exprs, true);
 
         t2c.eval();
     }
@@ -140,7 +140,7 @@ public class TestsFormula {
         // Accu expression translated from a formula
         Expression accuExpr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
-        ta.accu(new FormulaExp4J("0.0", s.getTable("T")), accuExpr, null, new ColumnPath(t2g));
+        ta.accu(accuExpr, new ColumnPath(t2g));
         ta.eval();
 
         // Check correctness of dependencies

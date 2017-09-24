@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class knows how to produce output values for all column inputs.
- * The logic for computing individual values (including possible translation) is provided by expressions.
+ * This class knows how to produce output columnPaths for all column inputs.
+ * The logic for computing individual columnPaths (including possible translation) is provided by expressions.
  * This class implements the following aspects:
  * - Iterating: the main (loop) table and other tables needed for evaluation of this column outputs
  * - Reading inputs: column paths which are used to compute the output including expression parameters or group path for accumulation

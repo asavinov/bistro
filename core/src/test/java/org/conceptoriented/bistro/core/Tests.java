@@ -99,8 +99,9 @@ public class Tests {
     @Test
     public void calcTest() {
         Schema s = this.createCalcSchema();
-        Column ta = s.getColumn("T", "A");
-        Column tb = s.getColumn("T", "B");
+        Table t = s.getTable("T");
+        Column ta = t.getColumn("A");
+        Column tb = t.getColumn("B");
 
         // Use objects
         List<ColumnPath> paths = Arrays.asList(new ColumnPath(Arrays.asList(ta)));
@@ -148,21 +149,36 @@ public class Tests {
         Table t2 = s.getTable("T2");
         Column t2c = t2.getColumn("C");
 
-        // Use Expression instances
+        // Use column paths
         List<Column> columns = Arrays.asList(t.getColumn("A"), t.getColumn("B"));
+        List<ColumnPath> paths = Arrays.asList(new ColumnPath(t2.getColumn("A")), new ColumnPath(t2.getColumn("B")));
 
-        Expression e1 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("A"))));
-        Expression e2 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("B"))));
-        List<Expression> exprs = Arrays.asList(e1, e2);
-
-        t2c.link(columns, exprs);
-
+        t2c.link(
+                columns, // A and B from T
+                paths // A and B from T2
+        );
         t2c.eval();
 
         // Check correctness of dependencies
         List<Column> t2c_deps = t2c.getDependencies();
-        assertTrue(t2c_deps.contains(s.getColumn("T2", "A")));
-        assertTrue(t2c_deps.contains(s.getColumn("T2", "B")));
+        assertTrue(t2c_deps.contains(t2.getColumn("A")));
+        assertTrue(t2c_deps.contains(t2.getColumn("B")));
+
+        assertEquals(0L, t2c.getValue(0)); // Existing
+        assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
+
+        // Use Expression instances
+        Expression e1 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("A"))));
+        Expression e2 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("B"))));
+        List<Expression> exprs = Arrays.asList(e1, e2);
+
+        t2c.link(columns, exprs, true);
+        t2c.eval();
+
+        // Check correctness of dependencies
+        t2c_deps = t2c.getDependencies();
+        assertTrue(t2c_deps.contains(t2.getColumn("A")));
+        assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
@@ -210,22 +226,43 @@ public class Tests {
     @Test
     public void accuTest() {
         Schema s = this.createAccuSchema();
+        Table t = s.getTable("T");
         Table t2 = s.getTable("T2");
 
         // Accu (group) formula
-        Column ta = s.getColumn("T", "A");
-        Column t2g = s.getColumn("T2", "G");
+        Column ta = t.getColumn("A");
+        Column t2g = t2.getColumn("G");
 
-        // Create custom accu expression and bind to certain parameter paths
-        Expression accuExpr = new CustomAccuExpr(Arrays.asList(new ColumnPath(s.getColumn("T2", "Id"))));
 
-        ta.accu(new FormulaExp4J("0.0", s.getTable("T")), accuExpr, null, new ColumnPath(t2g));
-        ta.eval(); // It has to also eval the accu (group) columns
+        ta.setDefaultValue(0.0);
+
+        // Lambda for accumulation " [out] + 2.0 * [Id] "
+        ta.accu(
+                (p, o) -> (Double)o + 2.0 * (Double)p[0],
+                Arrays.asList( new ColumnPath(t2.getColumn("Id"))),
+                new ColumnPath(t2g)
+        );
+        ta.eval();
 
         // Check correctness of dependencies
         List<Column> ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
-        assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
+        assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
+        assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
+
+        assertEquals(20.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
+
+        // Custom expression
+        ta.accu(
+                new CustomAccuExpr(Arrays.asList(new ColumnPath(t2.getColumn("Id")))),
+                new ColumnPath(t2g));
+        ta.eval(); // It has to also eval the accu (group) columns
+
+        // Check correctness of dependencies
+        ta_deps = ta.getDependencies();
+        assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
+        assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
 
         assertEquals(20.0, ta.getValue(0));
         assertEquals(20.0, ta.getValue(1));

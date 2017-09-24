@@ -19,7 +19,7 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 	public void eval() {
 		// Initialization
 		if(this.initExpr == null) { // Default
-			super.column.setValue(); // Reset
+			super.column.setValue(); // Initialize to default value
 		}
 		else {
 			super.evaluateExpr(this.initExpr, null);
@@ -64,6 +64,15 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 		return ret;
 	}
 
+	public ColumnDefinitionAccu(Column column, Expression accuExpr, ColumnPath accuPathColumns) {
+		super(column);
+
+		this.initExpr = null;
+		this.accuExpr = accuExpr;
+		this.finExpr = null;
+
+		this.accuPathColumns = accuPathColumns;
+	}
 	public ColumnDefinitionAccu(Column column, Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPathColumns) {
 		super(column);
 

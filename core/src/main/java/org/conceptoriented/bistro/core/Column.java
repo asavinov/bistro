@@ -55,6 +55,9 @@ public class Column {
 
     public void setValue() { this.data.setValue(); this.isDirty = true; }
 
+    public Object getDefaultValue() { return this.data.getDefaultValue(); }
+    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isDirty = true; }
+
     //
     // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
     //
@@ -71,7 +74,7 @@ public class Column {
     // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by eval procedure - isDirty is also ignored.
 
     // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
-    // 2) set this output values (this function changes) -> or any of its dependencies recursively
+    // 2) set this output columnPaths (this function changes) -> or any of its dependencies recursively
     // 3) definition change of this -> or any of its dependencies
     // 4) definition error of this -> or any of its dependencies
 
@@ -269,6 +272,7 @@ public class Column {
     // Calcuate. Convert input parameters into an Evaluator object and ealuate it in the case of immediate (eager) action.
     //
 
+    // Lambda + parameters
     public void calc(Evaluator lambda, List<ColumnPath> paths) { // Specify lambda and parameter paths
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
@@ -281,6 +285,7 @@ public class Column {
         }
     }
 
+    // Expression class + parameters
     public void calc(Class clazz, List<ColumnPath> paths) {
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
@@ -312,6 +317,7 @@ public class Column {
         }
     }
 
+    // Formula
     public void calc(String formulaClass, String formula) { // Specify Expression class/selector and formula parameter for this class
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
@@ -335,16 +341,29 @@ public class Column {
     // Link
     //
 
-    public void link(List<Column> columns, List<Expression> exprs) { // Custom rhs UDEs for each lhs column
+    // Expressions
+    public void link(List<Column> columns, List<ColumnPath> columnPaths) {
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
-        this.definition = new ColumnDefinitionLink(this, columns, exprs);
+        this.definition = new ColumnDefinitionLinkPaths(this, columns, columnPaths);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
+    // Expressions
+    public void link(List<Column> columns, List<Expression> exprs, boolean erasureWorkaroudn) { // Custom rhs UDEs for each lhs column
+        this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
+
+        this.definition = new ColumnDefinitionLinkExprs(this, columns, exprs);
+
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    // Formulas
     public void link(String formulaClass, List<String> names, List<String> formulas) { // Column names in the output table and expressions in the input table
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
@@ -373,7 +392,7 @@ public class Column {
             exprs.add(expr);
         }
 
-        this.definition = new ColumnDefinitionLink(this, columns, exprs);
+        this.definition = new ColumnDefinitionLinkExprs(this, columns, exprs);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -384,16 +403,30 @@ public class Column {
     // Accumulate
     //
 
-    public void accu(Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
+    // Evaluator + parameters
+    public void accu(Evaluator accuEval, List<ColumnPath> params, ColumnPath accuPath) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        this.definition = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPath);
+        Expression accuExpr = new Expr(accuEval, params);
+        this.definition = new ColumnDefinitionAccu(this, accuExpr, accuPath);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
+    // Expression
+    public void accu(Expression accuExpr, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
+        this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
+
+        this.definition = new ColumnDefinitionAccu(this, accuExpr, accuPath);
+
+        if(this.isInCyle()) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    // Formula
     public void accu(String formulaClass, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify Expression class/selector and formulas
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 

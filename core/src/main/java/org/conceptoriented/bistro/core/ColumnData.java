@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * It is responsible for explicit representation of a function, that is, a mapping from input ids to output values.
+ * It is responsible for explicit representation of a function, that is, a mapping from input ids to output columnPaths.
  * This representation can be changed by setting outputs for certain inputs. And it is possible to request outputs.
  */
 public class ColumnData {
@@ -22,8 +22,11 @@ public class ColumnData {
 
 	private static int INITIAL_SIZE = 10;
     private static int INCREMENT_SIZE = 5;
-    private Object[] values; // This array stores the output values
+    private Object[] values; // This array stores the output columnPaths
+
     private Object defaultValue = null;
+    public Object getDefaultValue() { return this.defaultValue; }
+    public void setDefaultValue(Object value) { this.defaultValue = value; }
 
     private int startIdOffset = 0; // Cell of the array where the start id is stored
 
@@ -71,7 +74,7 @@ public class ColumnData {
 
         // Check if there is enough space to free (garbage collection)
         if(this.startIdOffset > INCREMENT_SIZE) {
-            // Shift values to the beginning
+            // Shift columnPaths to the beginning
             System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
             this.startIdOffset = 0;
 

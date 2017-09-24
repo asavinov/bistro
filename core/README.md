@@ -57,7 +57,7 @@ Command line:
 
 * Evalex UDE is not always impelmented and not tested but only a placeholder exists.
 
-* Introduce constant UDE, for example, for initializers like 0.0 and EQUAL UDE for copying field/path values to output without any expression.
+* Introduce constant UDE, for example, for initializers like 0.0 and EQUAL UDE for copying field/path columnPaths to output without any expression.
   * Use case: 1) initializer, determine manaully 2) Within UdeExp4j or other expressions which determine this internally and want simplify computations by avoiding their own expression and reusing simpler way, for example, labmda or another definitionType of constant return.
 
 * JavaScript UDE

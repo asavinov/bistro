@@ -73,7 +73,7 @@ public class Range {
 
         Range other_ = (Range)other;
 
-        // this may cause NPE if nulls are valid values for x or y. The logic may be improved to handle nulls properly, if needed.
+        // this may cause NPE if nulls are valid columnPaths for x or y. The logic may be improved to handle nulls properly, if needed.
         return other_.start == this.start && other_.end == this.end;
     }
 
