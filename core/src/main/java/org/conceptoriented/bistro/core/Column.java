@@ -264,10 +264,6 @@ public class Column {
         return false;
     }
 
-    // Patterns:
-    // 1) calc(Ude.class/Ude.name, formula) <- here we provide translator plus proceudre/binding (new instance will be given formula string)
-    // 2) calc(lambda/Ude.class/Ude.name, path_objects/names) <- here we provide procedure plus binding (instance will be given parameter paths)
-
     //
     // Calcuate. Convert input parameters into an Evaluator object and ealuate it in the case of immediate (eager) action.
     //
@@ -285,6 +281,7 @@ public class Column {
         }
     }
 
+    // Lambda + parameters
     public void calc(Evaluator lambda, Column[] params) { // Specify lambda and parameter columns
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
@@ -297,32 +294,11 @@ public class Column {
         }
     }
 
-    // Expression class + parameters
-    public void calc(Class clazz, ColumnPath[] params) {
+    // Expression
+    public void calc(Expression expr) {
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
-        // Instantiate the specified class
-        Object instance = null;
-        try {
-            instance = (Evaluator)clazz.newInstance();
-        } catch (Exception e) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Instantiation error.", "Cannot create instance of the specified class.", e));
-            return;
-        }
-
-        Expression expr = null;
-        if(instance instanceof Expression) {
-            this.definition = new ColumnDefinitionCalc(this, (Expression) instance, params);
-        }
-        else if(instance instanceof Evaluator) {
-            this.definition = new ColumnDefinitionCalc(this, (Evaluator) instance, params);
-        }
-        else {
-            // TODO: Error: wrong class
-            return;
-        }
-
-        // TODO: Process errors (same as above)
+        this.definition = new ColumnDefinitionCalc(this, (Expression) expr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

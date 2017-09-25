@@ -100,7 +100,7 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
         this.column = column;
 
         List<ColumnPath> paths = new ArrayList<>();
-        for(Column col : columns) {
+        for(Column col : columnPaths) {
             paths.add(new ColumnPath(col));
         }
 

@@ -103,9 +103,10 @@ public class Tests {
         Column ta = t.getColumn("A");
         Column tb = t.getColumn("B");
 
-        // Use objects
         ColumnPath[] paths = new ColumnPath[] {new ColumnPath(ta)};
-        tb.calc(CustomCalcEval.class, paths);
+
+        // Lambda
+        tb.calc((p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1, paths);
         tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -114,8 +115,10 @@ public class Tests {
         assertEquals(Double.NaN, tb.getValue(1));
         assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
 
-        // Use lambda
-        tb.calc((p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1, paths);
+        // Expression
+        Expression expr = new CustomCalcEval(paths);
+
+        tb.calc(expr);
         tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -238,10 +241,12 @@ public class Tests {
 
         ta.setDefaultValue(0.0);
 
+        ColumnPath[] params = new ColumnPath[] { new ColumnPath(t2.getColumn("Id")) };
+
         // Lambda for accumulation " [out] + 2.0 * [Id] "
         ta.accu(
                 (p, o) -> (Double)o + 2.0 * (Double)p[0],
-                new ColumnPath[] { new ColumnPath(t2.getColumn("Id")) },
+                params,
                 new ColumnPath(t2g)
         );
         ta.eval();
@@ -255,9 +260,9 @@ public class Tests {
         assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
 
-        // Custom expression
+        // Expression
         ta.accu(
-                new CustomAccuExpr(Arrays.asList(new ColumnPath(t2.getColumn("Id")))),
+                new CustomAccuExpr(params),
                 new ColumnPath(t2g));
         ta.eval(); // It has to also eval the accu (group) columns
 
@@ -278,17 +283,17 @@ public class Tests {
         //
         // Table 1 (group table)
         //
-        Table t1 = schema.createTable("T");
+        Table t = schema.createTable("T");
 
-        Column tid = schema.createColumn("Id", t1);
+        Column tid = schema.createColumn("Id", t);
 
         // Define accu column
-        Column ta = schema.createColumn("A", t1);
+        Column ta = schema.createColumn("A", t);
         ta.setDefinitionType(ColumnDefinitionType.ACCU);
 
-        t1.add();
-        t1.add();
-        t1.add();
+        t.add();
+        t.add();
+        t.add();
         tid.setValue(0, 5.0);
         tid.setValue(1, 10.0);
         tid.setValue(2, 15.0);
@@ -301,10 +306,10 @@ public class Tests {
         Column t2id = schema.createColumn("Id", t2);
 
         // Define group column: G: T2 -> T
-        Column t2g = schema.createColumn("G", t2, t1);
-        t2g.link(Formula.Exp4j,
-                new String[] {"Id"},
-                new String[] {"[Id]"}
+        Column t2g = schema.createColumn("G", t2, t);
+        t2g.link(
+                new Column[] { tid }, // Id from T
+                new Column[] { t2id } // Id from T2
         );
 
         t2.add();
@@ -322,23 +327,22 @@ public class Tests {
 }
 
 
-class CustomCalcEval implements Evaluator {
-/*
+class CustomCalcEval implements Expression {
+
     List<ColumnPath> parameterPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
-*/
+
     @Override public Object evaluate(Object[] params, Object out) {
         double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
         return 2.0 * param + 1.0; // "2 * [A] + 1"
     }
-/*
+
     public CustomCalcEval() {
     }
-    public CustomCalcEval(List<ColumnPath> parameterPaths) {
-        this.setParameterPaths(parameterPaths);
+    public CustomCalcEval(ColumnPath[] params) {
+        this.setParameterPaths(Arrays.asList(params));
     }
-*/
 }
 
 class CustomAccuExpr implements Expression {
@@ -354,7 +358,7 @@ class CustomAccuExpr implements Expression {
     }
     public CustomAccuExpr() {
     }
-    public CustomAccuExpr(List<ColumnPath> inputPaths) {
-        this.setParameterPaths(inputPaths);
+    public CustomAccuExpr(ColumnPath[] params) {
+        this.setParameterPaths(Arrays.asList(params));
     }
 }
