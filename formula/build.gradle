@@ -1,4 +1,5 @@
 buildscript {
+    ext.kotlin_version = '1.1.4-3'
     repositories {
         flatDir {
             dirs "$rootProject.projectDir"
@@ -7,15 +8,18 @@ buildscript {
 		mavenCentral()
 	}
     dependencies {
+        //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 apply plugin: 'java'
+//apply plugin: "kotlin"
+apply plugin: 'antlr'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 jar {
-    baseName = 'bistro-core'
+    baseName = 'bistro-formula'
     version =  '0.2.0'
 }
 
@@ -32,7 +36,24 @@ group = 'org.conceptoriented'
 version = '0.2.0'
 
 dependencies {
+    //compile "org.jetbrains.kotlin:kotlin-stdlib"
+
+    compile("org.conceptoriented:core:0.2.0")
+
+    antlr("org.antlr:antlr4:4.7")
+
+    compile("org.antlr:antlr4-runtime:4.7")
+
+    compile("net.objecthunter:exp4j:0.4.8")
+    compile("com.udojava:EvalEx:1.11")
+
     testCompile("junit:junit:4.12")
+}
+
+// https://docs.gradle.org/current/userguide/antlr_plugin.html
+generateGrammarSource {
+    maxHeapSize = "64m"
+	arguments += ["-visitor", "-listener", "-long-messages"]
 }
 
 task wrapper(type: Wrapper) {

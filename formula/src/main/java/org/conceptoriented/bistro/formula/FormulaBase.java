@@ -1,4 +1,4 @@
-package org.conceptoriented.bistro.core.formula;
+package org.conceptoriented.bistro.formula;
 
 import org.conceptoriented.bistro.core.*;
 

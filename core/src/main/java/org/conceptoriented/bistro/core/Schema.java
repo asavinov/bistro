@@ -29,7 +29,7 @@ public class Schema {
 		return this.tables;
 	}
 	public Table getTable(String table) {
-        Table ret = this.tables.stream().filter(x -> x.getName().equalsIgnoreCase(table)).findAny().orElse(null);
+        Table ret = this.tables.stream().filter(x -> x.getName().equals(table)).findAny().orElse(null);
         return ret;
 	}
 	public Table getTableById(String id) {
@@ -71,15 +71,15 @@ public class Schema {
 		return res;
 	}
 	public List<Column> getColumns(String table) {
-		List<Column> res = this.columns.stream().filter(x -> x.getInput().getName().equalsIgnoreCase(table)).collect(Collectors.<Column>toList());
+		List<Column> res = this.columns.stream().filter(x -> x.getInput().getName().equals(table)).collect(Collectors.<Column>toList());
 		return res;
 	}
 	public Column getColumn(Table table, String column) {
-		Column ret = this.columns.stream().filter(x -> x.getInput().equals(table) && x.getName().equalsIgnoreCase(column)).findAny().orElse(null);
+		Column ret = this.columns.stream().filter(x -> x.getInput().equals(table) && x.getName().equals(column)).findAny().orElse(null);
 		return ret;
 	}
 	public Column getColumn(String table, String column) {
-        Column ret = this.columns.stream().filter(x -> x.getInput().getName().equalsIgnoreCase(table) && x.getName().equalsIgnoreCase(column)).findAny().orElse(null);
+        Column ret = this.columns.stream().filter(x -> x.getInput().getName().equals(table) && x.getName().equals(column)).findAny().orElse(null);
         return ret;
 	}
 	public Column getColumnById(String id) {

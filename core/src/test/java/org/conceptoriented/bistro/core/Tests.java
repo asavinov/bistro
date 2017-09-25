@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.conceptoriented.bistro.core.formula.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

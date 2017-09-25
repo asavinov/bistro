@@ -1,4 +1,4 @@
-package org.conceptoriented.bistro.core.formula;
+package org.conceptoriented.bistro.formula;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;

@@ -2,7 +2,7 @@ grammar Tuple;
 import Common;
 
 @header {
-  package org.conceptoriented.bistro.core.formula;
+  package org.conceptoriented.bistro.formula;
 }
 
 // tuple is a list of members

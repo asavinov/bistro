@@ -1,7 +1,5 @@
 package org.conceptoriented.bistro.core;
 
-import org.conceptoriented.bistro.core.formula.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -306,6 +304,7 @@ public class Column {
     }
 
     // Formula
+/*
     public void calc(String formulaClass, String formula) { // Specify Expression class/selector and formula parameter for this class
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
@@ -324,6 +323,7 @@ public class Column {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
+*/
 
     //
     // Link
@@ -363,6 +363,7 @@ public class Column {
     }
 
     // Formulas
+/*
     public void link(String formulaClass, String[] names, String[] formulas) { // Column names in the output table and expressions in the input table
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
@@ -397,6 +398,7 @@ public class Column {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
+*/
 
     //
     // Accumulate
@@ -438,6 +440,7 @@ public class Column {
     }
 
     // Formula
+/*
     public void accu(String formulaClass, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify Expression class/selector and formulas
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
@@ -493,6 +496,7 @@ public class Column {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
+*/
 
     //
 	// Serialization and construction
