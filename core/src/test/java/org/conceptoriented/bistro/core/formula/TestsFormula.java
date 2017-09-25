@@ -64,8 +64,11 @@ public class TestsFormula {
         Table t2 = s.getTable("T2");
         Column t2c = t2.getColumn("C");
 
-        // Use formulas
-        t2c.link(Formula.Exp4j, Arrays.asList("A", "B"), Arrays.asList("[A]", "[B]")); // [A]=[A]; [B]=[B]
+        // Use formulas: [A]=[A]; [B]=[B]
+        t2c.link(Formula.Exp4j,
+                new String[] {"A", "B"},
+                new String[] {"[A]", "[B]"}
+        );
 
         t2c.eval();
 
@@ -78,13 +81,13 @@ public class TestsFormula {
         assertEquals(1L, t2c.getValue(1)); // Appended
 
         // Using individual expressions creaed from formulas
-        List<Column> columns = Arrays.asList(t.getColumn("A"), t.getColumn("B"));
-        List<Expression> exprs = exprs = Arrays.asList(
+        Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
+        Expression[] exprs = new Expression[] {
                 new FormulaExp4J("[A]", t2),
                 new FormulaExp4J("[B]", t2)
-        );
+        };
 
-        t2c.link(columns, exprs, true);
+        t2c.link(columns, exprs);
 
         t2c.eval();
     }
@@ -136,6 +139,8 @@ public class TestsFormula {
         // Accu (group) formula
         Column ta = s.getColumn("T", "A");
         Column t2g = s.getColumn("T2", "G");
+
+        ta.setDefaultValue(0.0);
 
         // Accu expression translated from a formula
         Expression accuExpr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
@@ -204,7 +209,10 @@ public class TestsFormula {
 
         // Define group column
         Column t2g = schema.createColumn("G", t2, t1);
-        t2g.link(Formula.Exp4j, Arrays.asList("Id"), Arrays.asList("[Id]"));
+        t2g.link(Formula.Exp4j,
+                new String[] {"Id"},
+                new String[] {"[Id]"}
+        );
 
         t2.add();
         t2.add();

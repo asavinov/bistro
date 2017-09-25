@@ -104,7 +104,7 @@ public class Tests {
         Column tb = t.getColumn("B");
 
         // Use objects
-        List<ColumnPath> paths = Arrays.asList(new ColumnPath(Arrays.asList(ta)));
+        ColumnPath[] paths = new ColumnPath[] {new ColumnPath(ta)};
         tb.calc(CustomCalcEval.class, paths);
         tb.eval();
 
@@ -150,8 +150,8 @@ public class Tests {
         Column t2c = t2.getColumn("C");
 
         // Use column paths
-        List<Column> columns = Arrays.asList(t.getColumn("A"), t.getColumn("B"));
-        List<ColumnPath> paths = Arrays.asList(new ColumnPath(t2.getColumn("A")), new ColumnPath(t2.getColumn("B")));
+        Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
+        ColumnPath[] paths = new ColumnPath[] { new ColumnPath(t2.getColumn("A")), new ColumnPath(t2.getColumn("B")) };
 
         t2c.link(
                 columns, // A and B from T
@@ -168,11 +168,14 @@ public class Tests {
         assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
 
         // Use Expression instances
-        Expression e1 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("A"))));
-        Expression e2 = new Expr((p,o) -> p[0], Arrays.asList(new ColumnPath(t2.getColumn("B"))));
-        List<Expression> exprs = Arrays.asList(e1, e2);
+        Expression e1 = new Expr((p,o) -> p[0], new Column[] {t2.getColumn("A")} );
+        Expression e2 = new Expr((p,o) -> p[0], new Column[] {t2.getColumn("B")} );
+        Expression[] exprs = new Expression[] {e1, e2};
 
-        t2c.link(columns, exprs, true);
+        t2c.link(
+                columns,
+                exprs
+        );
         t2c.eval();
 
         // Check correctness of dependencies
@@ -233,13 +236,12 @@ public class Tests {
         Column ta = t.getColumn("A");
         Column t2g = t2.getColumn("G");
 
-
         ta.setDefaultValue(0.0);
 
         // Lambda for accumulation " [out] + 2.0 * [Id] "
         ta.accu(
                 (p, o) -> (Double)o + 2.0 * (Double)p[0],
-                Arrays.asList( new ColumnPath(t2.getColumn("Id"))),
+                new ColumnPath[] { new ColumnPath(t2.getColumn("Id")) },
                 new ColumnPath(t2g)
         );
         ta.eval();
@@ -298,9 +300,12 @@ public class Tests {
 
         Column t2id = schema.createColumn("Id", t2);
 
-        // Define group column
+        // Define group column: G: T2 -> T
         Column t2g = schema.createColumn("G", t2, t1);
-        t2g.link(Formula.Exp4j, Arrays.asList("Id"), Arrays.asList("[Id]"));
+        t2g.link(Formula.Exp4j,
+                new String[] {"Id"},
+                new String[] {"[Id]"}
+        );
 
         t2.add();
         t2.add();

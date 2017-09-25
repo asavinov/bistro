@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -18,8 +19,17 @@ public class Expr implements Expression {
         return evaluateLambda.evaluate(params, out);
     }
 
-    public Expr(Evaluator eval, List<ColumnPath> parameterPaths) {
+    public Expr(Evaluator eval, ColumnPath[] params) {
         this.evaluateLambda = eval;
-        this.setParameterPaths(parameterPaths);
+        this.setParameterPaths(Arrays.asList(params));
+    }
+    public Expr(Evaluator eval, Column[] params) {
+        this.evaluateLambda = eval;
+
+        List<ColumnPath> paths = new ArrayList<>();
+        for(int i=0; i<params.length; i++) {
+            paths.add(new ColumnPath(params[i]));
+        }
+        this.setParameterPaths(paths);
     }
 }

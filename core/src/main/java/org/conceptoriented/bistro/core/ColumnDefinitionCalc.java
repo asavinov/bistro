@@ -1,5 +1,7 @@
 package org.conceptoriented.bistro.core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -28,8 +30,18 @@ public class ColumnDefinitionCalc extends ColumnDefinitionBase {
 		return deps;
 	}
 
-	public ColumnDefinitionCalc(Column column, Evaluator lambda, List<ColumnPath> paths) {
+	public ColumnDefinitionCalc(Column column, Evaluator lambda, ColumnPath[] paths) {
 		super(column);
+		this.expr = new Expr(lambda, paths);
+	}
+
+	public ColumnDefinitionCalc(Column column, Evaluator lambda, Column[] columns) {
+		super(column);
+		ColumnPath[] paths = new ColumnPath[columns.length];
+		for (int i = 0; i < columns.length; i++) {
+            paths[i] = new ColumnPath(columns[i]);
+		}
+
 		this.expr = new Expr(lambda, paths);
 	}
 

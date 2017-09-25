@@ -23,9 +23,9 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 		// ACCU: The optimal approach is to apply negative accu function for removed elements and then positive accu function for added elements
 		Range mainRange = mainTable.getIdRange();
 
-		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading columnPaths
+		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading paths
 		List<ColumnPath> paramPaths = expr.getParameterPaths();
-		Object[] paramValues = new Object[paramPaths.size()]; // Will store columnPaths for all params
+		Object[] paramValues = new Object[paramPaths.size()]; // Will store paths for all params
 		Object out; // Current output value
 		Object result; // Will be written to output for each input
 
@@ -33,7 +33,7 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 			// Find group [ACCU-specific]
 			Long g = accuLinkPath == null ? i : (Long) accuLinkPath.getValue(i);
 
-			// Read all parameter columnPaths
+			// Read all parameter paths
 			int paramNo = 0;
 			for(ColumnPath paramPath : paramPaths) {
 				paramValues[paramNo] = paramPath.getValue(i);

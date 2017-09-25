@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
     Column column;
 
     List<Column> columns = new ArrayList<>();
-    List<ColumnPath> columnPaths = new ArrayList<>();
+    List<ColumnPath> paths = new ArrayList<>();
 
     List<BistroError> definitionErrors = new ArrayList<>();
     @Override
@@ -22,7 +23,7 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
 	@Override
 	public void eval() {
-        this.evaluateLink(this.columns, this.columnPaths);
+        this.evaluateLink(this.columns, this.paths);
 	}
 
 	@Override
@@ -33,7 +34,7 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
             if (!ret.contains(col)) ret.add(col);
         }
 
-        for (ColumnPath path : this.columnPaths) {
+        for (ColumnPath path : this.paths) {
             for (Column col : path.columns) {
                 if (!ret.contains(col)) ret.add(col);
             }
@@ -57,7 +58,7 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
         //List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
         //List< Object[] > rhsParamValues = new ArrayList<>();
-        List< Object > rhsResults = new ArrayList<>(); // Record of columnPaths used for search (produced by expressions and having same length as column list)
+        List< Object > rhsResults = new ArrayList<>(); // Record of paths used for search (produced by expressions and having same length as column list)
 
         // Initialize these lists for each member expression
         for(ColumnPath path : columnPaths) {
@@ -88,10 +89,22 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionLinkPaths(Column column, List<Column> columns, List<ColumnPath> columnPaths) {
+    public ColumnDefinitionLinkPaths(Column column, Column[] columns, ColumnPath[] paths) {
         this.column = column;
 
-		this.columns.addAll(columns);
-		this.columnPaths.addAll(columnPaths);
+		this.columns.addAll(Arrays.asList(columns));
+		this.paths.addAll(Arrays.asList(paths));
 	}
+
+    public ColumnDefinitionLinkPaths(Column column, Column[] columns, Column[] columnPaths) {
+        this.column = column;
+
+        List<ColumnPath> paths = new ArrayList<>();
+        for(Column col : columns) {
+            paths.add(new ColumnPath(col));
+        }
+
+        this.columns.addAll(Arrays.asList(columns));
+        this.paths.addAll(paths);
+    }
 }

@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -58,7 +59,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
 
         List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
         List< Object[] > rhsParamValues = new ArrayList<>();
-        List< Object > rhsResults = new ArrayList<>(); // Record of columnPaths used for search (produced by expressions and having same length as column list)
+        List< Object > rhsResults = new ArrayList<>(); // Record of paths used for search (produced by expressions and having same length as column list)
 
         // Initialize these lists for each member expression
         for(Expression expr : exprs) {
@@ -77,7 +78,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
                 List<ColumnPath> paramPaths = rhsParamPaths.get(mmbrNo);
                 Object[] paramValues = rhsParamValues.get(mmbrNo);
 
-                // Read all parameter columnPaths (assuming that this column output is not used in link columns)
+                // Read all parameter paths (assuming that this column output is not used in link columns)
                 int paramNo = 0;
                 for(ColumnPath paramPath : paramPaths) {
                     paramValues[paramNo] = paramPath.getValue(i);
@@ -106,10 +107,10 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
 
     }
 
-	public ColumnDefinitionLinkExprs(Column column, List<Column> columns, List<Expression> exprs) {
+	public ColumnDefinitionLinkExprs(Column column, Column[] columns, Expression[] exprs) {
         this.column = column;
 
-        this.columns.addAll(columns);
-		this.exprs.addAll(exprs);
+        this.columns.addAll(Arrays.asList(columns));
+		this.exprs.addAll(Arrays.asList(exprs));
 	}
 }
