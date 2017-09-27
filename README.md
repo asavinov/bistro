@@ -2,7 +2,7 @@
 
 ## Waht is Bistro
 
-*Bistro* is a general purpose, light-weight data processing engine which changes the way data is being processed. It going to be as simple as a spreadsheet and as powerful as SQL. At its core, it relies on a novel *column-oriented* data representation and processing engine which is unique in that its logic is described as a DAG of *column operations* as opposed to table operations in most other frameworks. Computations in Bistro are performed by *evaluating* columns which have custom definitions in terms of other columns. 
+*Bistro* is a general purpose, light-weight data processing engine which changes the way data is being processed. It is going to be as simple as a spreadsheet and as powerful as SQL. At its core, it relies on a novel *column-oriented* data representation and processing engine which is unique in that its logic is described as a DAG of *column operations* as opposed to table operations in most other frameworks. Computations in Bistro are performed by *evaluating* columns which have custom definitions in terms of other columns. 
 
 ## New Data Processing Paradigm: Calc-Link-Accu
 
@@ -16,13 +16,17 @@ Formally, Bistro relies on the *concept-oriented model* (COM) where the main uni
 
 As a *general-purpose* data processing engine, Bistro can be applied to many problems like data integration, data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing.
 
+## Graph of column operations
+
+In Bistro, computations nodes in the graph are columns and each column has some definition which determins what operations this node will execute to compute its values. Column definitions take some other columns as input and the output values are stored in this column as its result which can be used as input in other column definitions.
+
 # How it works
 
 ## Schema
 
 First of all, it is necessary to create a *schema* which can be thought of as a database and will be a collection of all other elements and parameters: 
 ```java
-Schema schema = new Schema("My Schema");
+Bistro schema = new Bistro("My Bistro");
 ```
 
 A schema like tables and columns has an arbitrary (case sensitive) name. The schema is then used to create and access other elements as well as perform various operations with data. 
@@ -49,6 +53,7 @@ long id;
 id = table.add(); // Append a new element: id = 0
 id = table.add(); // Remove the oldest element: id = 1
 id = table.remove(); // Remove the oldest element: id = 0
+table.add();
 ```
 It is important that elements are removed from the beginning in the FIFO order, that is, the oldest element is always removed. The addition and removal of elements changes the range of the valid identifiers of this table. The current range of identifiers can be retrieved using this method:
 ```java
@@ -58,25 +63,24 @@ The `Range` object provides a start id (inclusive) and an end id (exclusive) for
 
 Any table can be used as a *data type* for schema columns.
 
-## User columns
+## No definition columns
 
-Data in Bistro is stored in columns. Formally, a column is a function and hence it defines a *mapping* from all inputs to the outputs. Both input and output tables of a column are specified during creation: 
+Data in Bistro is stored in columns. Formally, a column is a function and hence it defines a *mapping* from all table inputs to the values in the output table. Input and output tables of a column are specified during creation: 
 ```java
 Column name = schema.createColumn("name", table, objects);
 ```
-This column defining a mapping from the "My Table" to the "Object" (primitive) table.
+This column defines a mapping from "My Table" to the "Object" (primitive) table.
 
-Any new column has not definition and it cannot derive its output values. Such columns are referred to as *user columns* because the only way to specify their outputs for input is to use API:
+A new column does not have a definition and hence it cannot derive its output values. The only way to define their mapping from outputs for inputs is to explicitly set the outputs using API:
 ```java
 name.setValue(1, "abc");
-table.add();
 name.setValue(2, "abc def");
 Object value = name.getValue(1); // value = "abc"
 ```
 
 ## Calculate columns
 
-A column might have a *definition* which means that it uses some operations to automatically derive or infer its output values from the data in other columns (which could be user columns or also derived columns). Depending on the logic behind such inference, there are different column definition types. Probably the simplest derived column type is a *calculate* column: 
+A column might have a *definition* which means that it uses some operation to automatically derive or infer its output values from the data in other columns (which in turn can derive their outputs from other columns). Depending on the logic behind such inference, there are different column definition types. The simplest derived column type is a *calculate* column: 
 
 > For each input, a calculate column *computes* its output by using the outputs of some other columns of this same table for this same input
 
@@ -85,10 +89,10 @@ For example, we could define a calculate column which increments the value store
 Column calc = schema.createColumn("length", table, objects);
 calc.calc(
   (p, o) -> ((String)p[0]).length(), // How to compute
-  Arrays.asList(name) // Columns to be used as parameters
+  Arrays.asList(name) // Parameters for computing
   );
 ```
-The first parameter is a function which takes two arguments. The first argument `p` is an array of outputs of other columns that have to be processed. The second argument `o` is the current output of this same column which is not used for calculate columns. The second parameter of the definition specifies the input columns the outputs of which have to be processed. In this example, we use a previously defined user column the outputs of which will be incremented. The size of the `p` array has to be equal to the length of the second parameter. 
+The first parameter is a function which takes two arguments. The first argument `p` is an array of outputs of other columns that have to be processed. The second argument `o` is the current output of this same column which is not used for calculate columns. The second parameter of the definition specifies the input columns the outputs of which have to be processed. In this example, we use a previously defined no-definition column the outputs of which will be incremented. The size of the `p` array has to be equal to the length of the second parameter. 
 
 The definition itself does not do any computations, that is, the outputs of this calculate column will have default values. To really derive the outputs of this column it has to be evaluated:
 ```java
@@ -122,10 +126,12 @@ This property however cannot be used to access the elements of the "Table". Ther
 ```java
 Column link = schema.createColumn("link to table", facts, table);
 link.link(
-  Arrays.asList(name) // Columns of the type table to search a target element
-  Arrays.asList(group) // Expressions. Columns of this table providing criteria
+  Arrays.asList(name) // Columns to be used for searching (in the type table)
+  Arrays.asList(group) // Columns providing criteria for search (in this input table)
   );
 ```
+This definition essentially means that the new column will reference elements of its type table which have the same `name` as this table `group` column.
+
 This link column can be now evaluated:
 ```java
 link.eval();
@@ -136,6 +142,13 @@ value = link.getValue(0); // value = 1
 value = link.getValue(1); // value = 1
 value = link.getValue(2); // value = 2
 ```
+The main benefit of having link columns is that they are evaluated once but can be then used in many other column definitions for *direct* access to elements of another table without searching or joining records. Link columns can be also used in *column paths* for concatenating several column access operations (dot notation). For example, now we get *directly* access columns of "My Table" from "Facts":
+```java
+ColumnPath path = new ColumnPath(Arrays.asList(link,length));
+value = path.getValue(1);
+value = path.getValue(2);
+```
+Many column defintion methods accept column paths as parameters.
 
 It is possible that many elements satisfy the link criteria and then one of them is chosen as the output value. In the case no output element has been found, either `null` is set as the output or a new element is appended depending on the options. There exist also other ways to define links, for example, by providing lambdas for computing the link criteria.
 
@@ -194,9 +207,7 @@ Accumulate functions have also other definition options, for example, specifying
 
 ## Schema evaluation and dependencies
 
-It is not necessary to evaluate a column immediately after it has been defined. It is possible to define all or some of the columns and then evalute one of them. Bistro manages all dependencies and it will automatically and recursively evaluate all the columns this column depends on. If a column data has been modified or its definition has changed then it will also influence all columns that depend on it directly or indirectly.
-
-It is also possible to evalute the whole schema:
+It is not necessary to evaluate a column immediately after it has been defined. It is possible to define all or some of the columns and then evalute all of them. Bistro manages all dependencies and it will automatically (recursively) evaluate all columns this column depends on (if necessary). If a column data has been modified or its definition has changed then it will also influence all columns that depend on it directly or indirectly. The easiest way is to evaluate the whole schema:
 ```java
 schema.eval();
 ```

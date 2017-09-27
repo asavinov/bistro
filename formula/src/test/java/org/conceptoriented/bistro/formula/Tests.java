@@ -1,19 +1,17 @@
 package org.conceptoriented.bistro.formula;
 
-import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.core.formula.*;
-import org.conceptoriented.bistro.core.formula.FormulaExp4J;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestsFormula {
+import org.conceptoriented.bistro.core.*;
+
+public class Tests {
 
     @BeforeClass
     public static void setUpClass() {
@@ -29,8 +27,11 @@ public class TestsFormula {
         Column ta = s.getColumn("T", "A");
         Column tb = s.getColumn("T", "B");
 
-        // Use formulas
-        tb.calc(Formula.Exp4j, "2 * [A] + 1");
+        // Create expression from formula
+        Formula expr = new FormulaExp4J("2 * [A] + 1", s.getTable("T"));
+
+        // Define and evaluate
+        tb.calc(expr);
         tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -64,12 +65,17 @@ public class TestsFormula {
         Table t2 = s.getTable("T2");
         Column t2c = t2.getColumn("C");
 
-        // Use formulas: [A]=[A]; [B]=[B]
-        t2c.link(Formula.Exp4j,
-                new String[] {"A", "B"},
-                new String[] {"[A]", "[B]"}
-        );
+        // Create expressions: A=[A]; B=[B]
+        Expression[] exprs = new Expression[] {
+                new FormulaExp4J("[A]", t2),
+                new FormulaExp4J("[B]", t2)
+        };
 
+        // Define and evaluate
+        t2c.link(
+                new Column[] {t.getColumn("A"), t.getColumn("B")},
+                exprs
+        );
         t2c.eval();
 
         // Check correctness of dependencies
@@ -79,17 +85,6 @@ public class TestsFormula {
 
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(1L, t2c.getValue(1)); // Appended
-
-        // Using individual expressions creaed from formulas
-        Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
-        Expression[] exprs = new Expression[] {
-                new FormulaExp4J("[A]", t2),
-                new FormulaExp4J("[B]", t2)
-        };
-
-        t2c.link(columns, exprs);
-
-        t2c.eval();
     }
 
     Schema createLinkSchema() {
@@ -143,9 +138,12 @@ public class TestsFormula {
         ta.setDefaultValue(0.0);
 
         // Accu expression translated from a formula
-        Expression accuExpr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
+        Expression expr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
-        ta.accu(accuExpr, new ColumnPath(t2g));
+        ta.accu(
+                expr,
+                new ColumnPath(t2g)
+        );
         ta.eval();
 
         // Check correctness of dependencies
@@ -156,21 +154,6 @@ public class TestsFormula {
         assertEquals(20.0, ta.getValue(0));
         assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
-
-
-        // The same using formulas
-        ta.accu(Formula.Exp4j, "0.0", " [out] + 2.0 * [Id] ", null, "T2", new NamePath("G"));
-        ta.eval();
-
-        // Check correctness of dependencies
-        ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
-        assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-
 
         // Test how dirty status is propagated through dependencies
         t2.getColumn("Id").setValue(2, 5.0); // Change (make dirty) non-derived column
@@ -209,9 +192,9 @@ public class TestsFormula {
 
         // Define group column
         Column t2g = schema.createColumn("G", t2, t1);
-        t2g.link(Formula.Exp4j,
-                new String[] {"Id"},
-                new String[] {"[Id]"}
+        t2g.link(
+                new Column[] { t1.getColumn("Id") },
+                new Expression[] { new FormulaExp4J("[Id]", t2) }
         );
 
         t2.add();

@@ -303,28 +303,6 @@ public class Column {
         }
     }
 
-    // Formula
-/*
-    public void calc(String formulaClass, String formula) { // Specify Expression class/selector and formula parameter for this class
-        this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
-
-        Expression expr = null;
-        try {
-            expr = FormulaBase.createInstance(formulaClass, formula, this.input);
-        }
-        catch(BistroError e) {
-            this.definitionErrors.add(e);
-            return;
-        }
-
-        this.definition = new ColumnDefinitionCalc(this, expr);
-
-        if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-*/
-
     //
     // Link
     //
@@ -361,44 +339,6 @@ public class Column {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
-
-    // Formulas
-/*
-    public void link(String formulaClass, String[] names, String[] formulas) { // Column names in the output table and expressions in the input table
-        this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
-
-        // Resolve all names
-        Column[] columns = new Column[names.length];
-        for(int i=0; i<names.length; i++) {
-            Column col = this.output.getColumn(names[i]);
-            if(col == null) {
-                this.definitionErrors.add(new BistroError(BistroErrorCode.NAME_RESOLUTION_ERROR, "Cannot resolve column name.", "Cannot resolve column name: " + name));
-                return;
-            }
-            columns[i] = col;
-        }
-
-        // Translate all formulas
-        Expression[] exprs = new Expression[formulas.length];
-        for(int i=0; i<formulas.length; i++) {
-            FormulaBase expr = null;
-            try {
-                expr = FormulaBase.createInstance(formulaClass, formulas[i], this.input);
-            }
-            catch(BistroError e) {
-                this.definitionErrors.add(e);
-                return;
-            }
-            exprs[i] = expr;
-        }
-
-        this.definition = new ColumnDefinitionLinkExprs(this, columns, exprs);
-
-        if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-*/
 
     //
     // Accumulate
@@ -438,65 +378,6 @@ public class Column {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
-
-    // Formula
-/*
-    public void accu(String formulaClass, String initFormula, String accuFormula, String finFormula, String accuTableName, NamePath accuLinkPath) { // Specify Expression class/selector and formulas
-        this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
-
-        // Accu table and link (group) path
-        Table accuTable = schema.getTable(accuTableName);
-        if(accuTable == null) { // Binding error
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Binding error.", "Cannot find table: " + accuTableName));
-            return;
-        }
-
-        // Accu (group) path
-        ColumnPath accuPathColumns = accuLinkPath.resolveColumns(accuTable);
-        if(accuPathColumns == null) { // Binding error
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Binding error.", "Cannot find columns: " + accuLinkPath.toString()));
-            return;
-        }
-
-        // Initialization
-        Expression initExpr = null;
-        try {
-            initExpr = FormulaBase.createInstance(formulaClass, initFormula, this.input);
-        }
-        catch(BistroError e) {
-            this.definitionErrors.add(e);
-            return;
-        }
-
-        // Accumulation
-        Expression accuExpr = null;
-        try {
-            accuExpr = FormulaBase.createInstance(formulaClass, accuFormula, accuTable); // Note that we use a different table (not this column input)
-        }
-        catch(BistroError e) {
-            this.definitionErrors.add(e);
-            return;
-        }
-
-        // Finalization
-        Expression finExpr = null;
-        if(finFormula != null && !finFormula.isEmpty()) {
-            try {
-                finExpr = FormulaBase.createInstance(formulaClass, finFormula, this.input);
-            }
-            catch(BistroError e) {
-                this.definitionErrors.add(e);
-                return;
-            }
-        }
-
-        this.definition = new ColumnDefinitionAccu(this, initExpr, accuExpr, finExpr, accuPathColumns);
-
-        if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-*/
 
     //
 	// Serialization and construction

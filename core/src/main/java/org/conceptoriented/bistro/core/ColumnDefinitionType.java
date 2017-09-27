@@ -2,9 +2,9 @@ package org.conceptoriented.bistro.core;
 
 public enum ColumnDefinitionType {
 	NONE(0), // No computations
-	CALC(60), // Calculate column
-	LINK(70), // Link column
-	ACCU(90), // Accumulate column
+	CALC(10), // Calculate column
+	LINK(20), // Link column
+	ACCU(30), // Accumulate column
 	;
 
 	private int value;
