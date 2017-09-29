@@ -1,6 +1,9 @@
 package org.conceptoriented.bistro.core;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 public class Table {
 	private Schema schema;

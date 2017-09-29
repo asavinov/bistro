@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 
 jar {
     baseName = 'bistro-core'
-    version =  '0.2.0'
+    version =  '0.3.0'
 }
 
 repositories {
@@ -29,7 +29,8 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
-version = '0.2.0'
+archivesBaseName = 'bistro-core'
+version = '0.3.0'
 
 dependencies {
     testCompile("junit:junit:4.12")
@@ -44,7 +45,15 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+
+            // Set the base name of the artifacts
+            //groupId 'org.conceptoriented'
+            artifactId 'bistro-core'
+            //version '0.3.0'
+
+            //artifact jar
             artifact sourcesJar
+            artifact javadocJar
         }
     }
     repositories {
@@ -58,6 +67,16 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
-artifacts {
-	archives sourcesJar
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
 }
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+}
+
+// http://blog.omega-prime.co.uk/2015/11/30/easy-publishing-to-maven-central-with-gradle/
+// http://mike-neck.github.io/blog/2013/06/21/how-to-publish-artifacts-with-gradle-maven-publish-plugin-version-1-dot-6/

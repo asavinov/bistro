@@ -1,5 +1,6 @@
 package org.conceptoriented.bistro.formula;
 
+import org.conceptoriented.bistro.core.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -8,8 +9,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import org.conceptoriented.bistro.core.*;
 
 public class Tests {
 
