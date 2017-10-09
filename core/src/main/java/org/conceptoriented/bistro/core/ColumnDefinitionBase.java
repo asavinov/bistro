@@ -48,7 +48,11 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 				result = expr.evaluate(paramValues, out);
 			}
 			catch(BistroError e) {
-				definitionErrors.add(e);
+				this.definitionErrors.add(e);
+				return;
+			}
+			catch(Exception e) {
+                this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
 				return;
 			}
 

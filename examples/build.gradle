@@ -1,0 +1,90 @@
+buildscript {
+    repositories {
+        flatDir {
+            dirs "$rootProject.projectDir"
+        }
+		mavenLocal()
+		mavenCentral()
+	}
+    dependencies {
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'antlr'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+jar {
+    baseName = 'bistro-examples'
+    version =  '0.3.0'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    //jcenter()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'org.conceptoriented'
+archivesBaseName = 'bistro-examples'
+version = '0.3.0'
+
+dependencies {
+    compile("org.conceptoriented:bistro-core:0.3.0")
+    compile("org.conceptoriented:bistro-formula:0.3.0")
+
+    antlr("org.antlr:antlr4:4.7")
+
+    compile("org.antlr:antlr4-runtime:4.7")
+
+    compile("net.objecthunter:exp4j:0.4.8")
+    compile("com.udojava:EvalEx:1.11")
+
+    testCompile("junit:junit:4.12")
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
+
+// Install into (local) maven repository
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            // Set the base name of the artifacts
+            //groupId 'org.conceptoriented'
+            artifactId 'bistro-examples'
+            //version '0.3.0'
+
+            //artifact jar
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+// Generate archive with source files (to be installed into maven repository)
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+}

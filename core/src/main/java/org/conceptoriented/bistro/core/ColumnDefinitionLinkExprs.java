@@ -94,6 +94,10 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
                     definitionErrors.add(e);
                     return;
                 }
+                catch(Exception e) {
+                    this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                    return;
+                }
 
                 rhsResults.set(mmbrNo, result);
             }

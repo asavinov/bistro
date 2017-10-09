@@ -359,11 +359,11 @@ public class Column {
     }
 
     // Evaluator + parameters
-    public void accu(Evaluator accuEval, Column[] params, ColumnPath accuPath) {
+    public void accu(Evaluator accuEval, Column[] params, Column accuPath) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
         Expression accuExpr = new Expr(accuEval, params);
-        this.definition = new ColumnDefinitionAccu(this, accuExpr, accuPath);
+        this.definition = new ColumnDefinitionAccu(this, accuExpr, new ColumnPath(accuPath));
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

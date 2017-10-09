@@ -10,7 +10,7 @@ Bistro-core is a core library of Bistro for schema management, data representati
 
 First of all, it is necessary to create a *schema* which can be thought of as a database and will be a collection of all other elements and parameters: 
 ```java
-Bistro schema = new Bistro("My Bistro");
+Schema schema = new Schema("My Schema");
 ```
 
 A schema like tables and columns has an arbitrary (case sensitive) name. The schema is then used to create and access other elements as well as perform various operations with data. 
@@ -73,7 +73,7 @@ For example, we could define a calculate column which increments the value store
 Column calc = schema.createColumn("length", table, objects);
 calc.calc(
   (p, o) -> ((String)p[0]).length(), // How to compute
-  Arrays.asList(name) // Parameters for computing
+  new Column[] {name}) // Parameters for computing
   );
 ```
 The first parameter is a function which takes two arguments. The first argument `p` is an array of outputs of other columns that have to be processed. The second argument `o` is the current output of this same column which is not used for calculate columns. The second parameter of the definition specifies the input columns the outputs of which have to be processed. In this example, we use a previously defined no-definition column the outputs of which will be incremented. The size of the `p` array has to be equal to the length of the second parameter. 
@@ -85,7 +85,7 @@ calc.eval();
 Now, if there were no errors, we can retrieve the output values:
 ```java
 value = calc.getValue(1); // value = 3
-value = calc.getValue(1); // value = 7
+value = calc.getValue(2); // value = 7
 ```
 
 There exist also other ways to define calculate columns which can be more convenient in different situations, for example, in the case of complex arithmetic operations or in the case of complex computations implemented programmatically. Note also that column outputs could contain `null` and all lambda functions must guarantee the validity of its computations including null-safety and type-safety.
@@ -110,8 +110,8 @@ This property however cannot be used to access the elements of the "Table". Ther
 ```java
 Column link = schema.createColumn("link to table", facts, table);
 link.link(
-  Arrays.asList(name) // Columns to be used for searching (in the type table)
-  Arrays.asList(group) // Columns providing criteria for search (in this input table)
+  new Column[] {name}, // Columns to be used for searching (in the type table)
+  new Column[] {group} // Columns providing criteria for search (in this input table)
   );
 ```
 This definition essentially means that the new column will reference elements of its type table which have the same `name` as this table `group` column.
@@ -178,7 +178,7 @@ We can find the sum of the measure for each element in the "Table" using this ac
 Column sums = schema.createColumn("sum measure", table, objects);
 sums.accu(
   (p, o) -> (Double)o + (Double)p[0], // Add the measure for each new fact
-  Arrays.asList(measure) // Measure
+  new Column[] {measure} // Measure
   link // Grouping column
   );
 
