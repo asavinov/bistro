@@ -64,7 +64,7 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 		return ret;
 	}
 
-	public ColumnDefinitionAccu(Column column, Expression accuExpr, ColumnPath accuPathColumns) {
+	public ColumnDefinitionAccu(Column column, ColumnPath accuPathColumns, Expression accuExpr) {
 		super(column);
 
 		this.initExpr = null;
@@ -73,7 +73,7 @@ public class ColumnDefinitionAccu extends ColumnDefinitionBase {
 
 		this.accuPathColumns = accuPathColumns;
 	}
-	public ColumnDefinitionAccu(Column column, Expression initExpr, Expression accuExpr, Expression finExpr, ColumnPath accuPathColumns) {
+	public ColumnDefinitionAccu(Column column, ColumnPath accuPathColumns, Expression initExpr, Expression accuExpr, Expression finExpr) {
 		super(column);
 
 		this.initExpr = initExpr;

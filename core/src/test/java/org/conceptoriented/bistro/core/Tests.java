@@ -103,10 +103,11 @@ public class Tests {
         Column ta = t.getColumn("A");
         Column tb = t.getColumn("B");
 
-        ColumnPath[] paths = new ColumnPath[] {new ColumnPath(ta)};
-
         // Lambda
-        tb.calc((p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1, paths);
+        tb.calc(
+                (p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1,
+                ta
+        );
         tb.eval();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -116,7 +117,7 @@ public class Tests {
         assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
 
         // Expression
-        Expression expr = new CustomCalcEval(paths);
+        Expression expr = new CustomCalcExpr(new ColumnPath(ta));
 
         tb.calc(expr);
         tb.eval();
@@ -154,11 +155,10 @@ public class Tests {
 
         // Use column paths
         Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
-        ColumnPath[] paths = new ColumnPath[] { new ColumnPath(t2.getColumn("A")), new ColumnPath(t2.getColumn("B")) };
 
         t2c.link(
                 columns, // A and B from T
-                paths // A and B from T2
+                t2.getColumn("A"), t2.getColumn("B") // A and B from T2
         );
         t2c.eval();
 
@@ -170,14 +170,10 @@ public class Tests {
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
 
-        // Use Expression instances
-        Expression e1 = new Expr((p,o) -> p[0], new Column[] {t2.getColumn("A")} );
-        Expression e2 = new Expr((p,o) -> p[0], new Column[] {t2.getColumn("B")} );
-        Expression[] exprs = new Expression[] {e1, e2};
-
         t2c.link(
                 columns,
-                exprs
+                new Expr((p,o) -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
+                new Expr((p,o) -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
         );
         t2c.eval();
 
@@ -239,15 +235,12 @@ public class Tests {
         Column ta = t.getColumn("A");
         Column t2g = t2.getColumn("G");
 
-        ta.setDefaultValue(0.0);
-
-        ColumnPath[] params = new ColumnPath[] { new ColumnPath(t2.getColumn("Id")) };
-
         // Lambda for accumulation " [out] + 2.0 * [Id] "
+        ta.setDefaultValue(0.0);
         ta.accu(
+                t2g,
                 (p, o) -> (Double)o + 2.0 * (Double)p[0],
-                params,
-                new ColumnPath(t2g)
+                t2.getColumn("Id")
         );
         ta.eval();
 
@@ -262,8 +255,9 @@ public class Tests {
 
         // Expression
         ta.accu(
-                new CustomAccuExpr(params),
-                new ColumnPath(t2g));
+                new ColumnPath(t2g),
+                new CustomAccuExpr(new ColumnPath(t2.getColumn("Id")))
+        );
         ta.eval(); // It has to also eval the accu (group) columns
 
         // Check correctness of dependencies
@@ -327,7 +321,7 @@ public class Tests {
 }
 
 
-class CustomCalcEval implements Expression {
+class CustomCalcExpr implements Expression {
 
     List<ColumnPath> parameterPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
@@ -338,9 +332,9 @@ class CustomCalcEval implements Expression {
         return 2.0 * param + 1.0; // "2 * [A] + 1"
     }
 
-    public CustomCalcEval() {
+    public CustomCalcExpr() {
     }
-    public CustomCalcEval(ColumnPath[] params) {
+    public CustomCalcExpr(ColumnPath... params) {
         this.setParameterPaths(Arrays.asList(params));
     }
 }
@@ -358,7 +352,7 @@ class CustomAccuExpr implements Expression {
     }
     public CustomAccuExpr() {
     }
-    public CustomAccuExpr(ColumnPath[] params) {
+    public CustomAccuExpr(ColumnPath... params) {
         this.setParameterPaths(Arrays.asList(params));
     }
 }

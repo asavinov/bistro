@@ -140,8 +140,8 @@ public class Tests {
         Expression expr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
         ta.accu(
-                expr,
-                new ColumnPath(t2g)
+                new ColumnPath(t2g),
+                expr
         );
         ta.eval();
 

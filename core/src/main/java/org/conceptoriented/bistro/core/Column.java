@@ -269,7 +269,7 @@ public class Column {
     //
 
     // Lambda + parameters
-    public void calc(Evaluator lambda, ColumnPath[] params) { // Specify lambda and parameter paths
+    public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter paths
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
@@ -282,7 +282,7 @@ public class Column {
     }
 
     // Lambda + parameters
-    public void calc(Evaluator lambda, Column[] params) { // Specify lambda and parameter columns
+    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter columns
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
@@ -310,7 +310,7 @@ public class Column {
     //
 
     // Equality
-    public void link(Column[] columns, ColumnPath[] params) {
+    public void link(Column[] columns, ColumnPath... params) {
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
         this.definition = new ColumnDefinitionLinkPaths(this, columns, params);
@@ -321,7 +321,7 @@ public class Column {
     }
 
     // Equality
-    public void link(Column[] columns, Column[] params) {
+    public void link(Column[] columns, Column... params) {
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
         this.definition = new ColumnDefinitionLinkPaths(this, columns, params);
@@ -332,7 +332,7 @@ public class Column {
     }
 
     // Expressions
-    public void link(Column[] columns, Expression[] exprs) { // Custom rhs UDEs for each lhs column
+    public void link(Column[] columns, Expression... exprs) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
         this.definition = new ColumnDefinitionLinkExprs(this, columns, exprs);
@@ -347,11 +347,11 @@ public class Column {
     //
 
     // Evaluator + parameters
-    public void accu(Evaluator accuEval, ColumnPath[] params, ColumnPath accuPath) {
+    public void accu(ColumnPath accuPath, Evaluator lambda, ColumnPath... params) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        Expression accuExpr = new Expr(accuEval, params);
-        this.definition = new ColumnDefinitionAccu(this, accuExpr, accuPath);
+        Expression accuExpr = new Expr(lambda, params);
+        this.definition = new ColumnDefinitionAccu(this, accuPath, accuExpr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -359,11 +359,11 @@ public class Column {
     }
 
     // Evaluator + parameters
-    public void accu(Evaluator accuEval, Column[] params, Column accuPath) {
+    public void accu(Column accuPath, Evaluator lambda, Column... params) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        Expression accuExpr = new Expr(accuEval, params);
-        this.definition = new ColumnDefinitionAccu(this, accuExpr, new ColumnPath(accuPath));
+        Expression accuExpr = new Expr(lambda, params);
+        this.definition = new ColumnDefinitionAccu(this, new ColumnPath(accuPath), accuExpr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -371,10 +371,10 @@ public class Column {
     }
 
     // Expression
-    public void accu(Expression accuExpr, ColumnPath accuPath) { // Provide instance of custom UDEs which have already paths
+    public void accu(ColumnPath accuPath, Expression expr) { // Provide instance of custom UDEs which have already paths
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        this.definition = new ColumnDefinitionAccu(this, accuExpr, accuPath);
+        this.definition = new ColumnDefinitionAccu(this, accuPath, expr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

@@ -19,13 +19,13 @@ public class Expr implements Expression {
         return evaluateLambda.evaluate(params, out);
     }
 
-    public Expr(Evaluator eval, ColumnPath[] params) {
+    public Expr(Evaluator eval, ColumnPath... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new ColumnPath[]{};
         this.setParameterPaths(Arrays.asList(params));
     }
-    public Expr(Evaluator eval, Column[] params) {
+    public Expr(Evaluator eval, Column... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new Column[]{};
