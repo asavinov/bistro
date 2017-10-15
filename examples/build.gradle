@@ -37,6 +37,8 @@ dependencies {
     compile("org.conceptoriented:bistro-core:0.3.0")
     compile("org.conceptoriented:bistro-formula:0.3.0")
 
+    compile("org.apache.commons:commons-csv:1.4")
+
     antlr("org.antlr:antlr4:4.7")
 
     compile("org.antlr:antlr4-runtime:4.7")
