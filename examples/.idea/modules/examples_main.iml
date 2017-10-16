@@ -16,7 +16,6 @@
     <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-formula:0.3.0" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4:4.7" level="project" />
     <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.3.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.apache.commons:commons-csv:1.4" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4-runtime:4.7" level="project" />
     <orderEntry type="library" name="Gradle: net.objecthunter:exp4j:0.4.8" level="project" />
     <orderEntry type="library" name="Gradle: com.udojava:EvalEx:1.11" level="project" />
