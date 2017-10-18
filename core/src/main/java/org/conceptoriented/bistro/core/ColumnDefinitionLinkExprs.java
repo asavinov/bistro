@@ -89,7 +89,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
                 Expression expr = exprs.get(mmbrNo);
                 Object result;
                 try {
-                    result = expr.evaluate(paramValues, null);
+                    result = expr.eval(paramValues);
                 } catch (BistroError e) {
                     definitionErrors.add(e);
                     return;

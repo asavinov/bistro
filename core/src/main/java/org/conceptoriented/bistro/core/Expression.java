@@ -10,10 +10,4 @@ public interface Expression extends Evaluator {
 
 	public void setParameterPaths(List<ColumnPath> paths);
 	public List<ColumnPath> getParameterPaths();
-
-	/**
-	 * Each parameter has a description which can be retrieved by means of this method. 
-	 * It is not the best approach because these descriptions are language specific.
-	 */
-	//public List<String> getParamDescriptions();
 }

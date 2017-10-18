@@ -7,5 +7,5 @@ package org.conceptoriented.bistro.core;
  */
 @FunctionalInterface
 public interface Evaluator {
-    public Object evaluate(Object[] params, Object out) throws BistroError;
+    public Object eval(Object[] params) throws BistroError;
 }

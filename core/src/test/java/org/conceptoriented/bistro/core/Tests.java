@@ -105,7 +105,7 @@ public class Tests {
 
         // Lambda
         tb.calc(
-                (p, o) -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1,
+                p -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1,
                 ta
         );
         tb.eval();
@@ -172,8 +172,8 @@ public class Tests {
 
         t2c.link(
                 columns,
-                new Expr((p,o) -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
-                new Expr((p,o) -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
+                new Expr( p -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
+                new Expr( p -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
         );
         t2c.eval();
 
@@ -239,7 +239,7 @@ public class Tests {
         ta.setDefaultValue(0.0);
         ta.accu(
                 t2g,
-                (p, o) -> (Double)o + 2.0 * (Double)p[0],
+                p -> 2.0 * (Double)p[0] + (Double)p[1],
                 t2.getColumn("Id")
         );
         ta.eval();
@@ -327,7 +327,7 @@ class CustomCalcExpr implements Expression {
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
-    @Override public Object evaluate(Object[] params, Object out) {
+    @Override public Object eval(Object[] params) {
         double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
         return 2.0 * param + 1.0; // "2 * [A] + 1"
     }
@@ -345,10 +345,10 @@ class CustomAccuExpr implements Expression {
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return inputPaths; }
 
-    @Override public Object evaluate(Object[] params, Object out) {
+    @Override public Object eval(Object[] params) {
         double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
-        double outVal = out == null ? Double.NaN : ((Number)out).doubleValue();
-        return outVal + 2.0 * param; // " [out] + 2.0 * [Id] "
+        double outVal = params[1] == null ? Double.NaN : ((Number)params[1]).doubleValue();
+        return 2.0 * param + outVal; // " 2.0 * [Id] + [out] "
     }
     public CustomAccuExpr() {
     }

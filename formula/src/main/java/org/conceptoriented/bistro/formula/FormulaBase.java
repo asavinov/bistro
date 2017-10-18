@@ -49,11 +49,14 @@ public class FormulaBase implements Formula {
 		return paths;
 	}
 	@Override
-	public Object evaluate(Object[] params, Object out) throws BistroError {
+	public Object eval(Object[] params) throws BistroError {
+
 		// Set all parameters in native expressions
-		int paramNo = 0;
-		for(ExprDependency dep : this.exprDependencies) {
-			Object value = params[paramNo];
+		for(int p=0; p<this.exprDependencies.size(); p++) {
+
+			Object value = params[p];
+            ExprDependency dep = this.exprDependencies.get(p);
+
 			if(value == null) value = Double.NaN;
 			try {
 				if(this.isEquality) {
@@ -69,11 +72,11 @@ public class FormulaBase implements Formula {
 			catch(Exception e) {
 			    throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
-			paramNo++;
 		}
 
 		// Set out value (if used)
-		if(this.outDependency != null) {
+		if(this.outDependency != null && params.length > this.exprDependencies.size()) { // If the output is provided as the last element
+            Object out = params[this.exprDependencies.size()];
 			if(out == null) out = Double.NaN;
 			try {
 				if(this.isEquality) {

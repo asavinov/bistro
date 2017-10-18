@@ -72,8 +72,8 @@ For example, we could define a calculate column which increments the value store
 ```java
 Column calc = schema.createColumn("length", table, objects);
 calc.calc(
-  (p, o) -> ((String)p[0]).length(), // How to compute
-  new Column[] {name}) // Parameters for computing
+  p -> ((String)p[0]).length(), // How to compute
+  name // Parameters for computing
   );
 ```
 The first parameter is a function which takes two arguments. The first argument `p` is an array of outputs of other columns that have to be processed. The second argument `o` is the current output of this same column which is not used for calculate columns. The second parameter of the definition specifies the input columns the outputs of which have to be processed. In this example, we use a previously defined no-definition column the outputs of which will be incremented. The size of the `p` array has to be equal to the length of the second parameter. 
@@ -154,9 +154,8 @@ If we want to simply count the number of facts belonging to each element of the 
 ```java
 Column counts = schema.createColumn("count facts", table, objects);
 counts.accu(
-  (p, o) -> (Double)o + 1.0, // How to accumulate/update
-  null, // Nothing to aggregate except for counting
-  link // How to group/map facts to this table
+  link, // How to group/map facts to this table
+  p -> (Double)p[0] + 1.0 // How to accumulate/update
   );
 
 counts.eval();
@@ -177,9 +176,9 @@ We can find the sum of the measure for each element in the "Table" using this ac
 ```java
 Column sums = schema.createColumn("sum measure", table, objects);
 sums.accu(
-  (p, o) -> (Double)o + (Double)p[0], // Add the measure for each new fact
-  new Column[] {measure} // Measure
-  link // Grouping column
+  link, // Grouping column
+  p -> (Double)p[0] + (Double)p[1], // Add the measure for each new fact
+  measure // Measure
   );
 
 sums.eval();
@@ -251,7 +250,7 @@ Command line:
 
 ## API
 
-* Maybe in addition to column parameters, introduce column name parameters (so that we do not need to resolve them)
+* Convenience. Maybe in addition to column parameters, introduce column name parameters (so that we do not need to resolve them)
   * calc(lambda, String[]) - use a list of column names (also list of NamePaths)
   * link(String[], String[])
   * link(String[], NamePath[])

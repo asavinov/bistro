@@ -40,6 +40,6 @@ Version: `0.3.0`
 
 # Change Log
 
-* v0.3.0 (2017-09-xx) - Refactoring column definition API: arrays instead lists, factoring formulas out in a separate project etc.
+* v0.3.0 (2017-10-xx) - Refactoring column definition API: arrays instead lists, factoring formulas out in a separate project etc.
 * v0.2.0 (2017-09-17) - Major refactoring and cleaning with new API
 * v0.1.0 (2017-09-03) - Initial commit

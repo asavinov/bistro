@@ -15,8 +15,8 @@ public class Expr implements Expression {
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
     Evaluator evaluateLambda;
-    @Override public Object evaluate(Object[] params, Object out) throws BistroError {
-        return evaluateLambda.evaluate(params, out);
+    @Override public Object eval(Object[] params) throws BistroError {
+        return evaluateLambda.eval(params);
     }
 
     public Expr(Evaluator eval, ColumnPath... params) {

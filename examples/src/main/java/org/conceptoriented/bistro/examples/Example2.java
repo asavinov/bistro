@@ -41,7 +41,7 @@ public class Example2 {
         // [OrderItems].[Amount] = [Quantity] * [Unit Price]
         Column itemsAmount = schema.createColumn("Amount", items, columnType);
         itemsAmount.calc(
-                (p,o) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
+                p -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
                 items.getColumn("Quantity"), items.getColumn("Unit Price")
         );
 
@@ -72,7 +72,7 @@ public class Example2 {
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,
-                (p,o) -> (double)p[0] + (double)o, // [Amount] + [out]
+                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
                 items.getColumn("Amount")
         );
 
@@ -81,7 +81,7 @@ public class Example2 {
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,
-                (p,o) -> (double)p[0] + (double)o, // [Amount] + [out]
+                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
                 items.getColumn("Amount")
         );
 
