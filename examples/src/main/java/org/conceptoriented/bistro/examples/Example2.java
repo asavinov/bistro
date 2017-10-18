@@ -58,8 +58,8 @@ public class Example2 {
 
         // [OrderItems].[Order]: OrderItems -> Orders
         Column itemsOrder = schema.createColumn("Order", items, orders);
-        itemsProduct.link(
-                new Column[] { products.getColumn("ID") },
+        itemsOrder.link(
+                new Column[] { orders.getColumn("ID") },
                 items.getColumn("Order ID")
         );
 
@@ -72,7 +72,7 @@ public class Example2 {
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,
-                (p,o) -> Double.valueOf((String)p[0]) + Double.valueOf((String)o),
+                (p,o) -> (double)p[0] + (double)o, // [Amount] + [out]
                 items.getColumn("Amount")
         );
 
@@ -80,14 +80,12 @@ public class Example2 {
         Column ordersAmount = schema.createColumn("Total Amount", orders, columnType);
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
-                itemsOrder, // [out] + [Quantity] * [Unit Price]
-                (p,o) -> Double.valueOf((String)p[0]) + Double.valueOf((String)o),
+                itemsOrder,
+                (p,o) -> (double)p[0] + (double)o, // [Amount] + [out]
                 items.getColumn("Amount")
         );
 
         schema.eval();
-
-        int a = 0;
     }
 
 }

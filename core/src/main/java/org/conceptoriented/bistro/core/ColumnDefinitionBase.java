@@ -31,7 +31,11 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 
 		for(long i=mainRange.start; i<mainRange.end; i++) {
 			// Find group [ACCU-specific]
-			Long g = accuLinkPath == null ? i : (Long) accuLinkPath.getValue(i);
+			Object g_out = accuLinkPath == null ? i : accuLinkPath.getValue(i);
+			if(g_out == null) {
+			    continue; // Do not accumulate facts without group
+            }
+            Long g = (Long)g_out;
 
 			// Read all parameter paths
 			int paramNo = 0;

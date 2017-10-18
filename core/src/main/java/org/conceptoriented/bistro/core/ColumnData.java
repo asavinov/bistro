@@ -55,7 +55,7 @@ public class ColumnData {
 		// Check if not enough space and allocate more if necessary
         int additionalSize = (this.startIdOffset + (int)idRange.getLength() + (int)count) - this.values.length;
         if(additionalSize > 0) { // More space is needed
-            additionalSize = INCREMENT_SIZE + additionalSize / INCREMENT_SIZE; // How many increments we need to cover the additional size
+            additionalSize = ((additionalSize/INCREMENT_SIZE) + 1) * INCREMENT_SIZE; // How many increments we need to cover the additional size
             this.values = Arrays.copyOf(this.values, this.values.length + additionalSize);
         }
 
@@ -72,13 +72,14 @@ public class ColumnData {
         this.idRange.start += count;
         this.startIdOffset += count;
 
-        // Check if there is enough space to free (garbage collection)
+        // Free some space if there is enough in the beginning of the array (garbage collection)
         if(this.startIdOffset > INCREMENT_SIZE) {
-            // Shift columnPaths to the beginning
+            // Shift values to the beginning
             System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
             this.startIdOffset = 0;
 
-            if(this.values.length > INITIAL_SIZE + INITIAL_SIZE) { // Do not make smaller than initial size
+            // Free space at the end of the allocated array
+            if(this.values.length >= INITIAL_SIZE + INCREMENT_SIZE) { // Do not make smaller than initial size
                 int additionalSize = this.values.length - (int) idRange.getLength(); // Unused space
                 additionalSize = (additionalSize / INCREMENT_SIZE) * INCREMENT_SIZE; // How much (whole increments) we want to remove
                 this.values = Arrays.copyOf(this.values, this.values.length - additionalSize);
@@ -92,8 +93,11 @@ public class ColumnData {
 		// Initialize storage
 		this.values = new Object[INITIAL_SIZE];
 
-		// Initialize ranges according to the input table (all records new)
+		// Initially no data but the ids start from what is specified in parameters
 		this.idRange.start = start;
-        this.idRange.end = end;
-	}
+        this.idRange.end = start;
+
+        // Now the end will move and space will be added if necessary
+        this.add(end - start);
+    }
 }

@@ -86,12 +86,25 @@ public class Column {
         this.isDirty = true;
     }
 
-    protected boolean hasDirtyDeep() { // This plus inherited dirty status
+    // This plus inherited dirty status
+    protected boolean hasDirtyDeep() {
         if(this.isDirty) return true;
 
         // Otherwise check if there is a dirty dependency (recursively)
         for(Column dep : this.getDependencies()) {
             if(dep.hasDirtyDeep()) return true;
+        }
+
+        return false;
+    }
+    protected boolean hasDirtyDeepDerived() { // Only derived columns taken into account - non-derived skipped (always leaves)
+        if(!this.isDerived()) return false; // Non-derived skipped (do not expand dependencies because they by definition have no them)
+
+        if(this.isDirty) return true;
+
+        // Otherwise check if there is a dirty dependency (recursively)
+        for(Column dep : this.getDependencies()) {
+            if(dep.hasDirtyDeepDerived()) return true;
         }
 
         return false;

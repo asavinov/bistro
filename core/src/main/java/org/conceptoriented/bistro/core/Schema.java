@@ -187,7 +187,7 @@ public class Schema {
 
             boolean oneDepDirty = false;
             for(Column dep : col.getDependencies()) {
-                if(dep.hasDirtyDeep()) { oneDepDirty = true; break; }
+                if(dep.hasDirtyDeepDerived()) { oneDepDirty = true; break; }
             }
 
             if(oneDepDirty) { // Columns with dirty dependencies cannot be evaluated
