@@ -3,9 +3,6 @@ package org.conceptoriented.bistro.examples;
 import org.conceptoriented.bistro.core.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 public class Example2 {
 
@@ -19,7 +16,7 @@ public class Example2 {
         // Create schema
         //
 
-        schema = new Schema("Ex1");
+        schema = new Schema("Example 2");
 
         //
         // Create tables and columns by loading data from CSV files

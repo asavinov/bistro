@@ -2,8 +2,6 @@ package org.conceptoriented.bistro.examples;
 
 import org.conceptoriented.bistro.core.*;
 
-import java.util.Arrays;
-
 public class Example1 {
 
 	public static void main(String[] args) {
@@ -23,7 +21,7 @@ public class Example1 {
         Table events = schema.createTable("EVENTS");
 
         // Primitive tables are used as data types when defining columns
-        Table object = schema.getTable("Object");
+        Table objects = schema.getTable("Object");
 
         //
         // Create columns
@@ -31,10 +29,10 @@ public class Example1 {
         Column column;
 
         // Each thing has a name
-        Column thingName = schema.createColumn("Name", things, object);
+        Column thingName = schema.createColumn("Name", things, objects);
 
         // Each event stores name of the device it was sent from
-        Column eventThingName = schema.createColumn("Thing Name", events, object);
+        Column eventThingName = schema.createColumn("Thing Name", events, objects);
 
         //
         // Data
@@ -59,7 +57,7 @@ public class Example1 {
         //
 
         // This column will compute the thing name length in characters
-        Column calc = schema.createColumn("Name Length", things, object);
+        Column calc = schema.createColumn("Name Length", things, objects);
         calc.calc(
                 p -> ((String)p[0]).length(), // How to compute
                 thingName // One parameter to compute the column
@@ -78,7 +76,7 @@ public class Example1 {
         // Link column finds its output in the output table
         Column link = schema.createColumn("Thing", events, things);
         link.link(
-                new Column[] {thingName}, // Columns to be used for searching (in the type table)
+                new Column[] { thingName }, // Columns to be used for searching (in the type table)
                 eventThingName // Columns providing criteria (values) for search (in this input table)
         );
 
@@ -86,7 +84,7 @@ public class Example1 {
         // Accumulate column
         //
 
-        Column counts = schema.createColumn("Event Count", things, object);
+        Column counts = schema.createColumn("Event Count", things, objects);
         counts.accu(
                 link, // How to group/map facts to this table
                 p -> (Double)p[0] + 1.0 // How to accumulate/update
