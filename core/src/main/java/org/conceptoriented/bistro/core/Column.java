@@ -359,11 +359,16 @@ public class Column {
     // Accumulate
     //
 
-    // Evaluator + parameters
+    // Evaluator + parameters OR Expression + no params
     public void accu(ColumnPath accuPath, Evaluator lambda, ColumnPath... params) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        Expression accuExpr = new Expr(lambda, params);
+        Expression accuExpr;
+        if(lambda instanceof Expression)
+            accuExpr = (Expression)lambda;
+        else
+            accuExpr = new Expr(lambda, params);
+
         this.definition = new ColumnDefinitionAccu(this, accuPath, accuExpr);
 
         if(this.isInCyle()) {
@@ -371,23 +376,17 @@ public class Column {
         }
     }
 
-    // Evaluator + parameters
+    // Evaluator + parameters OR Expression + no params
     public void accu(Column accuPath, Evaluator lambda, Column... params) {
         this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
 
-        Expression accuExpr = new Expr(lambda, params);
+        Expression accuExpr;
+        if(lambda instanceof Expression)
+            accuExpr = (Expression)lambda;
+        else
+            accuExpr = new Expr(lambda, params);
+
         this.definition = new ColumnDefinitionAccu(this, new ColumnPath(accuPath), accuExpr);
-
-        if(this.isInCyle()) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
-    // Expression
-    public void accu(ColumnPath accuPath, Expression expr) { // Provide instance of custom UDEs which have already paths
-        this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
-
-        this.definition = new ColumnDefinitionAccu(this, accuPath, expr);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

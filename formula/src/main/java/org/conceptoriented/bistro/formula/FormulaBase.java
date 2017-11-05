@@ -54,10 +54,25 @@ public class FormulaBase implements Formula {
 		// Set all parameters in native expressions
 		for(int p=0; p<this.exprDependencies.size(); p++) {
 
-			Object value = params[p];
-            ExprDependency dep = this.exprDependencies.get(p);
+			// Read and prepare the parameter value
+		    Object value = params[p];
+			if(value == null && !this.isEquality) {
+                value = Double.NaN;
+            }
+			else if(value instanceof String && !this.isEquality) {
+			    if( ((String) value).isEmpty() )
+			        value = Double.NaN;
+			    else
+			        try {
+                        value = Double.valueOf((String) value);
+                    }
+                    catch(NumberFormatException e){
+                        throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error converting string to double. " + e.getMessage(), e);
+                    }
+			}
 
-			if(value == null) value = Double.NaN;
+            // Set the parameter value in the expression
+			ExprDependency dep = this.exprDependencies.get(p);
 			try {
 				if(this.isEquality) {
 					; // Do nothing
@@ -74,7 +89,7 @@ public class FormulaBase implements Formula {
 			}
 		}
 
-		// Set out value (if used)
+		// Set current output value (if used)
 		if(this.outDependency != null && params.length > this.exprDependencies.size()) { // If the output is provided as the last element
             Object out = params[this.exprDependencies.size()];
 			if(out == null) out = Double.NaN;

@@ -46,6 +46,7 @@ public class ExUtils {
             String[] fields = line.split(",");
             lines.add(fields);
         }
+        scanner.close();
         return lines;
     }
 
