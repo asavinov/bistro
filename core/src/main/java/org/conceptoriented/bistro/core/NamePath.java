@@ -10,7 +10,7 @@ public class NamePath {
 	
 	public List<String> names = new ArrayList<String>();
 	
-	// Assume that it is a column path, resolve all individual columns relative to the specified table
+	// Assume that it is a column path, resolve all individual keyColumns relative to the specified table
 	// The returned array contains as many elements as the names in the sequence
 	public ColumnPath resolveColumns(Table table) {
 		List<Column> result = new ArrayList<Column>();

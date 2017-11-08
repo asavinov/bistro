@@ -59,7 +59,7 @@ public class Column {
     public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isDirty = true; }
 
     //
-    // Data (protected). These are used from Table only (all columns change their ranges simultaniously) and from users - users add/remove elements via tables.
+    // Data (protected). These are used from Table only (all keyColumns change their ranges simultaniously) and from users - users add/remove elements via tables.
     //
 
     protected void add() { this.data.add(); this.isDirty = true; }
@@ -71,10 +71,10 @@ public class Column {
     //
     // Data dirty state (~hasDirtyDeep)
     //
-    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by eval procedure - isDirty is also ignored.
+    // 0) for USER keyColumns (!isDerived) is defined and interpreted by the user -> USER keyColumns do not participate in dependencies/evaluation, so since USER keyColumns are ignored by eval procedure - isDirty is also ignored.
 
     // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
-    // 2) set this output paths (this function changes) -> or any of its dependencies recursively
+    // 2) set this output valuePaths (this function changes) -> or any of its dependencies recursively
     // 3) definition change of this -> or any of its dependencies
     // 4) definition error of this -> or any of its dependencies
 
@@ -97,7 +97,7 @@ public class Column {
 
         return false;
     }
-    protected boolean hasDirtyDeepDerived() { // Only derived columns taken into account - non-derived skipped (always leaves)
+    protected boolean hasDirtyDeepDerived() { // Only derived keyColumns taken into account - non-derived skipped (always leaves)
         if(!this.isDerived()) return false; // Non-derived skipped (do not expand dependencies because they by definition have no them)
 
         if(this.isDirty) return true;
@@ -120,7 +120,7 @@ public class Column {
         if(deps == null) return new ArrayList<>();
         return deps;
     }
-    // Get all unique dependencies of the specified columns
+    // Get all unique dependencies of the specified keyColumns
     protected List<Column> getDependencies(List<Column> cols) {
         List<Column> ret = new ArrayList<>();
         for(Column col : cols) {
@@ -132,7 +132,7 @@ public class Column {
         return ret;
     }
 
-    // Get all columns that (directly) depend on this column
+    // Get all keyColumns that (directly) depend on this column
     protected List<Column> getDependants() {
         List<Column> res = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Column>toList());
         return res;
@@ -182,7 +182,7 @@ public class Column {
     // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column
     public void eval() {
 
-        // Skip non-derived columns - they do not participate in evaluation
+        // Skip non-derived keyColumns - they do not participate in evaluation
         if(!this.isDerived()) {
             if(this.isDirty()) {
                 this.getDependants().forEach(x -> x.setDirty());
@@ -282,7 +282,7 @@ public class Column {
     //
 
     // Lambda + parameters
-    public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter paths
+    public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter valuePaths
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
@@ -295,7 +295,7 @@ public class Column {
     }
 
     // Lambda + parameters
-    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter columns
+    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter keyColumns
         this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
@@ -323,10 +323,10 @@ public class Column {
     //
 
     // Equality
-    public void link(Column[] columns, ColumnPath... params) {
+    public void link(Column[] keyColumns, ColumnPath... valuePaths) {
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
-        this.definition = new ColumnDefinitionLinkPaths(this, columns, params);
+        this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valuePaths);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -334,10 +334,10 @@ public class Column {
     }
 
     // Equality
-    public void link(Column[] columns, Column... params) {
+    public void link(Column[] keyColumns, Column... valueColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
-        this.definition = new ColumnDefinitionLinkPaths(this, columns, params);
+        this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valueColumns);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -345,10 +345,10 @@ public class Column {
     }
 
     // Expressions
-    public void link(Column[] columns, Expression... exprs) { // Custom rhs UDEs for each lhs column
+    public void link(Column[] keyColumns, Expression... valueExprs) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
 
-        this.definition = new ColumnDefinitionLinkExprs(this, columns, exprs);
+        this.definition = new ColumnDefinitionLinkExprs(this, keyColumns, valueExprs);
 
         if(this.isInCyle()) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A sequence of columns where each next column starts from the data type (table) of the previous column.
+ * A sequence of keyColumns where each next column starts from the data type (table) of the previous column.
  */
 public class ColumnPath {
 
@@ -33,7 +33,7 @@ public class ColumnPath {
         return this.columns.get(this.columns.size()-1).getOutput();
     }
 
-    public static List<Column> getColumns(List<ColumnPath> paths) { // Extract (unique) columns from a list of paths
+    public static List<Column> getColumns(List<ColumnPath> paths) { // Extract (unique) keyColumns from a list of valuePaths
         List<Column> columns = new ArrayList<>();
 
         for(ColumnPath path : paths) {

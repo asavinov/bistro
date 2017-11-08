@@ -3,7 +3,7 @@ package org.conceptoriented.bistro.core;
 import java.util.List;
 
 /**
- * It is an implementation of definition for calc columns.
+ * It is an implementation of definition for calc keyColumns.
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
 public class ColumnDefinitionCalc extends ColumnDefinitionBase {

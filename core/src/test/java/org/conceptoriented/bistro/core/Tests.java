@@ -24,7 +24,7 @@ public class Tests {
     @Test
     public void schemaTest() // Schema operations
     {
-        // Create and configure: schema, tables, columns
+        // Create and configure: schema, tables, keyColumns
         Schema s = new Schema("My Schema");
 
         Table t = s.createTable("T");
@@ -46,7 +46,7 @@ public class Tests {
      * The range of ids is read from the table.
      * Values are set and get using column methos.
      * Convenience methods:
-     * Getting or setting several columns simultaniously using Map (of column names or column references).
+     * Getting or setting several keyColumns simultaniously using Map (of column names or column references).
      */
     @Test
     public void dataTest() { // Manual operations table id ranges
@@ -70,7 +70,7 @@ public class Tests {
         assertEquals(3, t.getIdRange().end);
 
         // Records.
-        // Working with multiple columns (records)
+        // Working with multiple keyColumns (records)
         long id4 = t.add();
         List<Column> cols = Arrays.asList(c1, c2);
         List<Object> vals = Arrays.asList(2.0, "StringValue 2");
@@ -153,7 +153,7 @@ public class Tests {
         Table t2 = s.getTable("T2");
         Column t2c = t2.getColumn("C");
 
-        // Use column paths
+        // Use column valuePaths
         Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
 
         t2c.link(
@@ -187,7 +187,7 @@ public class Tests {
     }
 
     Schema createLinkSchema() {
-        // Create and configure: schema, tables, columns
+        // Create and configure: schema, tables, keyColumns
         Schema s = new Schema("My Schema");
 
         //
@@ -258,7 +258,7 @@ public class Tests {
                 new ColumnPath(t2g),
                 new CustomAccuExpr(new ColumnPath(t2.getColumn("Id")))
         );
-        ta.eval(); // It has to also eval the accu (group) columns
+        ta.eval(); // It has to also eval the accu (group) keyColumns
 
         // Check correctness of dependencies
         ta_deps = ta.getDependencies();
@@ -323,7 +323,7 @@ public class Tests {
 
 class CustomCalcExpr implements Expression {
 
-    List<ColumnPath> parameterPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
+    List<ColumnPath> parameterPaths = new ArrayList<>(); // The expression parameters are bound to these input column valuePaths
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
@@ -341,7 +341,7 @@ class CustomCalcExpr implements Expression {
 
 class CustomAccuExpr implements Expression {
 
-    List<ColumnPath> inputPaths = new ArrayList<>(); // The expression parameters are bound to these input column paths
+    List<ColumnPath> inputPaths = new ArrayList<>(); // The expression parameters are bound to these input column valuePaths
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return inputPaths; }
 

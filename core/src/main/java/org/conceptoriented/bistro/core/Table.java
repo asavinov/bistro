@@ -80,7 +80,7 @@ public class Table {
     }
 
     //
-    // Operations with multiple column paths
+    // Operations with multiple column valuePaths
     //
 
     public void getValues(long id, Map<String,Object> record) {
@@ -123,8 +123,8 @@ public class Table {
     public long find(List<Column> columns, List<Object> values, boolean append) {
 
         //List<String> names = record.entrySet()..getNames();
-        //List<Object> paths = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());
-        //List<Column> columns = names.stream().map(x -> this.getSchema().getColumn(this.getName(), x)).collect(Collectors.<Column>toList());
+        //List<Object> valuePaths = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());
+        //List<Column> keyColumns = names.stream().map(x -> this.getSchema().getColumn(this.getName(), x)).collect(Collectors.<Column>toList());
 
 		Range searchRange = this.getIdRange();
 		long index = -1;
@@ -137,7 +137,7 @@ public class Table {
 
                 // PROBLEM: The same number in Double and Integer will not be equal.
 				//   SOLUTION 1: cast to some common type before comparison. It can be done in-line here or we can use utility methods.
-				//   *SOLUTION 2: assume that the paths have the type of the column, that is, the same comparable numeric type
+				//   *SOLUTION 2: assume that the valuePaths have the type of the column, that is, the same comparable numeric type
 				//   SOLUTION 3: always cast the value to the type of this column (either here or in the expression)
 
 				// PROBLEM: Object.equals does not handle null's correctly

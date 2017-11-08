@@ -23,9 +23,9 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
 		// ACCU: The optimal approach is to apply negative accu function for removed elements and then positive accu function for added elements
 		Range mainRange = mainTable.getIdRange();
 
-		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading paths
+		// Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading valuePaths
 		List<ColumnPath> paramPaths = expr.getParameterPaths();
-		Object[] paramValues = new Object[paramPaths.size() + 1]; // Will store paths for all params and current output at the end
+		Object[] paramValues = new Object[paramPaths.size() + 1]; // Will store valuePaths for all params and current output at the end
 		Object result; // Will be written to output for each input
 
 		for(long i=mainRange.start; i<mainRange.end; i++) {
@@ -36,7 +36,7 @@ public abstract class ColumnDefinitionBase implements ColumnDefinition { // Conv
             }
             Long g = (Long)g_out;
 
-			// Read all parameter paths
+			// Read all parameter valuePaths
 			for(int p=0; p<paramPaths.size(); p++) {
 				paramValues[p] = paramPaths.get(p).getValue(i);
 			}

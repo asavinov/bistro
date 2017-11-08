@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * It is an implementation of definition for link columns.
+ * It is an implementation of definition for link keyColumns.
  * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
  */
 public class ColumnDefinitionAccu extends ColumnDefinitionBase {
