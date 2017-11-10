@@ -5,8 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * It is an implementation of definition for link keyColumns.
- * It loops through the main table, reads inputs, passes them to the expression and then write the output to the main column.
+ * The logic of link columns.
  */
 public class ColumnDefinitionLinkExprs implements ColumnDefinition {
 
@@ -22,14 +21,9 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
         return this.definitionErrors;
     }
 
-	@Override
-	public void eval() {
-        this.evaluateLink(this.keyColumns, this.valueExprs);
-	}
-
-	@Override
-	public List<Column> getDependencies() {
-		List<Column> ret = new ArrayList<>();
+    @Override
+    public List<Column> getDependencies() {
+        List<Column> ret = new ArrayList<>();
 
         for (Expression expr : this.valueExprs) {
             List<Column> deps = ColumnPath.getColumns(expr.getParameterPaths());
@@ -38,10 +32,11 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
             }
         }
 
-		return ret;
-	}
+        return ret;
+    }
 
-    protected void evaluateLink(List<Column> keyColumns, List<Expression> valueExprs) {
+    @Override
+	public void eval() {
 
         definitionErrors.clear(); // Clear state
 
@@ -59,7 +54,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
         List< Object > rhsResults = new ArrayList<>(); // Record of valuePaths used for search (produced by expressions and having same length as column list)
 
         // Initialize these lists for each member expression
-        for(Expression expr : valueExprs) {
+        for(Expression expr : this.valueExprs) {
             int paramCount = expr.getParameterPaths().size();
 
             rhsParamPaths.add( expr.getParameterPaths() );
@@ -70,7 +65,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
             // Evaluate ALL child rhs expressions by producing an array/record of their results
-            for(int mmbrNo = 0; mmbrNo < keyColumns.size(); mmbrNo++) {
+            for(int mmbrNo = 0; mmbrNo < this.keyColumns.size(); mmbrNo++) {
 
                 List<ColumnPath> paramPaths = rhsParamPaths.get(mmbrNo);
                 Object[] paramValues = rhsParamValues.get(mmbrNo);
@@ -83,7 +78,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
                 }
 
                 // Evaluate this member expression
-                Expression expr = valueExprs.get(mmbrNo);
+                Expression expr = this.valueExprs.get(mmbrNo);
                 Object result;
                 try {
                     result = expr.eval(paramValues);
@@ -100,12 +95,11 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
             }
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-            Object out = typeTable.find(keyColumns, rhsResults, true);
+            Object out = typeTable.find(this.keyColumns, rhsResults, true);
 
             // Update output
             this.column.setValue(i, out);
         }
-
     }
 
 	public ColumnDefinitionLinkExprs(Column column, Column[] keyColumns, Expression[] valueExprs) {
