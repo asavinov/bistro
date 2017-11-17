@@ -28,7 +28,7 @@ Bistro is a *general-purpose* data processing engine and can be applied to many 
 
 In Bistro, computations nodes in the graph are columns and each column has some definition which determins what operations this node will execute to compute its values. Column definitions take some other columns as input and the output values are stored in this column as its result which can be used as input in other column definitions.
 
-# How it works
+# Getting Started with Bistro
 
 ## Schema
 
@@ -39,7 +39,7 @@ Schema schema = new Schema("My Schema");
 
 A schema like tables and columns has an arbitrary (case sensitive) name. The schema is then used to create and access other elements as well as perform various operations with data. 
 
-## Tables
+## Creating Tables
 
 Tables are created within the schema by providing a unique name:
 ```java
@@ -71,7 +71,7 @@ The `Range` object provides a start id (inclusive) and an end id (exclusive) for
 
 Any table can be used as a *data type* for schema columns.
 
-## Columns no Definition
+## Creating Columns
 
 Data in Bistro is stored in columns. Formally, a column is a function and hence it defines a mathematical *mapping* from all table inputs to the values in the output table. Input and output tables of a column are specified during creation: 
 ```java
@@ -190,18 +190,17 @@ value = counts.getValue(1); // 2 events from oven
 
 ## Column Paths
 
-Link columns can be also used in *column paths* for concatenating several column access operations (dot notation). For example, now we can *directly* access device name length from any event:
+A *column path* is a sequence of columns where each next column belongs to the type of the previous column. In programming, column paths are written using dot notation. For example, we could define a column object and then use it to *directly* access the number of events received from this same event device:
 ```java
-ColumnPath path = new ColumnPath( Arrays.asList(link,calc) );
+ColumnPath path = new ColumnPath(link, accu);
 value = path.getValue(0);
-value = path.getValue(1);
-value = path.getValue(2);
 ```
-Many column definition methods accept column paths as parameters.
 
-## More Complex Accumulations
+Many column definition methods accept column paths as parameters rather than simply column. 
 
-Let us assume now that the "EVENTS" table has a property "Measure" we want to numerically aggregate (instead of simply counting):
+## Numeric Accumulation
+
+Let us assume now that the "EVENTS" table has a property "Measure" and we want to numerically aggregate it (instead of simply counting):
 ```java
 Column measure = schema.createColumn("Measure", things, objects);
 measure.setValue(0, 1.0);
@@ -209,23 +208,30 @@ measure.setValue(1, 2.0);
 measure.setValue(2, 3.0);
 ```
 
-We can find the sum of the measure for each element in the "Table" using this accumulate column:
+We can find the sum of the measure for each element in the "THINGS" table using this accumulate column:
 ```java
-Column sums = schema.createColumn("sum measure", table, objects);
+Column sums = schema.createColumn("Sum Measure", things, objects);
 sums.accu(
-  link, // Grouping column
-  p -> (Double)p[0] + (Double)p[1], // Add the measure for each new fact
-  measure // Measure
-  );
+        link, // Grouping column
+        p -> (Double)p[0] + (Double)p[1], // Add the measure for each new fact
+        measure // Measure
+);
 
 sums.eval();
 value = sums.getValue(1); // 3 (1+2)
 value = sums.getValue(2); // 3
 ```
 
-Accumulate functions have also other definition options, for example, specifying how the column is initialized and how it is finalized.
+# More Information
 
-# More info
+* More information on all aspects of the concept-oriented model and concept-oriented programming including publications can found here:
+    * http://www.conceptoriented.org
+    * http://www.conceptoriented.com
 
-* (Bistro-core)[https://bitbucket.org/conceptoriented/bistro/core] is a core library of Bistro for schema management, data representation and data processing.
-* (Bistro-formula)[https://bitbucket.org/conceptoriented/bistro/formula] is a library for defining columns using formulas in some expression language rather than the native programming langauge.
+* Alexandr Savinov is an author of Bistro as well as the underlying concept-oriented model (COM):
+    * http://conceptoriented.org/savinov
+    * https://www.researchgate.net/profile/Alexandr_Savinov
+
+* Some papers about this approach:
+    * A. Savinov. DataCommandr: Column-Oriented Data Integration, Transformation and Analysis. Proc. IoTBD 2016, 339-347. https://www.researchgate.net/publication/301764506_DataCommandr_Column-Oriented_Data_Integration_Transformation_and_Analysis
+    * A. Savinov. ConceptMix: Self-Service Analytical Data Integration based on the Concept-Oriented Model. A. Savinov. 3rd International Conference on Data Technologies and Applications (DATA 2014), 78-84. https://www.researchgate.net/publication/265301356_ConceptMix_Self-Service_Analytical_Data_Integration_based_on_the_Concept-Oriented_Model
