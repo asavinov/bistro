@@ -440,7 +440,7 @@ public class FormulaBase implements Formula {
         FormulaBase ude = null;
 
         if(clazz.equals(Formula.Exp4j)) {
-            ude = new FormulaExp4J(formula, table);
+            ude = new FormulaExp4j(formula, table);
         }
         else if(clazz.equals(Formula.Evalex)) {
             ude = new FormulaEvalex(formula, table);

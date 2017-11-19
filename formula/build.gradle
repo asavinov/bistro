@@ -17,7 +17,7 @@ apply plugin: 'maven-publish'
 
 jar {
     baseName = 'bistro-formula'
-    version =  '0.3.0'
+    version =  '0.4.0'
 }
 
 repositories {
@@ -31,17 +31,17 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-formula'
-version = '0.3.0'
+version = '0.4.0'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.3.0")
+    compile("org.conceptoriented:bistro-core:0.4.0")
 
     antlr("org.antlr:antlr4:4.7")
 
     compile("org.antlr:antlr4-runtime:4.7")
 
     compile("net.objecthunter:exp4j:0.4.8")
-    compile("com.udojava:EvalEx:1.11")
+    compile("com.udojava:EvalEx:1.16")
 
     testCompile("junit:junit:4.12")
 }
@@ -53,7 +53,7 @@ generateGrammarSource {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.3'
 }
 
 // Install into (local) maven repository
@@ -65,7 +65,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-formula'
-            //version '0.3.0'
+            //version '0.4.0'
 
             //artifact jar
             artifact sourcesJar

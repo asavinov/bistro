@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="formula:main" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="org.conceptoriented" external.system.module.type="sourceSet" external.system.module.version="0.3.0" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="formula:main" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="org.conceptoriented" external.system.module.type="sourceSet" external.system.module.version="0.4.0" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output url="file://$MODULE_DIR$/../../out/production/classes" />
     <exclude-output />
@@ -14,10 +14,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4:4.7" level="project" />
-    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.3.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.4.0" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4-runtime:4.7" level="project" />
     <orderEntry type="library" name="Gradle: net.objecthunter:exp4j:0.4.8" level="project" />
-    <orderEntry type="library" name="Gradle: com.udojava:EvalEx:1.11" level="project" />
+    <orderEntry type="library" name="Gradle: com.udojava:EvalEx:1.16" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
     <orderEntry type="library" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />

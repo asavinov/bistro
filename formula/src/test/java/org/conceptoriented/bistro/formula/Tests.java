@@ -27,7 +27,7 @@ public class Tests {
         Column tb = s.getColumn("T", "B");
 
         // Create expression from formula
-        Formula expr = new FormulaExp4J("2 * [A] + 1", s.getTable("T"));
+        Formula expr = new FormulaExp4j("2 * [A] + 1", s.getTable("T"));
 
         // Define and evaluate
         tb.calc(expr);
@@ -66,8 +66,8 @@ public class Tests {
 
         // Create expressions: A=[A]; B=[B]
         Expression[] exprs = new Expression[] {
-                new FormulaExp4J("[A]", t2),
-                new FormulaExp4J("[B]", t2)
+                new FormulaExp4j("[A]", t2),
+                new FormulaExp4j("[B]", t2)
         };
 
         // Define and evaluate
@@ -137,7 +137,7 @@ public class Tests {
         ta.setDefaultValue(0.0);
 
         // Accu expression translated from a formula
-        Expression expr = new FormulaExp4J(" [out] + 2.0 * [Id] ", s.getTable("T2"));
+        Expression expr = new FormulaExp4j(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
         ta.accu(
                 new ColumnPath(t2g),
@@ -193,7 +193,7 @@ public class Tests {
         Column t2g = schema.createColumn("G", t2, t1);
         t2g.link(
                 new Column[] { t1.getColumn("Id") },
-                new Expression[] { new FormulaExp4J("[Id]", t2) }
+                new Expression[] { new FormulaExp4j("[Id]", t2) }
         );
 
         t2.add();

@@ -1,7 +1,7 @@
 package org.conceptoriented.bistro.examples;
 
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.formula.FormulaExp4J;
+import org.conceptoriented.bistro.formula.*;
 
 import java.io.*;
 
@@ -41,7 +41,7 @@ public class Example3
         // [OrderDetails].[Amount] = [Quantity] * [UnitPrice]
         Column itemsAmount = schema.createColumn("Amount", items, columnType);
         itemsAmount.calc(
-                new FormulaExp4J("[Quantity] * [UnitPrice]", items)
+                new FormulaExp4j("[Quantity] * [UnitPrice]", items)
         );
 
         //
@@ -52,14 +52,14 @@ public class Example3
         Column itemsProduct = schema.createColumn("Product", items, products);
         itemsProduct.link(
                 new Column[] { products.getColumn("ProductID") },
-                new FormulaExp4J("[ProductID]", items)
+                new FormulaExp4j("[ProductID]", items)
         );
 
         // [OrderDetails].[OrderID]: OrderDetails -> Orders
         Column itemsOrder = schema.createColumn("Order", items, orders);
         itemsOrder.link(
                 new Column[] { orders.getColumn("OrderID") },
-                new FormulaExp4J("[OrderID]", items)
+                new FormulaExp4j("[OrderID]", items)
         );
 
         //
@@ -71,7 +71,7 @@ public class Example3
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,
-                new FormulaExp4J("[out] + [Amount]", items)
+                new FormulaExp4j("[out] + [Amount]", items)
         );
 
         // [Order].[Total Amount] = SUM [OrderDetails].[Amount]
@@ -79,7 +79,7 @@ public class Example3
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,
-                new FormulaExp4J("[out] + [Amount]", items)
+                new FormulaExp4j("[out] + [Amount]", items)
         );
 
         schema.eval();

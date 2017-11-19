@@ -16,7 +16,7 @@ apply plugin: 'eclipse'
 
 jar {
     baseName = 'bistro-examples'
-    version =  '0.3.0'
+    version =  '0.4.0'
 }
 
 repositories {
@@ -30,22 +30,22 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-examples'
-version = '0.3.0'
+version = '0.4.0'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.3.0")
-    compile("org.conceptoriented:bistro-formula:0.3.0")
+    compile("org.conceptoriented:bistro-core:0.4.0")
+    compile("org.conceptoriented:bistro-formula:0.4.0")
 
     antlr("org.antlr:antlr4:4.7")
 
     compile("org.antlr:antlr4-runtime:4.7")
 
     compile("net.objecthunter:exp4j:0.4.8")
-    compile("com.udojava:EvalEx:1.11")
+    compile("com.udojava:EvalEx:1.16")
 
     testCompile("junit:junit:4.12")
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.3'
 }

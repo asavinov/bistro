@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 
 jar {
     baseName = 'bistro-core'
-    version =  '0.3.0'
+    version =  '0.4.0'
 }
 
 repositories {
@@ -30,14 +30,14 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-core'
-version = '0.3.0'
+version = '0.4.0'
 
 dependencies {
     testCompile("junit:junit:4.12")
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.3'
 }
 
 // Install into (local) maven repository
@@ -49,7 +49,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-core'
-            //version '0.3.0'
+            //version '0.4.0'
 
             //artifact jar
             artifact sourcesJar
