@@ -1,9 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class Table {
 	private Schema schema;
@@ -113,6 +110,96 @@ public class Table {
             Object value = values.get(i);
             col.setValue(id, value);
         }
+    }
+
+
+    //
+    // Execution errors (cleaned, and then produced after each new population)
+    //
+
+    private List<BistroError> executionErrors = new ArrayList<>();
+    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
+        return this.executionErrors;
+    }
+
+    protected boolean hasExecutionErrorsDeep() {
+        if(executionErrors.size() > 1) return true; // Check this column
+
+        // Otherwise check executionErrors in dependencies (recursively)
+        // TODO: Uncomment when implemented
+        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+        //    for(Column dep : deps) {
+        //        if(dep == this) return true;
+        //        if(dep.getExecutionErrors().size() > 0) return true;
+        //    }
+        //}
+
+        return false;
+    }
+
+    //
+    // Populate
+    //
+
+    TableDefinition definition; // It is instantiated by proj-prod methods (or definition errors are added)
+
+    public void populate() {
+
+    }
+
+    //
+    // Table (definition) kind
+    //
+
+    protected TableDefinitionType definitionType;
+    public TableDefinitionType getDefinitionType() {
+        return this.definitionType;
+    }
+    public void setDefinitionType(TableDefinitionType definitionType) {
+        this.definitionType = definitionType;
+        this.definitionErrors.clear();
+        this.executionErrors.clear();
+        this.definition = null;
+        // TODO: Uncomment when implemented
+        //this.isDirty = true;
+    }
+    public boolean isDerived() {
+        if(this.definitionType == TableDefinitionType.PROJ || this.definitionType == TableDefinitionType.PROD) {
+            return true;
+        }
+        return false;
+    }
+
+    //
+    // Definition errors
+    //
+
+    private List<BistroError> definitionErrors = new ArrayList<>();
+    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
+        return this.definitionErrors;
+    }
+
+    public boolean hasDefinitionErrorsDeep() { // Recursively
+        if(this.definitionErrors.size() > 0) return true; // Check this column
+
+        // Otherwise check errors in dependencies (recursively)
+        // TODO: Uncomment when implemented
+        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+        //    for(Column dep : deps) {
+        //        if(dep == this) return true;
+        //        if(dep.getDefinitionErrors().size() > 0) return true;
+        //    }
+        //}
+
+        return false;
+    }
+
+    //
+    // Noop table. Reset definition.
+    //
+
+    public void noop() {
+        this.setDefinitionType(TableDefinitionType.NOOP); // Reset definition
     }
 
     //

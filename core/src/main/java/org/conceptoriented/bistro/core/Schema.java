@@ -122,7 +122,7 @@ public class Schema {
      */
     public void eval() {
         for(Column col : this.columns) {
-            col.getEvaluationErrors().clear();
+            col.getExecutionErrors().clear();
         }
 
         // The strategy is to start from the keyColumns which already can be evaluated, eval them, then again generate keyColumns which can be evaluted (by excluding the previous ones) and so on until no keyColumns can be evaluted.
@@ -181,7 +181,7 @@ public class Schema {
                 continue;
             }
 
-            if(col.hasEvaluationErrorsDeep()) { // Columns with evaluation errors cannot evaluated
+            if(col.hasExecutionErrorsDeep()) { // Columns with evaluation errors cannot evaluated
                 continue;
             }
 

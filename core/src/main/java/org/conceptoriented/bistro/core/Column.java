@@ -154,19 +154,19 @@ public class Column {
     // Execution errors (cleaned, and then produced after each new evaluation)
     //
 
-    private List<BistroError> evaluationErrors = new ArrayList<>();
-    public List<BistroError> getEvaluationErrors() { // Empty list in the case of no errors
-        return this.evaluationErrors;
+    private List<BistroError> executionErrors = new ArrayList<>();
+    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
+        return this.executionErrors;
     }
 
-    protected boolean hasEvaluationErrorsDeep() {
-        if(evaluationErrors.size() > 1) return true; // Check this column
+    protected boolean hasExecutionErrorsDeep() {
+        if(executionErrors.size() > 1) return true; // Check this column
 
-        // Otherwise check evaluationErrors in dependencies (recursively)
+        // Otherwise check executionErrors in dependencies (recursively)
         for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
             for(Column dep : deps) {
                 if(dep == this) return true;
-                if(dep.getEvaluationErrors().size() > 0) return true;
+                if(dep.getExecutionErrors().size() > 0) return true;
             }
         }
 
@@ -177,7 +177,7 @@ public class Column {
     // Evaluate
     //
 
-    ColumnDefinition definition; // It is instantiated by cal-link-accu methods (or translate errors are added)
+    ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
 
     // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column
     public void eval() {
@@ -192,7 +192,7 @@ public class Column {
         }
 
         // Clear all evaluation errors before any new evaluation
-        this.evaluationErrors.clear();
+        this.executionErrors.clear();
 
         // If there are some definition errors then no possibility to eval (including cycles)
         if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
@@ -214,7 +214,7 @@ public class Column {
         }
 
         // If there were some evaluation errors
-        if(this.hasEvaluationErrorsDeep()) { // this.canEvaluate false
+        if(this.hasExecutionErrorsDeep()) { // this.canEvaluate false
             return;
         }
         // No errors while evaluating dependencies
@@ -222,9 +222,9 @@ public class Column {
         // All dependencies are ok so this column can be evaluated
         this.definition.eval();
 
-        this.evaluationErrors.addAll(this.definition.getErrors());
+        this.executionErrors.addAll(this.definition.getErrors());
 
-        if(this.evaluationErrors.size() == 0) {
+        if(this.executionErrors.size() == 0) {
             this.isDirty = false; // Clean the state (remove dirty flag)
         }
         else {
@@ -233,7 +233,7 @@ public class Column {
     }
 
     //
-    // Formula definitionType
+    // Column (definition) kind
     //
 
     protected ColumnDefinitionType definitionType;
@@ -243,12 +243,12 @@ public class Column {
     public void setDefinitionType(ColumnDefinitionType definitionType) {
         this.definitionType = definitionType;
         this.definitionErrors.clear();
-        this.evaluationErrors.clear();
+        this.executionErrors.clear();
         this.definition = null;
         this.isDirty = true;
     }
     public boolean isDerived() {
-        if(this.definitionType == ColumnDefinitionType.CALC || this.definitionType == ColumnDefinitionType.ACCU || this.definitionType == ColumnDefinitionType.LINK) {
+        if(this.definitionType == ColumnDefinitionType.CALC || this.definitionType == ColumnDefinitionType.LINK || this.definitionType == ColumnDefinitionType.ACCU) {
             return true;
         }
         return false;
@@ -278,7 +278,15 @@ public class Column {
     }
 
     //
-    // Calcuate. Convert input parameters into an Evaluator object and ealuate it in the case of immediate (eager) action.
+    // Noop column. Reset definition.
+    //
+
+    public void noop() {
+        this.setDefinitionType(ColumnDefinitionType.NOOP); // Reset definition
+    }
+
+    //
+    // Calcuate column
     //
 
     // Lambda + parameters
@@ -319,7 +327,7 @@ public class Column {
     }
 
     //
-    // Link
+    // Link column
     //
 
     // Equality
@@ -356,7 +364,7 @@ public class Column {
     }
 
     //
-    // Accumulate
+    // Accumulate column
     //
 
     // Evaluator + parameters OR Expression + no params
@@ -422,7 +430,7 @@ public class Column {
 		this.output = output;
 		
 		// Formula
-		this.definitionType = ColumnDefinitionType.NONE;
+		this.definitionType = ColumnDefinitionType.NOOP;
 
 		// Data
 		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);

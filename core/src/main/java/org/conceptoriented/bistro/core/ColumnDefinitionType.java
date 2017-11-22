@@ -1,7 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 public enum ColumnDefinitionType {
-	NONE(0), // No computations
+	NOOP(0), // No definition
 	CALC(10), // Calculate column
 	LINK(20), // Link column
 	ACCU(30), // Accumulate column
@@ -19,7 +19,7 @@ public enum ColumnDefinitionType {
 	            return kind;
 	        }
 	    }
-	    return ColumnDefinitionType.NONE;
+	    return ColumnDefinitionType.NOOP;
 	 }
 
 	private ColumnDefinitionType(int value) {
