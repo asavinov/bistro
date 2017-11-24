@@ -145,6 +145,8 @@ public class Table {
 
     public void populate() {
 
+        this.definition.populate();
+
     }
 
     //
@@ -198,8 +200,26 @@ public class Table {
     // Noop table. Reset definition.
     //
 
+    // Note that the table retains its current population (which will not be overwritten automatically later during population) and it has to be emptied manually if necessary
     public void noop() {
         this.setDefinitionType(TableDefinitionType.NOOP); // Reset definition
+    }
+
+    //
+    // Project tables
+    //
+
+    public void proj() {
+        this.setDefinitionType(TableDefinitionType.PROJ); // Reset definition
+
+        this.definition = new TableDefinitionProj(this); // Create definition
+        // TODO: Proces errors. Add excpeitons to the declaration of creator
+
+        // TODO: Uncomment when implemented
+        //if(this.isInCyle()) {
+        //    this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This table depends on itself directly or indirectly."));
+        //    return;
+       // }
     }
 
     //

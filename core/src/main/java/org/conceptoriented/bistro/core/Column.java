@@ -59,7 +59,7 @@ public class Column {
     public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isDirty = true; }
 
     //
-    // Data (protected). These are used from Table only (all keyColumns change their ranges simultaniously) and from users - users add/remove elements via tables.
+    // Data (protected). These are used from Table only (all columns change their ranges simultaneously) and from users - users add/remove elements via tables.
     //
 
     protected void add() { this.data.add(); this.isDirty = true; }
@@ -71,7 +71,7 @@ public class Column {
     //
     // Data dirty state (~hasDirtyDeep)
     //
-    // 0) for USER keyColumns (!isDerived) is defined and interpreted by the user -> USER keyColumns do not participate in dependencies/evaluation, so since USER keyColumns are ignored by eval procedure - isDirty is also ignored.
+    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by eval procedure - isDirty is also ignored.
 
     // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
     // 2) set this output valuePaths (this function changes) -> or any of its dependencies recursively
@@ -97,7 +97,7 @@ public class Column {
 
         return false;
     }
-    protected boolean hasDirtyDeepDerived() { // Only derived keyColumns taken into account - non-derived skipped (always leaves)
+    protected boolean hasDirtyDeepDerived() { // Only derived columns taken into account - non-derived skipped (always leaves)
         if(!this.isDerived()) return false; // Non-derived skipped (do not expand dependencies because they by definition have no them)
 
         if(this.isDirty) return true;
@@ -120,7 +120,7 @@ public class Column {
         if(deps == null) return new ArrayList<>();
         return deps;
     }
-    // Get all unique dependencies of the specified keyColumns
+    // Get all unique dependencies of the specified columns
     protected List<Column> getDependencies(List<Column> cols) {
         List<Column> ret = new ArrayList<>();
         for(Column col : cols) {
@@ -132,7 +132,7 @@ public class Column {
         return ret;
     }
 
-    // Get all keyColumns that (directly) depend on this column
+    // Get all columns that (directly) depend on this column
     protected List<Column> getDependants() {
         List<Column> res = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Column>toList());
         return res;
@@ -179,10 +179,10 @@ public class Column {
 
     ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
 
-    // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column
+    // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column (as the last element)
     public void eval() {
 
-        // Skip non-derived keyColumns - they do not participate in evaluation
+        // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
             if(this.isDirty()) {
                 this.getDependants().forEach(x -> x.setDirty());
@@ -281,6 +281,7 @@ public class Column {
     // Noop column. Reset definition.
     //
 
+    // Note that the column retains its current output values (which will not be overwritten automatically later during evaluation) and it has to be reset manually if necessary
     public void noop() {
         this.setDefinitionType(ColumnDefinitionType.NOOP); // Reset definition
     }
@@ -291,7 +292,7 @@ public class Column {
 
     // Lambda + parameters
     public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter valuePaths
-        this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
@@ -303,8 +304,8 @@ public class Column {
     }
 
     // Lambda + parameters
-    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter keyColumns
-        this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
+    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter columns
+        this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
@@ -317,7 +318,7 @@ public class Column {
 
     // Expression
     public void calc(Expression expr) {
-        this.setDefinitionType(ColumnDefinitionType.CALC); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, (Expression) expr);
 
@@ -332,7 +333,7 @@ public class Column {
 
     // Equality
     public void link(Column[] keyColumns, ColumnPath... valuePaths) {
-        this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valuePaths);
 
@@ -343,7 +344,7 @@ public class Column {
 
     // Equality
     public void link(Column[] keyColumns, Column... valueColumns) {
-        this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valueColumns);
 
@@ -354,7 +355,7 @@ public class Column {
 
     // Expressions
     public void link(Column[] keyColumns, Expression... valueExprs) { // Custom rhs UDEs for each lhs column
-        this.setDefinitionType(ColumnDefinitionType.LINK); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkExprs(this, keyColumns, valueExprs);
 
@@ -369,7 +370,7 @@ public class Column {
 
     // Evaluator + parameters OR Expression + no params
     public void accu(ColumnPath accuPath, Evaluator lambda, ColumnPath... params) {
-        this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         Expression accuExpr;
         if(lambda instanceof Expression)
@@ -386,7 +387,7 @@ public class Column {
 
     // Evaluator + parameters OR Expression + no params
     public void accu(Column accuPath, Evaluator lambda, Column... params) {
-        this.setDefinitionType(ColumnDefinitionType.ACCU); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         Expression accuExpr;
         if(lambda instanceof Expression)
