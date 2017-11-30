@@ -136,44 +136,38 @@ public class Table implements Element {
         return new ArrayList<>();
     }
 
-    private List<BistroError> executionErrors = new ArrayList<>();
-    @Override
-    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
-        return this.executionErrors;
-    }
-
-    protected boolean hasExecutionErrorsDeep() {
-        if(executionErrors.size() > 1) return true; // Check this column
-
-        // Otherwise check executionErrors in dependencies (recursively)
-        // TODO: Uncomment when implemented
-        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-        //    for(Column dep : deps) {
-        //        if(dep == this) return true;
-        //        if(dep.getExecutionErrors().size() > 0) return true;
-        //    }
-        //}
-
-        return false;
-    }
-
     private List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
         return this.definitionErrors;
     }
 
+    @Override
     public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this column
+        if(this.definitionErrors.size() > 0) return true; // Check this element
 
         // Otherwise check errors in dependencies (recursively)
-        // TODO: Uncomment when implemented
-        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-        //    for(Column dep : deps) {
-        //        if(dep == this) return true;
-        //        if(dep.getDefinitionErrors().size() > 0) return true;
-        //    }
-        //}
+        for(Element dep : this.getDependencies()) {
+            if(dep.hasDefinitionErrorsDeep()) return true;
+        }
+
+        return false;
+    }
+
+    private List<BistroError> executionErrors = new ArrayList<>();
+    @Override
+    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
+        return this.executionErrors;
+    }
+
+    @Override
+    public boolean hasExecutionErrorsDeep() {
+        if(executionErrors.size() > 0) return true; // Check this element
+
+        // Otherwise check errors in dependencies (recursively)
+        for(Element dep : this.getDependencies()) {
+            if(dep.hasExecutionErrorsDeep()) return true;
+        }
 
         return false;
     }
@@ -209,17 +203,18 @@ public class Table implements Element {
     // Populate
     //
 
-    TableDefinition definition; // It is instantiated by proj-prod methods (or definition errors are added)
-
     public void populate() {
 
-        this.definition.populate();
-
+        if(this.definition != null) {
+            this.definition.populate();
+        }
     }
 
     //
     // Table (definition) kind
     //
+
+    TableDefinition definition; // It is instantiated by proj-prod methods (or definition errors are added)
 
     protected TableDefinitionType definitionType;
     public TableDefinitionType getDefinitionType() {

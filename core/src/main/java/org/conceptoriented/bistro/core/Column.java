@@ -105,41 +105,37 @@ public class Column implements Element {
         return ret;
     }
 
-    private List<BistroError> executionErrors = new ArrayList<>();
-    @Override
-    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
-        return this.executionErrors;
-    }
-
-    protected boolean hasExecutionErrorsDeep() {
-        if(executionErrors.size() > 1) return true; // Check this column
-
-        // Otherwise check executionErrors in dependencies (recursively)
-        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Element dep : deps) {
-                if(dep == this) return true;
-                if(dep.getExecutionErrors().size() > 0) return true;
-            }
-        }
-
-        return false;
-    }
-
     private List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
         return this.definitionErrors;
     }
 
+    @Override
     public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this column
+        if(this.definitionErrors.size() > 0) return true; // Check this element
 
         // Otherwise check errors in dependencies (recursively)
-        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Element dep : deps) {
-                if(dep == this) return true;
-                if(dep.getDefinitionErrors().size() > 0) return true;
-            }
+        for(Element dep : this.getDependencies()) {
+            if(dep.hasDefinitionErrorsDeep()) return true;
+        }
+
+        return false;
+    }
+
+    private List<BistroError> executionErrors = new ArrayList<>();
+    @Override
+    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
+        return this.executionErrors;
+    }
+
+    @Override
+    public boolean hasExecutionErrorsDeep() {
+        if(executionErrors.size() > 0) return true; // Check this element
+
+        // Otherwise check errors in dependencies (recursively)
+        for(Element dep : this.getDependencies()) {
+            if(dep.hasExecutionErrorsDeep()) return true;
         }
 
         return false;
@@ -172,18 +168,6 @@ public class Column implements Element {
         this.eval();
     }
 
-    // Get all unique dependencies of the specified columns
-    static protected List<Element> getDependencies(List<Element> deps) {
-        List<Element> ret = new ArrayList<>();
-        for(Element dep : deps) {
-            List<Element> ownDeps = dep.getDependencies();
-            for(Element ownd : ownDeps) {
-                if(!ret.contains(ownd)) ret.add(ownd);
-            }
-        }
-        return ret;
-    }
-
     // Checks if this column depends on itself
     protected boolean isInCyle() {
         for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
@@ -196,11 +180,21 @@ public class Column implements Element {
         return false;
     }
 
+    // Get all unique dependencies of the specified columns
+    static protected List<Element> getDependencies(List<Element> deps) {
+        List<Element> ret = new ArrayList<>();
+        for(Element dep : deps) {
+            List<Element> ownDeps = dep.getDependencies();
+            for(Element ownd : ownDeps) {
+                if(!ret.contains(ownd)) ret.add(ownd);
+            }
+        }
+        return ret;
+    }
+
     //
     // Evaluate
     //
-
-    ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
 
     // Evaluate only this individual column if possible
     public void eval() {
@@ -260,6 +254,8 @@ public class Column implements Element {
     //
     // Column (definition) kind
     //
+
+    ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
 
     protected ColumnDefinitionType definitionType;
     public ColumnDefinitionType getDefinitionType() {
@@ -416,7 +412,7 @@ public class Column implements Element {
 	@Override
 	public boolean equals(Object aThat) {
 		if (this == aThat) return true;
-		if ( !(aThat instanceof Table) ) return false;
+		if ( !(aThat instanceof Column) ) return false;
 		
 		Column that = (Column)aThat;
 		

@@ -260,7 +260,7 @@ public class Tests {
                 new ColumnPath(t2g),
                 new CustomAccuExpr(new ColumnPath(t2.getColumn("Id")))
         );
-        ta.eval(); // It has to also eval the accu (group) keyColumns
+        s.eval(); // It has to also eval the accu (group) keyColumns
 
         // Check correctness of dependencies
         ta_deps = ta.getDependencies();

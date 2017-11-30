@@ -11,8 +11,10 @@ public interface Element {
     public List<Element> getDependants();
 
     public List<BistroError> getExecutionErrors();
-    public List<BistroError> getDefinitionErrors();
+    public boolean hasExecutionErrorsDeep();
 
+    public List<BistroError> getDefinitionErrors();
+    public boolean hasDefinitionErrorsDeep();
 
     public boolean isDirty();
     public void setDirty();

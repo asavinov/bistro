@@ -159,6 +159,7 @@ public class Tests {
         // Test how dirty status is propagated through dependencies
         t2.getColumn("Id").setValue(2, 5.0); // Change (make dirty) non-derived column
         s.eval(); // Both t2g and ta have to be evaluated
+
         assertEquals(30.0, ta.getValue(0));
     }
 
