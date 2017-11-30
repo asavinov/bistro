@@ -20,9 +20,11 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 	}
 
     @Override
-    public List<Column> getDependencies() {
+    public List<Element> getDependencies() {
         List<ColumnPath> paths = this.expr.getParameterPaths();
-        List<Column> deps = ColumnPath.getColumns(paths);
+        List<Column> cols = ColumnPath.getColumns(paths);
+        List<Element> deps = new ArrayList<>();
+        cols.forEach(x -> deps.add(x));
         return deps;
     }
 

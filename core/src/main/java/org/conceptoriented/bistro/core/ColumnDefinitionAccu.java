@@ -23,12 +23,12 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
     }
 
     @Override
-    public List<Column> getDependencies() {
-        List<Column> ret = new ArrayList<>();
+    public List<Element> getDependencies() {
+        List<Element> ret = new ArrayList<>();
 
         if(this.initDefinition != null) {
-            for(Column col : this.initDefinition.getDependencies()) {
-                if(!ret.contains(col)) ret.add(col);
+            for(Element dep : this.initDefinition.getDependencies()) {
+                if(!ret.contains(dep)) ret.add(dep);
             }
         }
         if(this.accuExpr != null) {
@@ -37,8 +37,8 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
             }
         }
         if(this.finDefinition != null) {
-            for(Column col : this.finDefinition.getDependencies()) {
-                if(!ret.contains(col)) ret.add(col);
+            for(Element dep : this.finDefinition.getDependencies()) {
+                if(!ret.contains(dep)) ret.add(dep);
             }
         }
 

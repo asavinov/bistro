@@ -22,8 +22,8 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
     }
 
     @Override
-    public List<Column> getDependencies() {
-        List<Column> ret = new ArrayList<>();
+    public List<Element> getDependencies() {
+        List<Element> ret = new ArrayList<>();
 
         for (Expression expr : this.valueExprs) {
             List<Column> deps = ColumnPath.getColumns(expr.getParameterPaths());

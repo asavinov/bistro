@@ -2,7 +2,7 @@ package org.conceptoriented.bistro.core;
 
 import java.util.*;
 
-public class Table {
+public class Table implements Element {
 	private Schema schema;
 	public Schema getSchema() {
 		return schema;
@@ -112,12 +112,32 @@ public class Table {
         }
     }
 
+    //
+    // Element interface
+    //
 
-    //
-    // Execution errors (cleaned, and then produced after each new population)
-    //
+    @Override
+    public Table getTable() {
+        return this;
+    }
+
+    @Override
+    public Column getColumn() {
+        return null;
+    }
+
+    @Override
+    public List<Element> getDependencies() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<Element> getDependants() {
+        return new ArrayList<>();
+    }
 
     private List<BistroError> executionErrors = new ArrayList<>();
+    @Override
     public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
         return this.executionErrors;
     }
@@ -135,6 +155,54 @@ public class Table {
         //}
 
         return false;
+    }
+
+    private List<BistroError> definitionErrors = new ArrayList<>();
+    @Override
+    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
+        return this.definitionErrors;
+    }
+
+    public boolean hasDefinitionErrorsDeep() { // Recursively
+        if(this.definitionErrors.size() > 0) return true; // Check this column
+
+        // Otherwise check errors in dependencies (recursively)
+        // TODO: Uncomment when implemented
+        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+        //    for(Column dep : deps) {
+        //        if(dep == this) return true;
+        //        if(dep.getDefinitionErrors().size() > 0) return true;
+        //    }
+        //}
+
+        return false;
+    }
+
+    private boolean isDirty = false;
+    @Override
+    public boolean isDirty() {
+        return this.isDirty;
+    }
+    @Override
+    public void setDirty() {
+        this.isDirty = true;
+    }
+
+    @Override
+    public boolean isDirtyDeep() {
+        if(this.isDirty) return true;
+
+        // Otherwise check if there is a dirty dependency (recursively)
+        for(Element dep : this.getDependencies()) {
+            if(dep.isDirtyDeep()) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public void run() {
+        this.populate();
     }
 
     //
@@ -169,30 +237,6 @@ public class Table {
         if(this.definitionType == TableDefinitionType.PROJ || this.definitionType == TableDefinitionType.PROD) {
             return true;
         }
-        return false;
-    }
-
-    //
-    // Definition errors
-    //
-
-    private List<BistroError> definitionErrors = new ArrayList<>();
-    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        return this.definitionErrors;
-    }
-
-    public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this column
-
-        // Otherwise check errors in dependencies (recursively)
-        // TODO: Uncomment when implemented
-        //for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-        //    for(Column dep : deps) {
-        //        if(dep == this) return true;
-        //        if(dep.getDefinitionErrors().size() > 0) return true;
-        //    }
-        //}
-
         return false;
     }
 
@@ -298,5 +342,4 @@ public class Table {
 		this.id = UUID.randomUUID();
 		this.name = name;
 	}
-
 }

@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class Column {
+public class Column implements Element {
+
 	private Schema schema;
 	public Schema getSchema() {
 		return this.schema;
@@ -69,79 +70,124 @@ public class Column {
     protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
 
     //
-    // Data dirty state (~hasDirtyDeep)
+    // Element interface
     //
-    // 0) for USER columns (!isDerived) is defined and interpreted by the user -> USER columns do not participate in dependencies/evaluation, so since USER columns are ignored by eval procedure - isDirty is also ignored.
 
-    // 1) add/remove ids in this input (input set population changes) -> what about dependencies?
-    // 2) set this output valuePaths (this function changes) -> or any of its dependencies recursively
-    // 3) definition change of this -> or any of its dependencies
-    // 4) definition error of this -> or any of its dependencies
+    @Override
+    public Table getTable() {
+        return null;
+    }
+
+    @Override
+    public Column getColumn() {
+        return this;
+    }
+
+    @Override
+    public List<Element> getDependencies() {
+        if(this.definition == null) return new ArrayList<>();
+        List<Element> deps = this.definition.getDependencies();
+        if(deps == null) return new ArrayList<>();
+        return deps;
+    }
+
+    @Override
+    public List<Element> getDependants() {
+        List<Element> cols = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Element>toList());
+        List<Element> tabs = schema.getTables().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Element>toList());
+
+        List<Element> ret = new ArrayList<>();
+        ret.addAll(cols);
+        for(Element d : tabs) {
+            if(!ret.contains(d)) ret.add(d);
+        }
+
+        return ret;
+    }
+
+    private List<BistroError> executionErrors = new ArrayList<>();
+    @Override
+    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
+        return this.executionErrors;
+    }
+
+    protected boolean hasExecutionErrorsDeep() {
+        if(executionErrors.size() > 1) return true; // Check this column
+
+        // Otherwise check executionErrors in dependencies (recursively)
+        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Element dep : deps) {
+                if(dep == this) return true;
+                if(dep.getExecutionErrors().size() > 0) return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<BistroError> definitionErrors = new ArrayList<>();
+    @Override
+    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
+        return this.definitionErrors;
+    }
+
+    public boolean hasDefinitionErrorsDeep() { // Recursively
+        if(this.definitionErrors.size() > 0) return true; // Check this column
+
+        // Otherwise check errors in dependencies (recursively)
+        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Element dep : deps) {
+                if(dep == this) return true;
+                if(dep.getDefinitionErrors().size() > 0) return true;
+            }
+        }
+
+        return false;
+    }
 
     private boolean isDirty = false;
+    @Override
     public boolean isDirty() {
         return this.isDirty;
     }
+    @Override
     public void setDirty() {
         this.isDirty = true;
     }
 
-    // This plus inherited dirty status
-    protected boolean hasDirtyDeep() {
+    @Override
+    public boolean isDirtyDeep() {
         if(this.isDirty) return true;
 
         // Otherwise check if there is a dirty dependency (recursively)
-        for(Column dep : this.getDependencies()) {
-            if(dep.hasDirtyDeep()) return true;
-        }
-
-        return false;
-    }
-    protected boolean hasDirtyDeepDerived() { // Only derived columns taken into account - non-derived skipped (always leaves)
-        if(!this.isDerived()) return false; // Non-derived skipped (do not expand dependencies because they by definition have no them)
-
-        if(this.isDirty) return true;
-
-        // Otherwise check if there is a dirty dependency (recursively)
-        for(Column dep : this.getDependencies()) {
-            if(dep.hasDirtyDeepDerived()) return true;
+        for(Element dep : this.getDependencies()) {
+            if(dep.isDirtyDeep()) return true;
         }
 
         return false;
     }
 
-    //
-    // Dependencies
-    //
-
-    public List<Column> getDependencies() {
-        if(this.definition == null) return new ArrayList<>();
-        List<Column> deps = this.definition.getDependencies();
-        if(deps == null) return new ArrayList<>();
-        return deps;
+    @Override
+    public void run() {
+        this.eval();
     }
+
     // Get all unique dependencies of the specified columns
-    protected List<Column> getDependencies(List<Column> cols) {
-        List<Column> ret = new ArrayList<>();
-        for(Column col : cols) {
-            List<Column> deps = col.getDependencies();
-            for(Column d : deps) {
-                if(!ret.contains(d)) ret.add(d);
+    static protected List<Element> getDependencies(List<Element> deps) {
+        List<Element> ret = new ArrayList<>();
+        for(Element dep : deps) {
+            List<Element> ownDeps = dep.getDependencies();
+            for(Element ownd : ownDeps) {
+                if(!ret.contains(ownd)) ret.add(ownd);
             }
         }
         return ret;
     }
 
-    // Get all columns that (directly) depend on this column
-    protected List<Column> getDependants() {
-        List<Column> res = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Column>toList());
-        return res;
-    }
-
     // Checks if this column depends on itself
     protected boolean isInCyle() {
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Column dep : deps) {
+        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
+            for(Element dep : deps) {
                 if(dep == this) {
                     return true;
                 }
@@ -151,43 +197,24 @@ public class Column {
     }
 
     //
-    // Execution errors (cleaned, and then produced after each new evaluation)
-    //
-
-    private List<BistroError> executionErrors = new ArrayList<>();
-    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
-        return this.executionErrors;
-    }
-
-    protected boolean hasExecutionErrorsDeep() {
-        if(executionErrors.size() > 1) return true; // Check this column
-
-        // Otherwise check executionErrors in dependencies (recursively)
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Column dep : deps) {
-                if(dep == this) return true;
-                if(dep.getExecutionErrors().size() > 0) return true;
-            }
-        }
-
-        return false;
-    }
-
-    //
     // Evaluate
     //
 
     ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
 
-    // The strategy is to start from the goal (this column), recursively eval all dependencies and finally eval this column (as the last element)
+    // Evaluate only this individual column if possible
     public void eval() {
 
         // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
+
+            // Propagate dirty status to all dependants before resting it
             if(this.isDirty()) {
                 this.getDependants().forEach(x -> x.setDirty());
             }
+
             this.isDirty = false;
+
             return;
         }
 
@@ -196,30 +223,28 @@ public class Column {
 
         // If there are some definition errors then no possibility to eval (including cycles)
         if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
+            // TODO: Add error: cannot evaluate because of definition error in a dependency
             return;
         }
         // No definition errors - canEvaluate true
 
         // If everything is up-to-date then there is no need to eval
-        if(!this.hasDirtyDeep()) { // this.needEvaluate false
+        if(!this.isDirtyDeep()) { // this.needEvaluate false
+            // TODO: Add error: cannot evaluate because of dirty dependency
             return;
         }
         // There exists dirty status - needEvaluate true
 
-        // Evaluate dependencies recursively
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Column dep : deps) {
-                dep.eval(); // Whether it is really evaluated depends on the need (dirty status etc.)
-            }
-        }
-
-        // If there were some evaluation errors
+        // If there were evaluation errors
         if(this.hasExecutionErrorsDeep()) { // this.canEvaluate false
+            // TODO: Add error: cannot evaluate because of execution error in a dependency
             return;
         }
         // No errors while evaluating dependencies
 
-        // All dependencies are ok so this column can be evaluated
+        //
+        // Really evaluate using definition
+        //
         this.definition.eval();
 
         this.executionErrors.addAll(this.definition.getErrors());
@@ -251,29 +276,6 @@ public class Column {
         if(this.definitionType == ColumnDefinitionType.CALC || this.definitionType == ColumnDefinitionType.LINK || this.definitionType == ColumnDefinitionType.ACCU) {
             return true;
         }
-        return false;
-    }
-
-    //
-    // Definition errors. Produced after each new definition
-    //
-
-    private List<BistroError> definitionErrors = new ArrayList<>();
-    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        return this.definitionErrors;
-    }
-
-    public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this column
-
-        // Otherwise check errors in dependencies (recursively)
-        for(List<Column> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Column dep : deps) {
-                if(dep == this) return true;
-                if(dep.getDefinitionErrors().size() > 0) return true;
-            }
-        }
-
         return false;
     }
 

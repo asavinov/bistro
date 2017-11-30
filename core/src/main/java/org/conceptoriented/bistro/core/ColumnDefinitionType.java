@@ -4,7 +4,8 @@ public enum ColumnDefinitionType {
 	NOOP(0), // No definition
 	CALC(10), // Calculate column
 	LINK(20), // Link column
-	ACCU(30), // Accumulate column
+	PROJ(30), // Project column
+	ACCU(40), // Accumulate column
 	;
 
 	private int value;

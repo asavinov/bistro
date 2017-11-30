@@ -163,7 +163,7 @@ public class Tests {
         t2c.eval();
 
         // Check correctness of dependencies
-        List<Column> t2c_deps = t2c.getDependencies();
+        List<Element> t2c_deps = t2c.getDependencies();
         assertTrue(t2c_deps.contains(t2.getColumn("A")));
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
@@ -235,6 +235,8 @@ public class Tests {
         Column ta = t.getColumn("A");
         Column t2g = t2.getColumn("G");
 
+        t2g.eval();
+
         // Lambda for accumulation " [out] + 2.0 * [Id] "
         ta.setDefaultValue(0.0);
         ta.accu(
@@ -245,7 +247,7 @@ public class Tests {
         ta.eval();
 
         // Check correctness of dependencies
-        List<Column> ta_deps = ta.getDependencies();
+        List<Element> ta_deps = ta.getDependencies();
         assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
         assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
 

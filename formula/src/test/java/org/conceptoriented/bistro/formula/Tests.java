@@ -78,7 +78,7 @@ public class Tests {
         t2c.eval();
 
         // Check correctness of dependencies
-        List<Column> t2c_deps = t2c.getDependencies();
+        List<Element> t2c_deps = t2c.getDependencies();
         assertTrue(t2c_deps.contains(s.getColumn("T2", "A")));
         assertTrue(t2c_deps.contains(s.getColumn("T2", "B")));
 
@@ -134,6 +134,8 @@ public class Tests {
         Column ta = s.getColumn("T", "A");
         Column t2g = s.getColumn("T2", "G");
 
+        t2g.eval();
+
         ta.setDefaultValue(0.0);
 
         // Accu expression translated from a formula
@@ -146,7 +148,7 @@ public class Tests {
         ta.eval();
 
         // Check correctness of dependencies
-        List<Column> ta_deps = ta.getDependencies();
+        List<Element> ta_deps = ta.getDependencies();
         assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
         assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
 

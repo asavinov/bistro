@@ -12,5 +12,5 @@ import java.util.List;
 public interface ColumnDefinition {
 	public void eval();
 	public List<BistroError> getErrors();
-	public List<Column> getDependencies();
+	public List<Element> getDependencies();
 }

@@ -27,8 +27,8 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 	}
 
 	@Override
-	public List<Column> getDependencies() {
-		List<Column> ret = new ArrayList<>();
+	public List<Element> getDependencies() {
+		List<Element> ret = new ArrayList<>();
 
         for (ColumnPath path : this.valuePaths) {
             for (Column col : path.columns) {

@@ -9,7 +9,7 @@ import java.util.List;
 public interface TableDefinition {
 	public void populate();
 	public List<BistroError> getErrors();
-	public List<Column> getDependencies();
+	public List<Element> getDependencies();
 }
 
 
@@ -26,7 +26,7 @@ class TableDefinitionProj implements TableDefinition {
     }
 
     @Override
-    public List<Column> getDependencies() {
+    public List<Element> getDependencies() {
         // TODO:
         // Column deps: a list of all incoming (generating) columns
         // Table deps: derived from column deps (their input tables)
