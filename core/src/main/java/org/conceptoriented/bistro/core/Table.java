@@ -128,12 +128,28 @@ public class Table implements Element {
 
     @Override
     public List<Element> getDependencies() {
-        return new ArrayList<>();
+	    return new ArrayList<>();
+    }
+    @Override
+    public boolean hasDependency(Element element) {
+        for(Element dep : this.getDependencies()) {
+            if(dep == element) return true;
+            if(dep.hasDependency(element)) return true; // Recursion
+        }
+        return false;
     }
 
     @Override
     public List<Element> getDependants() {
-        return new ArrayList<>();
+	    return new ArrayList<>();
+    }
+    @Override
+    public boolean hasDependant(Element element) {
+        for(Element dep : this.getDependants()) {
+            if(dep == this) return true;
+            if(dep.hasDependant(element)) return true;// Recursion
+        }
+        return false;
     }
 
     private List<BistroError> definitionErrors = new ArrayList<>();

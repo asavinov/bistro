@@ -121,17 +121,45 @@ public class Schema {
      * Evaluate all columns of the schema. The order of evaluation is determined by dependencies. Only dirty columns are evaluated. Columns with errors are not evaluated.
      */
     public void eval() {
-        for(Column col : this.columns) {
-            col.getExecutionErrors().clear();
-        }
-
         List<List<Element>> layers = buildLayers();
+        this.eval_graph(layers);
+    }
+
+    /**
+     * Evaluate one specific column. Dependencies will be also evaluated if necessary
+     */
+    public void eval(Column column) {
+        List<List<Element>> layers = buildLayers(column);
+        this.eval_graph(layers);
+    }
+
+    /**
+     * Evaluate one column and dependencies if necessary
+     */
+    public void eval(Column[] columns) {
+    }
+
+    /**
+     * Evaluate all columns of one table
+     */
+    public void eval(Table table) {
+        List<List<Element>> layers = buildLayers(table);
+        this.eval_graph(layers);
+    }
+
+    //
+    // Dependency graph
+    //
+
+    protected void eval_graph(List<List<Element>> layers) {
 
         for(List<Element> layer : layers) {
 
             for(Element elem : layer) {
 
-                // This status will be cleared after evaluation so we explicitly propagate it to the dependents
+                elem.getExecutionErrors().clear();
+
+                // This status will be cleared after evaluation so we explicitly propagate it to the direct dependents (not all of them are in this graph)
                 if(elem.isDirty()) {
                     elem.getDependants().forEach(x -> x.setDirty());
                 }
@@ -140,16 +168,16 @@ public class Schema {
                     continue;
                 }
 
-                if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors cannot be evaluated and remain dirty
+                if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
                     continue;
                 }
 
                 // Check that all dependencies are clean (if at one is dirty then we cannot evaluate this)
-                boolean oneDepDirty = false;
+                boolean dirtyDepFound = false;
                 for(Element dep : elem.getDependencies()) {
-                    if(dep.isDirtyDeep()) { oneDepDirty = true; break; }
+                    if(dep.isDirtyDeep()) { dirtyDepFound = true; break; }
                 }
-                if(oneDepDirty) continue;
+                if(dirtyDepFound) continue;
 
                 //
                 // Really evaluate (and make up-to-date)
@@ -161,46 +189,9 @@ public class Schema {
 
     }
 
-    /**
-     * Evaluate one column and dependencies if necessary
-     */
-    public void eval(Column column) {
+    protected List<List<Element>> buildLayers() { // Build a list of layers of the graph
 
-        // Evaluate dependencies recursively
-        //for(List<Element> deps = column.getDependencies(); deps.size() > 0; deps = column.getDependencies(deps)) {
-        //    for(Element dep : deps) {
-        //        dep.run();
-        //    }
-        //}
-
-        column.run();
-    }
-
-    /**
-     * Evaluate one column and dependencies if necessary
-     */
-    public void eval(Column[] columns) {
-        for(Column column : columns) {
-            column.eval();
-        }
-    }
-
-    /**
-     * Evaluate all columns of one table
-     */
-    public void eval(Table table) {
-        for(Column column : table.getColumns()) {
-            column.eval();
-        }
-    }
-
-    //
-    // Dependency graph
-    //
-
-    protected List<List<Element>> buildLayers() { // Each layer is a list of elements which depend on elements of previous layers
-
-        List<List<Element>> layers = new ArrayList<>();
+        List<List<Element>> layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
 
         List<Element> all = new ArrayList<>();
         all.addAll(this.getColumns());
@@ -213,8 +204,12 @@ public class Schema {
             List<Element> layer = new ArrayList<>();
 
             for(Element elem : all) {
+
                 if(done.contains(elem)) continue;
-                if(!elem.getDefinitionErrors().isEmpty()) continue; // Do not add to done so dependants are also excluded from the graph
+
+                // Do not add to done so dependants are also excluded from the graph.
+                // It is important for avoiding cycles (same element in different layers) because elements in cycles are supposed to have definition error.
+                if(!elem.getDefinitionErrors().isEmpty()) continue;
 
                 boolean isNext = true;
                 for(Element dep : elem.getDependencies()) {
@@ -227,6 +222,36 @@ public class Schema {
 
             layers.add(layer);
             done.addAll(layer);
+        }
+
+        return layers;
+    }
+
+    protected List<List<Element>> buildLayers(Element element) { // Build graph with one element as the last element
+        List<List<Element>> layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
+
+        // Start from the last layer and then each previous layer will contain all dependencies of the previous layer elements
+
+        List<Element> layer = new ArrayList<>();
+        layer.add(element);
+
+        while(true) {
+
+            layers.add(0, new ArrayList<>(layer));
+            layer.clear();
+
+            for(Element elem : layers.get(0)) { // All elements of the previous layer
+                for(Element dep : elem.getDependencies()){
+
+                    if(layer.contains(dep)) continue;
+
+                    if(!elem.getDefinitionErrors().isEmpty()) continue;
+
+                    layer.add(dep);
+                }
+            }
+
+            if(layer.isEmpty()) break;
         }
 
         return layers;

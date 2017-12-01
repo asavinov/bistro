@@ -90,6 +90,14 @@ public class Column implements Element {
         if(deps == null) return new ArrayList<>();
         return deps;
     }
+    @Override
+    public boolean hasDependency(Element element) {
+        for(Element dep : this.getDependencies()) {
+            if(dep == element) return true;
+            if(dep.hasDependency(element)) return true; // Recursion
+        }
+        return false;
+    }
 
     @Override
     public List<Element> getDependants() {
@@ -103,6 +111,14 @@ public class Column implements Element {
         }
 
         return ret;
+    }
+    @Override
+    public boolean hasDependant(Element element) {
+        for(Element dep : this.getDependants()) {
+            if(dep == element) return true;
+            if(dep.hasDependant(element)) return true;// Recursion
+        }
+        return false;
     }
 
     private List<BistroError> definitionErrors = new ArrayList<>();
@@ -166,30 +182,6 @@ public class Column implements Element {
     @Override
     public void run() {
         this.eval();
-    }
-
-    // Checks if this column depends on itself
-    protected boolean isInCyle() {
-        for(List<Element> deps = this.getDependencies(); deps.size() > 0; deps = this.getDependencies(deps)) {
-            for(Element dep : deps) {
-                if(dep == this) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    // Get all unique dependencies of the specified columns
-    static protected List<Element> getDependencies(List<Element> deps) {
-        List<Element> ret = new ArrayList<>();
-        for(Element dep : deps) {
-            List<Element> ownDeps = dep.getDependencies();
-            for(Element ownd : ownDeps) {
-                if(!ret.contains(ownd)) ret.add(ownd);
-            }
-        }
-        return ret;
     }
 
     //
@@ -295,7 +287,7 @@ public class Column implements Element {
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             return;
         }
@@ -308,7 +300,7 @@ public class Column implements Element {
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
             return;
         }
@@ -320,7 +312,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionCalc(this, (Expression) expr);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
@@ -335,7 +327,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valuePaths);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
@@ -346,7 +338,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valueColumns);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
@@ -357,7 +349,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionLinkExprs(this, keyColumns, valueExprs);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
@@ -378,7 +370,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionAccu(this, accuPath, accuExpr);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
@@ -395,7 +387,7 @@ public class Column implements Element {
 
         this.definition = new ColumnDefinitionAccu(this, new ColumnPath(accuPath), accuExpr);
 
-        if(this.isInCyle()) {
+        if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }

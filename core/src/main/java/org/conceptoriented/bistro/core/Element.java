@@ -8,7 +8,10 @@ public interface Element {
     public Column getColumn();
 
     public List<Element> getDependencies();
+    public boolean hasDependency(Element element);
+
     public List<Element> getDependants();
+    public boolean hasDependant(Element element);
 
     public List<BistroError> getExecutionErrors();
     public boolean hasExecutionErrorsDeep();
