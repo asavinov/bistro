@@ -15,6 +15,8 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
 
     List<Expression> valueExprs = new ArrayList<>();
 
+    public boolean append = false;
+
     List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getErrors() {
@@ -95,14 +97,14 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
             }
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-            Object out = typeTable.find(this.keyColumns, rhsResults, true);
+            Object out = typeTable.find(rhsResults, this.keyColumns, this.append);
 
             // Update output
             this.column.setValue(i, out);
         }
     }
 
-	public ColumnDefinitionLinkExprs(Column column, Column[] keyColumns, Expression[] valueExprs) {
+	public ColumnDefinitionLinkExprs(Column column, Expression[] valueExprs, Column[] keyColumns) {
         this.column = column;
 
         this.keyColumns.addAll(Arrays.asList(keyColumns));

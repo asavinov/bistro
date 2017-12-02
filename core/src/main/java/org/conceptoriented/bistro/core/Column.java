@@ -39,9 +39,6 @@ public class Column implements Element {
 	}
 	public void setOutput(Table table) { this.output = table; this.setValue(null); }
 
-	private boolean key = false;
-	public boolean isKey() {  return this.key; }
-
     //
 	// Data (public)
 	//
@@ -268,12 +265,19 @@ public class Column implements Element {
     }
 
     //
-    // Noop column. Reset definition.
+    // Noop column
     //
 
-    // Note that the column retains its current output values (which will not be overwritten automatically later during evaluation) and it has to be reset manually if necessary
     public void noop() {
         this.setDefinitionType(ColumnDefinitionType.NOOP); // Reset definition
+    }
+
+    //
+    // Key column
+    //
+
+    public void key() {
+        this.setDefinitionType(ColumnDefinitionType.KEY); // Reset definition
     }
 
     //
@@ -321,13 +325,11 @@ public class Column implements Element {
     // Link column
     //
 
-    // TODO: Link columns never append - only find
-
     // Equality
     public void link(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valuePaths);
+        this.definition = new ColumnDefinitionLinkPaths(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -338,7 +340,7 @@ public class Column implements Element {
     public void link(Column[] valueColumns, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valueColumns);
+        this.definition = new ColumnDefinitionLinkPaths(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -349,7 +351,7 @@ public class Column implements Element {
     public void link(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkExprs(this, keyColumns, valueExprs);
+        this.definition = new ColumnDefinitionLinkExprs(this, valueExprs, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -360,7 +362,22 @@ public class Column implements Element {
     // Proj column
     //
 
-    // Proj column will do the same but append if not found. Also, they can link to only prod-tables with key-columns
+    // TODO: Link columns never append - only find. Proj-column - append.
+    //   proj-column definition constraint (check and raise error): specified key columns must match key columns of the output table
+
+    // ISSUE (in backlog): If not found in link, should output be NULL or -1 (now)? On one hand, we say that links are Long. But Long can be NULL. In future, it could be long which cannot be NULL.
+
+    // Equality
+    public void proj(ColumnPath[] valuePaths, Column... keyColumns) {
+        this.setDefinitionType(ColumnDefinitionType.PROJ);
+
+        this.definition = new ColumnDefinitionLinkPaths(this, valuePaths, keyColumns);
+        ((ColumnDefinitionLinkPaths)this.definition).append = true;
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
 
     //
     // Accumulate column

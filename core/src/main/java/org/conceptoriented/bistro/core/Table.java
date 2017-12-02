@@ -279,7 +279,7 @@ public class Table implements Element {
     //
 
 	// Important: Values must have the same type as the column data type - otherwise the comparision will not work
-    public long find(List<Column> columns, List<Object> values, boolean append) {
+    public long find(List<Object> values, List<Column> columns, boolean append) {
 
         //List<String> names = record.entrySet()..getNames();
         //List<Object> valuePaths = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());

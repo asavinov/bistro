@@ -99,6 +99,9 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
                 continue; // Do not accumulate facts without group
             }
             Long g = (Long)g_out;
+            if(g == -1) {
+                continue; // Do not accumulate facts without group
+            }
 
             // Read all parameter valuePaths
             for(int p=0; p<paramPaths.size(); p++) {

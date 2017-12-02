@@ -15,20 +15,17 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
     List<ColumnPath> valuePaths = new ArrayList<>();
 
+    public boolean append = false;
+
     List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getErrors() {
         return this.definitionErrors;
     }
 
-	@Override
-	public void eval() {
-        this.evaluateLink(this.keyColumns, this.valuePaths);
-	}
-
-	@Override
-	public List<Element> getDependencies() {
-		List<Element> ret = new ArrayList<>();
+    @Override
+    public List<Element> getDependencies() {
+        List<Element> ret = new ArrayList<>();
 
         for (ColumnPath path : this.valuePaths) {
             for (Column col : path.columns) {
@@ -36,10 +33,11 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
             }
         }
 
-		return ret;
-	}
+        return ret;
+    }
 
-    protected void evaluateLink(List<Column> keyColumns, List<ColumnPath> valuePaths) {
+    @Override
+	public void eval() {
 
         definitionErrors.clear(); // Clear state
 
@@ -54,10 +52,10 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
         //List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
         //List< Object[] > rhsParamValues = new ArrayList<>();
-        List< Object > rhsResults = new ArrayList<>(); // Record of valuePaths used for search (produced by expressions and having same length as column list)
+        List< Object > rhsResults = new ArrayList<>(); // Record of value paths used for search (produced by expressions and having same length as column list)
 
         // Initialize these lists for each member expression
-        for(ColumnPath path : valuePaths) {
+        for(ColumnPath path : this.valuePaths) {
             //int paramCount = expr.getParameterPaths().size();
 
             //rhsParamPaths.add( expr.getParameterPaths() );
@@ -68,16 +66,16 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
             // Evaluate ALL child rhs expressions by producing an array/record of their results
-            for(int mmbrNo = 0; mmbrNo < keyColumns.size(); mmbrNo++) {
+            for(int mmbrNo = 0; mmbrNo < this.keyColumns.size(); mmbrNo++) {
 
                 // Read one columnPath
-                Object result = valuePaths.get(mmbrNo).getValue(i);
+                Object result = this.valuePaths.get(mmbrNo).getValue(i);
 
                 rhsResults.set(mmbrNo, result);
             }
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-            Object out = typeTable.find(keyColumns, rhsResults, true);
+            Object out = typeTable.find(rhsResults, this.keyColumns, this.append);
 
             // Update output
             this.column.setValue(i, out);
@@ -85,14 +83,14 @@ public class ColumnDefinitionLinkPaths implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionLinkPaths(Column column, Column[] keyColumns, ColumnPath[] valuePaths) {
+    public ColumnDefinitionLinkPaths(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
         this.column = column;
 
 		this.keyColumns.addAll(Arrays.asList(keyColumns));
 		this.valuePaths.addAll(Arrays.asList(valuePaths));
 	}
 
-    public ColumnDefinitionLinkPaths(Column column, Column[] keyColumns, Column[] valueColumns) {
+    public ColumnDefinitionLinkPaths(Column column, Column[] valueColumns, Column[] keyColumns) {
         this.column = column;
 
         List<ColumnPath> paths = new ArrayList<>();

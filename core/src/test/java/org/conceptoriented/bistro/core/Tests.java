@@ -80,19 +80,19 @@ public class Tests {
 
         // Record search
         vals = Arrays.asList(2.0, "StringValue 2");
-        long found_id = t.find(cols, vals, false); // Record exist
+        long found_id = t.find(vals, cols, false); // Record exist
         assertEquals(id4, found_id);
 
         vals = Arrays.asList(2.0, "Non-existing value");
-        found_id = t.find(cols, vals, false); // Record does not exist
+        found_id = t.find(vals, cols, false); // Record does not exist
         assertTrue(found_id < 0);
 
         vals = Arrays.asList(5.0, "String value 5"); // Record does not exist
-        found_id = t.find(cols, vals, true); // Add if not found
+        found_id = t.find(vals, cols, true); // Add if not found
         assertEquals(4, found_id);
 
         vals = Arrays.asList(5L, "String value 5"); // Record exist but we specify different type (integer instead of double)
-        found_id = t.find(cols, vals, false);
+        found_id = t.find(vals, cols, false);
         assertTrue(found_id < 0); // Not found because of different types: Long is not comparable with Double
     }
 
@@ -169,7 +169,7 @@ public class Tests {
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
+        assertEquals(-1L, t2c.getValue(1)); // Not found
 
         Expression[] valueExprs = new Expression[] {
                 new Expr( p -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
@@ -188,7 +188,7 @@ public class Tests {
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
+        assertEquals(-1L, t2c.getValue(1)); // Not found
     }
 
     Schema createLinkSchema() {
@@ -201,7 +201,9 @@ public class Tests {
         Table t1 = s.createTable("T");
 
         Column t1a = s.createColumn("A", t1);
+        t1a.key();
         Column t1b = s.createColumn("B", t1);
+        t1b.key();
 
         // Add one record to link to
         t1.add();
@@ -287,6 +289,7 @@ public class Tests {
         Table t = schema.createTable("T");
 
         Column tid = schema.createColumn("Id", t);
+        tid.key();
 
         // Define accu column
         Column ta = schema.createColumn("A", t);

@@ -105,7 +105,7 @@ public class Example1 {
         // Link column
         value = link.getValue(0); // value = 1
         value = link.getValue(1); // value = 0
-        value = link.getValue(2); // value = 1
+        value = link.getValue(2); // value = -1
 
         // Accu column
         value = counts.getValue(0); // 1 event from fridge

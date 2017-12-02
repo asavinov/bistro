@@ -83,7 +83,7 @@ public class Tests {
         assertTrue(t2c_deps.contains(s.getColumn("T2", "B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // Appended
+        assertEquals(-1L, t2c.getValue(1)); // Not found
     }
 
     Schema createLinkSchema() {
