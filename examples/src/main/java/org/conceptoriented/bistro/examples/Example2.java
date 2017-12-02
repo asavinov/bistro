@@ -49,15 +49,15 @@ public class Example2 {
         // [OrderItems].[Product]: OrderItems -> Products
         Column itemsProduct = schema.createColumn("Product", items, products);
         itemsProduct.link(
-                new Column[] { products.getColumn("ID") },
-                items.getColumn("Product ID")
+                new Column[] { items.getColumn("Product ID") },
+                products.getColumn("ID")
         );
 
         // [OrderItems].[Order]: OrderItems -> Orders
         Column itemsOrder = schema.createColumn("Order", items, orders);
         itemsOrder.link(
-                new Column[] { orders.getColumn("ID") },
-                items.getColumn("Order ID")
+                new Column[] { items.getColumn("Order ID") },
+                orders.getColumn("ID")
         );
 
         //

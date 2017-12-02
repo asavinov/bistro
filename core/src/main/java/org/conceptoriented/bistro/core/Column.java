@@ -321,8 +321,10 @@ public class Column implements Element {
     // Link column
     //
 
+    // TODO: Link columns never append - only find
+
     // Equality
-    public void link(Column[] keyColumns, ColumnPath... valuePaths) {
+    public void link(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valuePaths);
@@ -333,7 +335,7 @@ public class Column implements Element {
     }
 
     // Equality
-    public void link(Column[] keyColumns, Column... valueColumns) {
+    public void link(Column[] valueColumns, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkPaths(this, keyColumns, valueColumns);
@@ -344,7 +346,7 @@ public class Column implements Element {
     }
 
     // Expressions
-    public void link(Column[] keyColumns, Expression... valueExprs) { // Custom rhs UDEs for each lhs column
+    public void link(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLinkExprs(this, keyColumns, valueExprs);
@@ -353,6 +355,12 @@ public class Column implements Element {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
+
+    //
+    // Proj column
+    //
+
+    // Proj column will do the same but append if not found. Also, they can link to only prod-tables with key-columns
 
     //
     // Accumulate column

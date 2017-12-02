@@ -230,7 +230,7 @@ public class Table implements Element {
     // Table (definition) kind
     //
 
-    TableDefinition definition; // It is instantiated by proj-prod methods (or definition errors are added)
+    TableDefinition definition; // It is instantiated by prod-prod methods (or definition errors are added)
 
     protected TableDefinitionType definitionType;
     public TableDefinitionType getDefinitionType() {
@@ -241,11 +241,10 @@ public class Table implements Element {
         this.definitionErrors.clear();
         this.executionErrors.clear();
         this.definition = null;
-        // TODO: Uncomment when implemented
-        //this.isDirty = true;
+        this.isDirty = true;
     }
     public boolean isDerived() {
-        if(this.definitionType == TableDefinitionType.PROJ || this.definitionType == TableDefinitionType.PROD) {
+        if(this.definitionType == TableDefinitionType.PROD) {
             return true;
         }
         return false;
@@ -264,17 +263,15 @@ public class Table implements Element {
     // Project tables
     //
 
-    public void proj() {
-        this.setDefinitionType(TableDefinitionType.PROJ); // Reset definition
+    public void prod() {
+        this.setDefinitionType(TableDefinitionType.PROD); // Reset definition
 
-        this.definition = new TableDefinitionProj(this); // Create definition
+        this.definition = new TableDefinitionProd(this); // Create definition
         // TODO: Proces errors. Add excpeitons to the declaration of creator
 
-        // TODO: Uncomment when implemented
-        //if(this.isInCyle()) {
-        //    this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This table depends on itself directly or indirectly."));
-        //    return;
-       // }
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
     }
 
     //

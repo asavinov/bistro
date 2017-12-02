@@ -154,11 +154,12 @@ public class Tests {
         Column t2c = t2.getColumn("C");
 
         // Use column valuePaths
-        Column[] columns = new Column[] {t.getColumn("A"), t.getColumn("B")};
+        Column[] valueColumns = new Column[] {t2.getColumn("A"), t2.getColumn("B")};
+        Column[] keyColumns = new Column[] {t.getColumn("A"), t.getColumn("B")};
 
         t2c.link(
-                columns, // A and B from T
-                t2.getColumn("A"), t2.getColumn("B") // A and B from T2
+                valueColumns, // A and B from T2
+                keyColumns // A and B from T
         );
         t2c.eval();
 
@@ -170,10 +171,14 @@ public class Tests {
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(1L, t2c.getValue(1)); // Exists. Has been appended before
 
-        t2c.link(
-                columns,
+        Expression[] valueExprs = new Expression[] {
                 new Expr( p -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
                 new Expr( p -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
+        };
+
+        t2c.link(
+                valueExprs,
+                keyColumns
         );
         t2c.eval();
 
@@ -304,8 +309,8 @@ public class Tests {
         // Define group column: G: T2 -> T
         Column t2g = schema.createColumn("G", t2, t);
         t2g.link(
-                new Column[] { tid }, // Id from T
-                new Column[] { t2id } // Id from T2
+                new Column[] { t2id }, // Values: Id from T2
+                new Column[] { tid } // Keys: Id from T
         );
 
         t2.add();

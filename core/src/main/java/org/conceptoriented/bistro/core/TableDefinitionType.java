@@ -2,8 +2,7 @@ package org.conceptoriented.bistro.core;
 
 public enum TableDefinitionType {
 	NOOP(0), // No definition
-	PROJ(10), // Project table column
-	PROD(20), // Product column
+	PROD(10), // Product table
 	;
 
 	private int value;

@@ -72,8 +72,8 @@ public class Tests {
 
         // Define and evaluate
         t2c.link(
-                new Column[] {t.getColumn("A"), t.getColumn("B")},
-                exprs
+                exprs,
+                t.getColumn("A"), t.getColumn("B")
         );
         t2c.eval();
 
@@ -195,8 +195,8 @@ public class Tests {
         // Define group column
         Column t2g = schema.createColumn("G", t2, t1);
         t2g.link(
-                new Column[] { t1.getColumn("Id") },
-                new Expression[] { new FormulaExp4j("[Id]", t2) }
+                new Expression[] { new FormulaExp4j("[Id]", t2) },
+                t1.getColumn("Id")
         );
 
         t2.add();

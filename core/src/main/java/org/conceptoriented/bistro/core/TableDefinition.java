@@ -14,7 +14,7 @@ public interface TableDefinition {
 
 
 
-class TableDefinitionProj implements TableDefinition {
+class TableDefinitionProd implements TableDefinition {
 
     Table table;
 
@@ -39,7 +39,7 @@ class TableDefinitionProj implements TableDefinition {
 
     }
 
-    public TableDefinitionProj(Table table) {
+    public TableDefinitionProd(Table table) {
         this.table = table;
     }
 

@@ -51,15 +51,15 @@ public class Example3
         // [OrderDetails].[ProductID]: OrderDetails -> Products
         Column itemsProduct = schema.createColumn("Product", items, products);
         itemsProduct.link(
-                new Column[] { products.getColumn("ProductID") },
-                new FormulaExp4j("[ProductID]", items)
+                new Expression[] { new FormulaExp4j("[ProductID]", items) },
+                new Column[] { products.getColumn("ProductID") }
         );
 
         // [OrderDetails].[OrderID]: OrderDetails -> Orders
         Column itemsOrder = schema.createColumn("Order", items, orders);
         itemsOrder.link(
-                new Column[] { orders.getColumn("OrderID") },
-                new FormulaExp4j("[OrderID]", items)
+                new Expression[] { new FormulaExp4j("[OrderID]", items) },
+                new Column[] { orders.getColumn("OrderID") }
         );
 
         //
