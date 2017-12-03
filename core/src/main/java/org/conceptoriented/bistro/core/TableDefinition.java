@@ -28,9 +28,8 @@ class TableDefinitionProd implements TableDefinition {
     @Override
     public List<Element> getDependencies() {
         // TODO:
-        // Column deps: a list of all incoming (generating) columns
-        // Table deps: derived from column deps (their input tables)
-        // Table deps: (key) domains should be ready (for any definition)?
+        // Incoming: a list of all incoming (generating) proj-columns & these column incoming tables
+        // Keys: (key) domains have to be populated
         return null;
     }
 

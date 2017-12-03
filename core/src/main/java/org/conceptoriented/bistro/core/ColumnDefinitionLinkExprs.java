@@ -15,7 +15,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
 
     List<Expression> valueExprs = new ArrayList<>();
 
-    public boolean append = false;
+    public boolean isProj = false;
 
     List<BistroError> definitionErrors = new ArrayList<>();
     @Override
@@ -32,6 +32,11 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
             for (Column col : deps) {
                 if (!ret.contains(col)) ret.add(col);
             }
+        }
+
+        if(!this.isProj) {
+            // Link columns depend on the output table (in contrast to proj columns which do not)
+            ret.add(this.column.getOutput());
         }
 
         return ret;
@@ -97,7 +102,7 @@ public class ColumnDefinitionLinkExprs implements ColumnDefinition {
             }
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-            Object out = typeTable.find(rhsResults, this.keyColumns, this.append);
+            Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
 
             // Update output
             this.column.setValue(i, out);

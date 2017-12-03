@@ -279,6 +279,7 @@ public class Table implements Element {
     //
 
 	// Important: Values must have the same type as the column data type - otherwise the comparision will not work
+    // ISSUE: If not found, should output be NULL or -1? On one hand, we say that links are Long. But Long can be NULL. In future, it could be long which cannot be NULL.
     public long find(List<Object> values, List<Column> columns, boolean append) {
 
         //List<String> names = record.entrySet()..getNames();

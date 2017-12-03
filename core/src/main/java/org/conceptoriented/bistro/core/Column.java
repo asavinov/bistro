@@ -362,17 +362,30 @@ public class Column implements Element {
     // Proj column
     //
 
-    // TODO: Link columns never append - only find. Proj-column - append.
-    //   proj-column definition constraint (check and raise error): specified key columns must match key columns of the output table
-
-    // ISSUE (in backlog): If not found in link, should output be NULL or -1 (now)? On one hand, we say that links are Long. But Long can be NULL. In future, it could be long which cannot be NULL.
-
     // Equality
     public void proj(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionLinkPaths(this, valuePaths, keyColumns);
-        ((ColumnDefinitionLinkPaths)this.definition).append = true;
+        // Output table cannot be noop-table (must be prod-table)
+        if(this.getOutput().getDefinitionType() == TableDefinitionType.NOOP) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Column definition error.", "Proj-column cannot have noop-table as type - use link-column instead."));
+        }
+
+        // Check that all specified key columns are keys of the type table
+        Column nonKeyColumn = null;
+        for(Column col : keyColumns) {
+            if(col.getDefinitionType() != ColumnDefinitionType.KEY) {
+                nonKeyColumn = col;
+                break;
+            }
+        }
+        if(nonKeyColumn != null) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Column definition error.", "All key columns of the proj-column definition must be key columns of the linked product table."));
+        }
+
+        // This flag can be important for dependencies
+        ((ColumnDefinitionLinkPaths)this.definition).isProj = true;
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
