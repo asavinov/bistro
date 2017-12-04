@@ -155,7 +155,14 @@ public class Table implements Element {
     private List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        return this.definitionErrors;
+        List<BistroError> ret = new ArrayList<>();
+        ret.addAll(this.definitionErrors);
+
+        if(this.definition != null) {
+            ret.addAll(this.definition.getErrors());
+        }
+
+        return ret;
     }
 
     @Override
@@ -244,30 +251,29 @@ public class Table implements Element {
         this.isDirty = true;
     }
     public boolean isDerived() {
-        if(this.definitionType == TableDefinitionType.PROD) {
-            return true;
+        if(this.definitionType == TableDefinitionType.NOOP) {
+            return false;
         }
-        return false;
+        return true;
     }
 
     //
-    // Noop table. Reset definition.
+    // Noop table
     //
 
     // Note that the table retains its current population (which will not be overwritten automatically later during population) and it has to be emptied manually if necessary
     public void noop() {
-        this.setDefinitionType(TableDefinitionType.NOOP); // Reset definition
+        this.setDefinitionType(TableDefinitionType.NOOP);
     }
 
     //
-    // Project tables
+    // Product table
     //
 
     public void prod() {
         this.setDefinitionType(TableDefinitionType.PROD); // Reset definition
 
         this.definition = new TableDefinitionProd(this); // Create definition
-        // TODO: Proces errors. Add excpeitons to the declaration of creator
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -350,5 +356,8 @@ public class Table implements Element {
 		this.schema = schema;
 		this.id = UUID.randomUUID();
 		this.name = name;
-	}
+
+         // Where its instances come from
+         this.definitionType = TableDefinitionType.NOOP;
+     }
 }

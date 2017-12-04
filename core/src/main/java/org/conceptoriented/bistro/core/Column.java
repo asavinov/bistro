@@ -121,7 +121,14 @@ public class Column implements Element {
     private List<BistroError> definitionErrors = new ArrayList<>();
     @Override
     public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        return this.definitionErrors;
+        List<BistroError> ret = new ArrayList<>();
+        ret.addAll(this.definitionErrors);
+
+        if(this.definition != null) {
+            ret.addAll(this.definition.getErrors());
+        }
+
+        return ret;
     }
 
     @Override
@@ -228,9 +235,11 @@ public class Column implements Element {
         //
         // Really evaluate using definition
         //
-        this.definition.eval();
+        if(this.definition != null) {
+            this.definition.eval();
+            this.executionErrors.addAll(this.definition.getErrors());
 
-        this.executionErrors.addAll(this.definition.getErrors());
+        }
 
         if(this.executionErrors.size() == 0) {
             this.isDirty = false; // Clean the state (remove dirty flag)
@@ -258,10 +267,10 @@ public class Column implements Element {
         this.isDirty = true;
     }
     public boolean isDerived() {
-        if(this.definitionType == ColumnDefinitionType.CALC || this.definitionType == ColumnDefinitionType.LINK || this.definitionType == ColumnDefinitionType.ACCU) {
-            return true;
+        if(this.definitionType == ColumnDefinitionType.NOOP) {
+            return false;
         }
-        return false;
+        return true;
     }
 
     //
@@ -269,7 +278,7 @@ public class Column implements Element {
     //
 
     public void noop() {
-        this.setDefinitionType(ColumnDefinitionType.NOOP); // Reset definition
+        this.setDefinitionType(ColumnDefinitionType.NOOP);
     }
 
     //
@@ -277,19 +286,18 @@ public class Column implements Element {
     //
 
     public void key() {
-        this.setDefinitionType(ColumnDefinitionType.KEY); // Reset definition
+
+        this.setDefinitionType(ColumnDefinitionType.KEY);
     }
 
     //
     // Calcuate column
     //
 
-    // Lambda + parameters
     public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter valuePaths
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
-        // TODO: Proces errors. Add excpeitons to the declaration of creator
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -297,12 +305,10 @@ public class Column implements Element {
         }
     }
 
-    // Lambda + parameters
     public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter columns
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
-        // TODO: Proces errors. Add excpeitons to the declaration of creator
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -310,7 +316,6 @@ public class Column implements Element {
         }
     }
 
-    // Expression
     public void calc(Expression expr) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
@@ -325,33 +330,30 @@ public class Column implements Element {
     // Link column
     //
 
-    // Equality
     public void link(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkPaths(this, valuePaths, keyColumns);
+        this.definition = new ColumnDefinitionLink(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    // Equality
     public void link(Column[] valueColumns, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkPaths(this, valueColumns, keyColumns);
+        this.definition = new ColumnDefinitionLink(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    // Expressions
     public void link(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
-        this.definition = new ColumnDefinitionLinkExprs(this, valueExprs, keyColumns);
+        this.definition = new ColumnDefinitionLink(this, valueExprs, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -362,30 +364,30 @@ public class Column implements Element {
     // Proj column
     //
 
-    // Equality
     public void proj(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
-        this.definition = new ColumnDefinitionLinkPaths(this, valuePaths, keyColumns);
-        // Output table cannot be noop-table (must be prod-table)
-        if(this.getOutput().getDefinitionType() == TableDefinitionType.NOOP) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Column definition error.", "Proj-column cannot have noop-table as type - use link-column instead."));
-        }
+        this.definition = new ColumnDefinitionProj(this, valuePaths, keyColumns);
 
-        // Check that all specified key columns are keys of the type table
-        Column nonKeyColumn = null;
-        for(Column col : keyColumns) {
-            if(col.getDefinitionType() != ColumnDefinitionType.KEY) {
-                nonKeyColumn = col;
-                break;
-            }
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
-        if(nonKeyColumn != null) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Column definition error.", "All key columns of the proj-column definition must be key columns of the linked product table."));
-        }
+    }
 
-        // This flag can be important for dependencies
-        ((ColumnDefinitionLinkPaths)this.definition).isProj = true;
+    public void proj(Column[] valueColumns, Column... keyColumns) {
+        this.setDefinitionType(ColumnDefinitionType.PROJ);
+
+        this.definition = new ColumnDefinitionProj(this, valueColumns, keyColumns);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void proj(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
+        this.setDefinitionType(ColumnDefinitionType.PROJ);
+
+        this.definition = new ColumnDefinitionProj(this, valueExprs, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -458,10 +460,10 @@ public class Column implements Element {
 		this.input = input;
 		this.output = output;
 		
-		// Formula
+		// Where its output values come from
 		this.definitionType = ColumnDefinitionType.NOOP;
 
-		// Data
+		// Where its output values are stored
 		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
 	}
 }

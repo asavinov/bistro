@@ -176,7 +176,7 @@ public class Tests {
                 new Expr( p -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
         };
 
-        t2c.link(
+        t2c.proj(
                 valueExprs,
                 keyColumns
         );
@@ -188,7 +188,7 @@ public class Tests {
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(-1L, t2c.getValue(1)); // Not found
+        assertEquals(1L, t2c.getValue(1)); // New record append by proj-column
     }
 
     Schema createLinkSchema() {
@@ -199,6 +199,7 @@ public class Tests {
         // Table 1 (type table to link to)
         //
         Table t1 = s.createTable("T");
+        t1.prod();
 
         Column t1a = s.createColumn("A", t1);
         t1a.key();
