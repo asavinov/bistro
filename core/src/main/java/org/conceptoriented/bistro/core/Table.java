@@ -128,7 +128,12 @@ public class Table implements Element {
 
     @Override
     public List<Element> getDependencies() {
-	    return new ArrayList<>();
+        List<Element> deps = new ArrayList<>();
+
+        if(this.definition == null) return deps;
+        deps = this.definition.getDependencies();
+        if(deps == null) return new ArrayList<>();
+        return deps;
     }
     @Override
     public boolean hasDependency(Element element) {

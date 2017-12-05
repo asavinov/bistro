@@ -82,8 +82,17 @@ public class Column implements Element {
 
     @Override
     public List<Element> getDependencies() {
-        if(this.definition == null) return new ArrayList<>();
-        List<Element> deps = this.definition.getDependencies();
+        List<Element> deps = new ArrayList<>();
+
+        if(this.getDefinitionType() == ColumnDefinitionType.KEY) {
+            if(this.getInput().getDefinitionType() == TableDefinitionType.PROD) {
+                deps.add(this.getInput()); // Key-columns depend on the prod-table (if any) because they are filled by their population procedure
+            }
+            return deps;
+        }
+
+        if(this.definition == null) return deps;
+        deps = this.definition.getDependencies();
         if(deps == null) return new ArrayList<>();
         return deps;
     }
