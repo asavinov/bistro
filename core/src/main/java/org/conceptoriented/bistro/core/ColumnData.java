@@ -68,22 +68,32 @@ public class ColumnData {
     protected void remove() { this.remove(1); }
 	protected void remove(long count) { // Remove the oldest records with lowest ids
 
-        // Delete
-        this.idRange.start += count;
-        this.startIdOffset += count;
+        if(count > 0) { // Remove oldest
+            // Delete
+            this.idRange.start += count;
+            this.startIdOffset += count;
 
-        // Free some space if there is enough in the beginning of the array (garbage collection)
-        if(this.startIdOffset > INCREMENT_SIZE) {
-            // Shift values to the beginning
-            System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
-            this.startIdOffset = 0;
+            // Garbage collection. Free some space if there is enough in the beginning of the array
+            if(this.startIdOffset > INCREMENT_SIZE) {
+                // Shift values to the beginning
+                System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
+                this.startIdOffset = 0;
 
-            // Free space at the end of the allocated array
-            if(this.values.length >= INITIAL_SIZE + INCREMENT_SIZE) { // Do not make smaller than initial size
-                int additionalSize = this.values.length - (int) idRange.getLength(); // Unused space
-                additionalSize = (additionalSize / INCREMENT_SIZE) * INCREMENT_SIZE; // How much (whole increments) we want to remove
-                this.values = Arrays.copyOf(this.values, this.values.length - additionalSize);
+                // Free space at the end of the allocated array
+                if(this.values.length >= INITIAL_SIZE + INCREMENT_SIZE) { // Do not make smaller than initial size
+                    int additionalSize = this.values.length - (int) idRange.getLength(); // Unused space
+                    additionalSize = (additionalSize / INCREMENT_SIZE) * INCREMENT_SIZE; // How much (whole increments) we want to remove
+                    this.values = Arrays.copyOf(this.values, this.values.length - additionalSize);
+                }
             }
+        }
+        else if(count < 0) { // Remove newest
+            // Delete
+            this.idRange.end += count; // End is decreased because count is negative
+
+            // TODO: Garbage collection.
+        }
+        else {
         }
 	}
 

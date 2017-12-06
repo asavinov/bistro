@@ -48,6 +48,17 @@ public class TableDefinitionProd implements TableDefinition {
         //   col.getData().nullify();
         //}
 
+
+        //
+        // Prepare where evaluation
+        //
+        List<ColumnPath> paramPaths =  null;
+        Object[] paramValues = null;
+        if(this.table.expressionWhere != null) {
+            paramPaths =  this.table.expressionWhere.getParameterPaths();
+            paramValues = new Object[paramPaths.size() + 1];
+        }
+
         //
         // The current state of the search procedure
         //
@@ -62,17 +73,45 @@ public class TableDefinitionProd implements TableDefinition {
 
         // Alternative recursive iteration: http://stackoverflow.com/questions/13655299/c-sharp-most-efficient-way-to-iterate-through-multiple-arrays-list
         // Alternative: in fact, we can fill each column with integer values alternated periodically depending on its index in the list of columns, e.g., column 0 will always have first half 0s and second half 1s, while next column will alternative two times faster and the last column will always look like 0101010101
-        while (top >= 0)
-        {
+
+        long input = -1; // If -1, then we need to append a record. If >=0, then this id has to be used as a new record (previous append does not satisfy where expression but was not deleted).
+        boolean result = true; // Where result for the last appended record
+        while (top >= 0) {
             if (top == colCount) // New element is ready. Process it.
             {
-                // Initialize a record and append it
-                long input = this.table.add();
+                // Append a new record if necessary
+                if(result == true) {
+                    input = this.table.add();
+                }
+                // Initialize the new record
                 for (int i = 0; i < colCount; i++) {
                     cols.get(i).setValue(input, offsets[i]);
                 }
 
-                // TODO: Check if the new appended instance satisfies the where condition and if not then remove it
+                if(this.table.expressionWhere!= null) { // If there is where condition
+                    // Read all parameters
+                    for(int p=0; p<paramPaths.size(); p++) {
+                        paramValues[p] = paramPaths.get(p).getValue(input);
+                    }
+
+                    // Evaluate
+                    try {
+                        result = (boolean) this.table.expressionWhere.eval(paramValues);
+                    }
+                    catch(BistroError e) {
+                        this.definitionErrors.add(e);
+                        return;
+                    }
+                    catch(Exception e) {
+                        this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                        return;
+                    }
+                }
+                else {
+                    result = true;
+                    input = -1;
+                }
+                // We do not delete the record if it does not satisfy where condition - it will be reused on the next step.
 
                 top--;
                 while (top >= 0 && lengths[top] == 0) // Go up by skipping empty dimensions and reseting
@@ -94,6 +133,10 @@ public class TableDefinitionProd implements TableDefinition {
                     while (top >= 0 && lengths[top] == 0); // Go down (backward) by skipping empty dimensions and reseting
                 }
             }
+        }
+
+        if(result == false) {
+            this.table.remove(-1); // Delete last record which does not satisfies where condition
         }
 
         // We populated table assuming that all ranges start from 0 (using 0-based output values). Now add the real start to each column

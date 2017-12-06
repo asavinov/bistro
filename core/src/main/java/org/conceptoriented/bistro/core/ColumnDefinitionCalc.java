@@ -24,7 +24,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
         List<ColumnPath> paths = this.expr.getParameterPaths();
         List<Column> cols = ColumnPath.getColumns(paths);
         List<Element> deps = new ArrayList<>();
-        cols.forEach(x -> deps.add(x));
+        for(Column col : cols) deps.add(col);
         return deps;
     }
 

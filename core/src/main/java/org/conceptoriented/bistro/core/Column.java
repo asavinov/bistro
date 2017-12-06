@@ -93,7 +93,8 @@ public class Column implements Element {
 
         if(this.definition == null) return deps;
         deps = this.definition.getDependencies();
-        if(deps == null) return new ArrayList<>();
+        if(deps == null) deps = new ArrayList<>();
+
         return deps;
     }
     @Override
@@ -303,10 +304,10 @@ public class Column implements Element {
     // Calcuate column
     //
 
-    public void calc(Evaluator lambda, ColumnPath... params) { // Specify lambda and parameter valuePaths
+    public void calc(Evaluator lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
-        this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
+        this.definition = new ColumnDefinitionCalc(this, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -314,10 +315,10 @@ public class Column implements Element {
         }
     }
 
-    public void calc(Evaluator lambda, Column... params) { // Specify lambda and parameter columns
+    public void calc(Evaluator lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
-        this.definition = new ColumnDefinitionCalc(this, lambda, params); // Create definition
+        this.definition = new ColumnDefinitionCalc(this, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -359,7 +360,7 @@ public class Column implements Element {
         }
     }
 
-    public void link(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
+    public void link(Expression[] valueExprs, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLink(this, valueExprs, keyColumns);
@@ -393,7 +394,7 @@ public class Column implements Element {
         }
     }
 
-    public void proj(Expression[] valueExprs, Column... keyColumns) { // Custom rhs UDEs for each lhs column
+    public void proj(Expression[] valueExprs, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valueExprs, keyColumns);
@@ -408,14 +409,14 @@ public class Column implements Element {
     //
 
     // Evaluator + parameters OR Expression + no params
-    public void accu(ColumnPath accuPath, Evaluator lambda, ColumnPath... params) {
+    public void accu(ColumnPath accuPath, Evaluator lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         Expression accuExpr;
         if(lambda instanceof Expression)
             accuExpr = (Expression)lambda;
         else
-            accuExpr = new Expr(lambda, params);
+            accuExpr = new Expr(lambda, paths);
 
         this.definition = new ColumnDefinitionAccu(this, accuPath, accuExpr);
 
@@ -425,14 +426,14 @@ public class Column implements Element {
     }
 
     // Evaluator + parameters OR Expression + no params
-    public void accu(Column accuPath, Evaluator lambda, Column... params) {
+    public void accu(Column accuPath, Evaluator lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         Expression accuExpr;
         if(lambda instanceof Expression)
             accuExpr = (Expression)lambda;
         else
-            accuExpr = new Expr(lambda, params);
+            accuExpr = new Expr(lambda, columns);
 
         this.definition = new ColumnDefinitionAccu(this, new ColumnPath(accuPath), accuExpr);
 

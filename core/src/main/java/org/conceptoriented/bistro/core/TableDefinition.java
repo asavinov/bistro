@@ -11,6 +11,3 @@ public interface TableDefinition {
 	public List<BistroError> getErrors();
 	public List<Element> getDependencies();
 }
-
-
-

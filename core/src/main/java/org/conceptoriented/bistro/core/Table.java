@@ -72,8 +72,17 @@ public class Table implements Element {
 
     public Range remove(long count) {
         this.getColumns().forEach( x -> x.remove(count) );
-        this.idRange.start += count;
-        return new Range(this.idRange.start - count, this.idRange.start);
+        if(count > 0) { // Remove oldest
+            this.idRange.start += count;
+            return new Range(this.idRange.start - count, this.idRange.start);
+        }
+        else if(count < 0) { // Remove newest
+            this.idRange.end += count; // End is decreased because count is negative
+            return new Range(this.idRange.end, this.idRange.end - count);
+        }
+        else {
+            return new Range(this.idRange.start, this.idRange.start);
+        }
     }
 
     //
@@ -132,7 +141,18 @@ public class Table implements Element {
 
         if(this.definition == null) return deps;
         deps = this.definition.getDependencies();
-        if(deps == null) return new ArrayList<>();
+        if(deps == null) deps = new ArrayList<>();
+
+        // Add what evaluation of where condition requires (except for this table columns)
+        if(this.expressionWhere != null) {
+            List<ColumnPath> paths = this.expressionWhere.getParameterPaths();
+            List<Column> cols = ColumnPath.getColumns(paths);
+            for(Column col : cols) {
+                if(col.getInput() == this) continue; // This table columns will be evaluated during population and hence during where evaluation, so we exclude them
+                deps.add(col);
+            }
+        }
+
         return deps;
     }
     @Override
@@ -279,6 +299,38 @@ public class Table implements Element {
         this.setDefinitionType(TableDefinitionType.PROD); // Reset definition
 
         this.definition = new TableDefinitionProd(this); // Create definition
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    //
+    // Where
+    //
+
+    Expression expressionWhere;
+
+    public void where(Evaluator lambda, ColumnPath... paths) {
+        this.expressionWhere = new Expr(lambda, paths);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            return;
+        }
+    }
+
+    public void where(Evaluator lambda, Column... columns) {
+        this.expressionWhere = new Expr(lambda, columns);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            return;
+        }
+    }
+
+    public void where(Expression expr) {
+        this.expressionWhere = expr;
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

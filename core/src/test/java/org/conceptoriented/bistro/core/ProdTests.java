@@ -26,9 +26,6 @@ public class ProdTests {
         Column c31 = t3.getColumn("C31");
         Column c32 = t3.getColumn("C32");
 
-        c31.key(); // First key (2 records)
-        c32.key(); // Second key (3 records)
-
         t3.prod();
 
         s.eval();
@@ -47,6 +44,34 @@ public class ProdTests {
         // c32 = {121212}
         assertEquals(1L, c32.getValue(0));
         assertEquals(1L, c32.getValue(3));
+    }
+
+    @Test
+    public void whereTest() {
+        Schema s = createSchema();
+        Table t3 = s.getTable("T3");
+        Column c31 = t3.getColumn("C31");
+        Column c32 = t3.getColumn("C32");
+
+        t3.prod();
+        t3.where(
+                p -> p[0] == "v1" || p[1] == "v1",
+                new ColumnPath(c31, s.getTable("T1").getColumn("C11")), new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
+        );
+
+        s.eval();
+
+        // Check correctness of dependencies
+
+        assertEquals(4, t3.getLength());
+
+        // c31 = {1222}
+        assertEquals(1L, c31.getValue(0));
+        assertEquals(2L, c31.getValue(3));
+
+        // c32 = {2123}
+        assertEquals(2L, c32.getValue(0));
+        assertEquals(3L, c32.getValue(3));
     }
 
     Schema createSchema() {
@@ -85,8 +110,10 @@ public class ProdTests {
         //
         Table t3 = s.createTable("T3");
 
-        Column t31 = s.createColumn("C31", t3, t1);
-        Column t32 = s.createColumn("C32", t3, t2);
+        Column c31 = s.createColumn("C31", t3, t1);
+        c31.key(); // First key (2 records)
+        Column c32 = s.createColumn("C32", t3, t2);
+        c32.key(); // Second key (3 records)
 
         return s;
     }
