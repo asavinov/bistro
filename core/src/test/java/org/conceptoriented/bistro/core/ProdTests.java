@@ -26,8 +26,6 @@ public class ProdTests {
         Column c31 = t3.getColumn("C31");
         Column c32 = t3.getColumn("C32");
 
-        t3.prod();
-
         s.eval();
 
         // Check correctness of dependencies
@@ -35,13 +33,14 @@ public class ProdTests {
         assertTrue(t3_deps.contains(c31.getOutput()));
         assertTrue(t3_deps.contains(c32.getOutput()));
 
+        // Result size
         assertEquals(6, t3.getLength());
 
         // c31 = {111222}
         assertEquals(1L, c31.getValue(0));
         assertEquals(2L, c31.getValue(4));
 
-        // c32 = {121212}
+        // c32 = {123123}
         assertEquals(1L, c32.getValue(0));
         assertEquals(1L, c32.getValue(3));
     }
@@ -53,7 +52,6 @@ public class ProdTests {
         Column c31 = t3.getColumn("C31");
         Column c32 = t3.getColumn("C32");
 
-        t3.prod();
         t3.where(
                 p -> p[0] == "v1" || p[1] == "v1",
                 new ColumnPath(c31, s.getTable("T1").getColumn("C11")), new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
@@ -61,17 +59,16 @@ public class ProdTests {
 
         s.eval();
 
-        // Check correctness of dependencies
-
+        // Result size
         assertEquals(4, t3.getLength());
 
-        // c31 = {1222}
+        // c31 = {1112}
         assertEquals(1L, c31.getValue(0));
         assertEquals(2L, c31.getValue(3));
 
-        // c32 = {2123}
-        assertEquals(2L, c32.getValue(0));
-        assertEquals(3L, c32.getValue(3));
+        // c32 = {1231}
+        assertEquals(2L, c32.getValue(1));
+        assertEquals(3L, c32.getValue(2));
     }
 
     Schema createSchema() {
@@ -109,6 +106,7 @@ public class ProdTests {
         // Table 3 (product of the two domain tables)
         //
         Table t3 = s.createTable("T3");
+        t3.prod();
 
         Column c31 = s.createColumn("C31", t3, t1);
         c31.key(); // First key (2 records)
@@ -118,4 +116,76 @@ public class ProdTests {
         return s;
     }
 
+    @Test
+    public void whereProjTest() {
+        Schema s = createSchema2();
+
+        Table t3 = s.getTable("T3");
+        Column c31 = t3.getColumn("C31");
+        Column c32 = t3.getColumn("C32");
+
+        Table t4 = s.getTable("T4");
+
+        // Projection without where
+        s.eval();
+
+        // Result size
+        assertEquals(3, t3.getLength());
+
+        // c31 = {112}
+        assertEquals(1L, c31.getValue(0));
+        assertEquals(2L, c31.getValue(2));
+
+        // c32 = {122}
+        assertEquals(1L, c32.getValue(0));
+        assertEquals(2L, c32.getValue(2));
+
+        // Add filter
+        t3.where(
+                p -> p[0] == "v1" || p[1] == "v1",
+                new ColumnPath(c31, s.getTable("T1").getColumn("C11")),
+                new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
+        );
+
+        s.eval();
+
+        // Result size
+        assertEquals(2, t3.getLength());
+
+        // c31 = {11}
+        assertEquals(1L, c31.getValue(0));
+        assertEquals(1L, c31.getValue(1));
+
+        // c32 = {12}
+        assertEquals(1L, c32.getValue(0));
+        assertEquals(2L, c32.getValue(1));
+    }
+
+    Schema createSchema2() {
+        Schema s = createSchema();
+        Table t3 = s.getTable("T3");
+        Column c31 = t3.getColumn("C31");
+        Column c32 = t3.getColumn("C32");
+
+        //
+        // Table 3 (fact table referencing and populating T3)
+        //
+        Table t4 = s.createTable("T4");
+        Column c41 = s.createColumn("C41", t4, s.getTable("T1"));
+        Column c42 = s.createColumn("C42", t4, s.getTable("T2"));
+
+        t4.add(4);
+        c41.setValue(0, 1L); c42.setValue(0, 1L); // v1, v1
+        c41.setValue(1, 1L); c42.setValue(1, 2L); // v1, v2
+        c41.setValue(2, 2L); c42.setValue(2, 2L); // v2, v2
+        c41.setValue(3, 2L); c42.setValue(3, 2L); // v2, v2
+
+        Column c43 = s.createColumn("C43", t4, t3); // Project column
+        c43.proj(
+                new Column[] {c41, c42},
+                c31, c32
+        );
+
+        return s;
+    }
 }

@@ -16,7 +16,7 @@ apply plugin: 'eclipse'
 
 jar {
     baseName = 'bistro-examples'
-    version =  '0.4.0'
+    version =  '0.5.0-SNAPSHOT'
 }
 
 repositories {
@@ -30,11 +30,11 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-examples'
-version = '0.4.0'
+version = '0.5.0-SNAPSHOT'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.4.0")
-    compile("org.conceptoriented:bistro-formula:0.4.0")
+    compile("org.conceptoriented:bistro-core:0.5.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-formula:0.5.0-SNAPSHOT")
 
     antlr("org.antlr:antlr4:4.7")
 

@@ -20,12 +20,12 @@ public class TableDefinitionProd implements TableDefinition {
         List<Element> ret = new ArrayList<>();
 
         // Key-column types have to be populated - we need them to build all their combinations
-        List<Column> keyCols = this.getKeyColumns();
+        List<Column> keyCols = this.table.getKeyColumns();
         List<Table> keyTypes = keyCols.stream().map(x -> x.getOutput()).collect(Collectors.toList());
         ret.addAll(keyTypes);
 
         // All incoming (populating) proj-columns
-        List<Column> projCols = this.getProjColumns();
+        List<Column> projCols = this.table.getProjColumns();
         // And their input tables which have to be populated before
         List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());
 
@@ -39,7 +39,7 @@ public class TableDefinitionProd implements TableDefinition {
     public void populate() {
 
         // Find all local greater dimensions to be varied (including the super-dim)
-        List<Column> cols = this.getKeyColumns();
+        List<Column> cols = this.table.getKeyColumns();
         int colCount = cols.size(); // Dimensionality - how many free dimensions
 
         // Initialize population
@@ -48,22 +48,27 @@ public class TableDefinitionProd implements TableDefinition {
         //   col.getData().nullify();
         //}
 
-
         //
-        // Prepare where evaluation
+        // Prepare value paths for where evaluation (see also ColumnDefinitionLink)
         //
-        List<ColumnPath> paramPaths =  null;
-        Object[] paramValues = null;
-        if(this.table.expressionWhere != null) {
-            paramPaths =  this.table.expressionWhere.getParameterPaths();
-            paramValues = new Object[paramPaths.size() + 1];
+        Expression whereExpr = this.table.expressionWhere;
+        List<ColumnPath> wherePaths =  null;
+        Object[] whereValues = null;
+        if(whereExpr != null) {
+            wherePaths =  whereExpr.getParameterPaths();
+            whereValues = new Object[wherePaths.size() + 1];
         }
+
+        boolean whereTrue = true; // Where result for the last appended record
 
         //
         // The current state of the search procedure
         //
         long[] offsets = new long[colCount]; // Current id of each dimension (incremented during search)
         for (int i = 0; i < colCount; i++) offsets[i] = -1;
+
+        long[] starts = new long[colCount]; // Start ids for each dimension
+        for (int i = 0; i < colCount; i++) starts[i] = cols.get(i).getOutput().getIdRange().start;
 
         long[] lengths = new long[colCount]; // Length of each dimension (how many ids in each dimension)
         for (int i = 0; i < colCount; i++) lengths[i] = cols.get(i).getOutput().getLength();
@@ -75,28 +80,30 @@ public class TableDefinitionProd implements TableDefinition {
         // Alternative: in fact, we can fill each column with integer values alternated periodically depending on its index in the list of columns, e.g., column 0 will always have first half 0s and second half 1s, while next column will alternative two times faster and the last column will always look like 0101010101
 
         long input = -1; // If -1, then we need to append a record. If >=0, then this id has to be used as a new record (previous append does not satisfy where expression but was not deleted).
-        boolean result = true; // Where result for the last appended record
         while (top >= 0) {
             if (top == colCount) // New element is ready. Process it.
             {
                 // Append a new record if necessary
-                if(result == true) {
+                if(whereTrue == true) {
                     input = this.table.add();
                 }
                 // Initialize the new record
                 for (int i = 0; i < colCount; i++) {
-                    cols.get(i).setValue(input, offsets[i]);
+                    cols.get(i).setValue(input, offsets[i] + starts[i]);
                 }
 
-                if(this.table.expressionWhere!= null) { // If there is where condition
+                // TODO: Switch to testing a record *before* adding using ColumnPath::FirstSegment method
+                // TODO: Unify checking whereExpr with proj-column append
+                if(whereExpr != null) {
+
                     // Read all parameters
-                    for(int p=0; p<paramPaths.size(); p++) {
-                        paramValues[p] = paramPaths.get(p).getValue(input);
+                    for(int p=0; p < wherePaths.size(); p++) {
+                        whereValues[p] = wherePaths.get(p).getValue(input);
                     }
 
                     // Evaluate
                     try {
-                        result = (boolean) this.table.expressionWhere.eval(paramValues);
+                        whereTrue = (boolean) whereExpr.eval(whereValues);
                     }
                     catch(BistroError e) {
                         this.definitionErrors.add(e);
@@ -108,7 +115,7 @@ public class TableDefinitionProd implements TableDefinition {
                     }
                 }
                 else {
-                    result = true;
+                    whereTrue = true;
                     input = -1;
                 }
                 // We do not delete the record if it does not satisfy where condition - it will be reused on the next step.
@@ -135,19 +142,8 @@ public class TableDefinitionProd implements TableDefinition {
             }
         }
 
-        if(result == false) {
+        if(whereTrue == false) {
             this.table.remove(-1); // Delete last record which does not satisfies where condition
-        }
-
-        // We populated table assuming that all ranges start from 0 (using 0-based output values). Now add the real start to each column
-        long[] starts = new long[colCount]; // Start id of each dimension
-        for (int i = 0; i < colCount; i++) {
-            long start = cols.get(i).getOutput().getIdRange().start;
-
-            for (int j = 0; j < this.table.getLength(); j++) {
-                Object val = cols.get(i).getValue(j);
-                cols.get(i).setValue(j, (Long)val + start);
-            }
         }
 
         // Finalize population
@@ -156,26 +152,6 @@ public class TableDefinitionProd implements TableDefinition {
         //    col.getData().setAutoIndex(true);
         //}
 
-    }
-
-    protected List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
-        List<Column> ret = new ArrayList<>();
-        for(Column col : this.table.getColumns()) {
-            if(col.getDefinitionType() != ColumnDefinitionType.KEY) continue; // Skip non-key columns
-            if(col.getOutput().isPrimitive()) continue; // Skip primitive columns
-            ret.add(col);
-        }
-        return ret;
-    }
-
-    protected List<Column> getProjColumns() { // Get all incoming proj-columns
-        List<Column> ret = new ArrayList<>();
-        for(Column col : this.table.getSchema().getColumns()) {
-            if(col.getOutput() != this.table) continue;
-            if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue; // Skip non-key columns
-            ret.add(col);
-        }
-        return ret;
     }
 
     public TableDefinitionProd(Table table) {

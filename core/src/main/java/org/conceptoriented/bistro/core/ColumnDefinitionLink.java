@@ -74,32 +74,100 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         // Currently we make full scan by re-evaluating all existing input ids
         Range mainRange = this.column.getInput().getIdRange();
 
-        // Each item in this lists is for one member expression
-        // We use lists and not map because want to use common index (faster) for access and not key (slower) which is important for frequent accesses in a long loop.
+        //
+        // Prepare value paths/exprs for search/find
+        //
+        //List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
+        //List<Object[]> rhsParamValues = new ArrayList<>();
+        List<Object> rhsResults = new ArrayList<>(); // Record of value paths used for search (produced by expressions and having same length as column list)
 
-        //List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
-        //List< Object[] > rhsParamValues = new ArrayList<>();
-        List< Object > rhsResults = new ArrayList<>(); // Record of value paths used for search (produced by expressions and having same length as column list)
-
-        // Initialize these lists for each member expression
+        // Initialize these lists for each key expression
         for(ColumnPath path : this.valuePaths) {
             //int paramCount = expr.getParameterPaths().size();
 
             //rhsParamPaths.add( expr.getParameterPaths() );
             //rhsParamValues.add( new Object[ paramCount ] );
-            rhsResults.add( null );
+            rhsResults.add(null);
         }
+
+        //
+        // Prepare value paths for where evaluation (see also TableDefinitionProd)
+        //
+        Expression whereExpr = typeTable.expressionWhere;
+        List<ColumnPath> wherePaths =  null;
+        Object[] whereValues = null;
+        int[] wherePathsKeyIndex = null;
+        if(whereExpr != null) {
+            wherePaths =  whereExpr.getParameterPaths();
+            whereValues = new Object[wherePaths.size() + 1];
+
+            wherePathsKeyIndex = new int[wherePaths.size()];
+            for(int i=0; i < wherePathsKeyIndex.length; i++) {
+                Column firstSegment = wherePaths.get(i).columns.get(0); // First segment
+                int keyColumnIndex = this.keyColumns.indexOf(firstSegment); // Same index is used in the record to be added
+                wherePathsKeyIndex[i] = keyColumnIndex;
+                // TODO: Problem: here we use only key columns filled by the proj defintion - but whereExpr might use other (key or non-key) columns
+                //   Solution: we need to error-check that all key columns (in param paths) used in whereExpr, are used as key columns in proj-column defintion (when one of these definitions is added)
+                // Assumption: all key columns used in params of whereExpr are also used in/coverd by proj-column keyColumns
+            }
+
+        }
+
+        boolean whereTrue = true; // Where result for the last appended record
 
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
             // Evaluate ALL child rhs expressions by producing an array/record of their results
-            for(int mmbrNo = 0; mmbrNo < this.keyColumns.size(); mmbrNo++) {
+            for(int keyNo = 0; keyNo < this.keyColumns.size(); keyNo++) {
 
                 // Read one columnPath
-                Object result = this.valuePaths.get(mmbrNo).getValue(i);
+                Object result = this.valuePaths.get(keyNo).getValue(i);
 
-                rhsResults.set(mmbrNo, result);
+                rhsResults.set(keyNo, result);
             }
+
+            // TODO: We need to generalize the logic of testing for using in prod-table (TableDefinitionProd) and proj-columns (ColumnDefinitionLink)
+            //   Some method generate a record with values with the purpose to add it. We also have an array of columns for this record attributes
+            //   Task: check if addition is possible by evaluating whereExpr.
+            //   Solution: We need to feed the record values to whereExpr paramPaths (skip first segment), taking into account the mapping (errors possible), and retrieving the param values
+            //   Challenge: we need to prepare to do it multiple times and not one time. So mapping or convention is needed to map values in the record to the whereExpr param paths.
+
+            // So we have:
+            // - exists/find predicate (which returns an index if found, and also can add if the flag is set)
+            // - satisfies/canAdd (which returns boolean, and can add if flag is set)
+            // Maybe find() method can also check the conditions before adding (but then the question is whether check conditions before search or after search)
+            // 1. We should check where condition before finding, because it is easier - finding is difficult.
+            // 2. We check condition only if want to append (isProj is true)
+            // 3. We read values of columns path parameters for checking a condition, so we need to keep this list and read values for each new record
+            // 4. Problem is that we want to check where before adding. In prod-table, we still add, then check, and then delete or reuse if not satisfied (with negative index)
+            //   We can add, then check, then remove, then find (we need to remove because otherwise find() will always find it).
+            //   Alternatively, find method could be adapted to ignore the last element, but it is difficult in future with indexes etc.
+            //   So the only principled solution is to be able to check conditions on a non-added record.
+            //   Expr actually takes only values (so it will work) -- the problem is how to retrieve param path values for a non-existing record. The first segment of param paths is what added values are - we need to continue them to next segments.
+
+            if(typeTable.expressionWhere != null) {
+
+                // Read all parameters
+                for(int p=0; p < wherePaths.size(); p++) {
+                    int keyNo = wherePathsKeyIndex[p];
+                    Object recordValue = rhsResults.get(keyNo);
+                    whereValues[p] = wherePaths.get(p).getValueSkipFirst(recordValue);
+                }
+
+                // Evaluate
+                try {
+                    whereTrue = (boolean) whereExpr.eval(whereValues);
+                }
+                catch(BistroError e) {
+                    this.definitionErrors.add(e);
+                    return;
+                }
+                catch(Exception e) {
+                    this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                    return;
+                }
+            }
+            if(!whereTrue) continue;
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
             Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
@@ -119,29 +187,29 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         // Currently we make full scan by re-evaluating all existing input ids
         Range mainRange = this.column.getInput().getIdRange();
 
-        // Each item in this lists is for one member expression
-        // We use lists and not map because want to use common index (faster) for access and not key (slower) which is important for frequent accesses in a long loop.
+        //
+        // Prepare value paths/exprs for search/find
+        //
+        List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
+        List<Object[]> rhsParamValues = new ArrayList<>();
+        List<Object> rhsResults = new ArrayList<>(); // Record of valuePaths used for search (produced by expressions and having same length as column list)
 
-        List< List<ColumnPath> > rhsParamPaths = new ArrayList<>();
-        List< Object[] > rhsParamValues = new ArrayList<>();
-        List< Object > rhsResults = new ArrayList<>(); // Record of valuePaths used for search (produced by expressions and having same length as column list)
-
-        // Initialize these lists for each member expression
+        // Initialize these lists for each key expression
         for(Expression expr : this.valueExprs) {
             int paramCount = expr.getParameterPaths().size();
 
             rhsParamPaths.add( expr.getParameterPaths() );
             rhsParamValues.add( new Object[ paramCount ] );
-            rhsResults.add( null );
+            rhsResults.add(null);
         }
 
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
             // Evaluate ALL child rhs expressions by producing an array/record of their results
-            for(int mmbrNo = 0; mmbrNo < this.keyColumns.size(); mmbrNo++) {
+            for(int keyNo = 0; keyNo < this.keyColumns.size(); keyNo++) {
 
-                List<ColumnPath> paramPaths = rhsParamPaths.get(mmbrNo);
-                Object[] paramValues = rhsParamValues.get(mmbrNo);
+                List<ColumnPath> paramPaths = rhsParamPaths.get(keyNo);
+                Object[] paramValues = rhsParamValues.get(keyNo);
 
                 // Read all parameter valuePaths (assuming that this column output is not used in link keyColumns)
                 int paramNo = 0;
@@ -150,8 +218,8 @@ public class ColumnDefinitionLink implements ColumnDefinition {
                     paramNo++;
                 }
 
-                // Evaluate this member expression
-                Expression expr = this.valueExprs.get(mmbrNo);
+                // Evaluate this key expression
+                Expression expr = this.valueExprs.get(keyNo);
                 Object result;
                 try {
                     result = expr.eval(paramValues);
@@ -164,7 +232,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
                     return;
                 }
 
-                rhsResults.set(mmbrNo, result);
+                rhsResults.set(keyNo, result);
             }
 
             // Find element in the type table which corresponds to these expression results (can be null if not found and not added)

@@ -66,6 +66,8 @@ public class Column implements Element {
     protected void remove() { this.data.remove(1); this.isDirty = true; }
     protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
 
+    protected void removeAll() { this.data.removeAll(); this.isDirty = true; }
+
     //
     // Element interface
     //
@@ -248,7 +250,6 @@ public class Column implements Element {
         if(this.definition != null) {
             this.definition.eval();
             this.executionErrors.addAll(this.definition.getErrors());
-
         }
 
         if(this.executionErrors.size() == 0) {
@@ -273,8 +274,10 @@ public class Column implements Element {
         this.definitionType = definitionType;
         this.definitionErrors.clear();
         this.executionErrors.clear();
+
         this.definition = null;
-        this.isDirty = true;
+
+        this.setDirty();
     }
     public boolean isDerived() {
         if(this.definitionType == ColumnDefinitionType.NOOP) {

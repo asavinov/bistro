@@ -10,23 +10,19 @@
 
 ## What is Bistro
 
-*Bistro* is a general purpose, light-weight data processing engine which changes the way data is being processed. It is going to be as simple as a spreadsheet and as powerful as SQL. At its core, it relies on a novel *column-oriented* data representation and processing engine which is unique in that its logic is described as a DAG of *column operations* as opposed to table operations in most other frameworks. Computations in Bistro are performed by *evaluating* columns which have custom definitions in terms of other columns. 
+*Bistro* is a general purpose, light-weight data processing engine which changes the way data is being processed. At its core, it relies on a novel *column-oriented* logical model which describes data processing as a DAG of *column operations* as opposed to table operations in most other models and frameworks. Computations in Bistro are performed by *evaluating* column definitions. Each such definition describes how the column output values are expressed in terms of other columns. In this sense, it is similar to how data processing is described in spreadsheets with the difference that column definitions are used instead of cell formulas.
 
 ## New Data Processing Paradigm: Calculate-Link-Accumulate (CLA)
 
-Bistro provides three column definition (operation) types: calculate columns, link columns and accumulate columns. This novel *calculate-link-accumulate* (CLA) data processing paradigm is an alternative to conventional SQL-like languages, map-reduce and other set-oriented approaches. In set-oriented approaches, data is being processed by producing new sets (tables, collections, lists etc.) from the data stored in other sets by applying various set operations like join, group-by, map or reduce. In CLA, data is being processed by producing new columns from existing columns by applying three main operations: calculate, link and accumulate. Calculate operation roughly corresponds to the map and select operations, links roughly correspond to the join operation, and accumulate is a column-oriented analogue of group-by and reduce. 
+Bistro provides three column definition (operation) types: calculate columns, link columns and accumulate columns. This novel *calculate-link-accumulate* (CLA) data processing paradigm is an alternative to conventional SQL-like languages, map-reduce and other set-oriented approaches. In set-oriented approaches, data is being processed by producing new sets (tables, collections, lists etc.) from the data stored in other sets by applying various set operations like join, group-by, map or reduce. In CLA, data is being processed by producing new columns from existing columns by applying three main operations: calculate, link and accumulate. The calculate operation roughly corresponds to the map and SQL select operations, link roughly corresponds to the join operation, and accumulate is a column-oriented analogue of group-by and reduce. Essentially, the use of column definitions makes CLA much closer to conventional spreadsheets, which are known to be rather intuitive and easy to use for data processing.
 
 ## Formal Basis: Concept-Oriented Model (COM)
 
-Formally, Bistro relies on the *concept-oriented model* (COM) where the main unit of representation and processing is that of a *function* as opposed to using only sets in the relational and other set-oriented models. An advantage of this model is that it does not use such operations as join and group-by which are known to be error-prone, difficult to comprehend, require high expertise and might be inefficient when applied to analytical data processing workloads. Essentially, the use of functions makes CLA much closer to conventional spreadsheets, which are known to be rather intuitive and easy to use for data processing. However, Bistro and CLA apply the functional approach in the context of table data rather than cells in spreadsheets.
+Formally, Bistro relies on the *concept-oriented model* (COM) where the main unit of representation and processing is that of a *function* as opposed to using only sets in the relational and other set-oriented models. An advantage of COM is that it does not use such operations as join and group-by which are known to be error-prone, difficult to comprehend, require high expertise and might be inefficient when applied to analytical data processing workloads. 
 
 ## Where Bistro is Useful
 
-Bistro is a *general-purpose* data processing engine and can be applied to many problems like data integration, data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing.
-
-## Graph of Column Operations
-
-In Bistro, computations nodes in the graph are columns and each column has some definition which determins what operations this node will execute to compute its values. Column definitions take some other columns as input and the output values are stored in this column as its result which can be used as input in other column definitions.
+As a *general-purpose* data processing engine, Bistro can be applied to many problems like data integration, data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing.
 
 # Getting Started with Bistro
 

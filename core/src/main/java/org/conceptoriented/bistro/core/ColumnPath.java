@@ -20,6 +20,19 @@ public class ColumnPath {
         return out;
     }
 
+    // Skip first segment and use the argument is its output
+    public Object getValueSkipFirst(Object firstOutput) {
+        Object out = firstOutput;
+        if(this.columns.size() > 1){
+            for(int i = 1; i < this.columns.size(); i++) {
+                Column col = this.columns.get(i);
+                out = col.getValue((long)out);
+                if(out == null) break;
+            }
+        }
+        return out;
+    }
+
     public int size() {
         return this.columns.size();
     }

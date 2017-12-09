@@ -96,6 +96,11 @@ public class ColumnData {
         else {
         }
 	}
+    protected void removeAll() {
+        this.idRange.start = 0;
+        this.idRange.end = 0;
+        this.startIdOffset = 0;
+    }
 
 	public ColumnData(long start, long end) {
 		this.id = UUID.randomUUID();

@@ -85,6 +85,12 @@ public class Table implements Element {
         }
     }
 
+    protected void removeAll() {
+        this.getColumns().forEach( x -> x.removeAll() );
+        this.idRange.start = 0;
+        this.idRange.end = 0;
+    }
+
     //
     // Operations with multiple column valuePaths
     //
@@ -228,6 +234,9 @@ public class Table implements Element {
     @Override
     public void setDirty() {
         this.isDirty = true;
+        if(definitionType == TableDefinitionType.PROD) {
+            this.getProjColumns().forEach(x -> x.setDirty()); // All proj-columns have to be marked dirty too because they will populate this table
+        }
     }
 
     @Override
@@ -253,8 +262,66 @@ public class Table implements Element {
 
     public void populate() {
 
+        // Skip non-derived columns - they do not participate in evaluation
+        if(!this.isDerived()) {
+
+            // Propagate dirty status to all dependants before resting it
+            if(this.isDirty()) {
+                this.getDependants().forEach(x -> x.setDirty());
+            }
+
+            this.isDirty = false;
+
+            return;
+        }
+
+        // Clear all evaluation errors before any new evaluation
+        this.executionErrors.clear();
+
+        // If there are some definition errors then no possibility to eval (including cycles)
+        if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
+            // TODO: Add error: cannot evaluate because of definition error in a dependency
+            return;
+        }
+        // No definition errors - canEvaluate true
+
+        // If everything is up-to-date then there is no need to eval
+        if(!this.isDirtyDeep()) { // this.needEvaluate false
+            // TODO: Add error: cannot evaluate because of dirty dependency
+            return;
+        }
+        // There exists dirty status - needEvaluate true
+
+        // If there were evaluation errors
+        if(this.hasExecutionErrorsDeep()) { // this.canEvaluate false
+            // TODO: Add error: cannot evaluate because of execution error in a dependency
+            return;
+        }
+        // No errors while evaluating dependencies
+
+        //
+        // Really evaluate using definition
+        //
         if(this.definition != null) {
-            this.definition.populate();
+
+            // If there exist proj-columns then its is a proj-table - skip full population
+            boolean isProj = false;
+            for(Column col : this.schema.getColumns()) {
+                if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue;
+                isProj = true;
+                break;
+            }
+            if(!isProj) {
+                this.definition.populate();
+                this.executionErrors.addAll(this.definition.getErrors());
+            }
+        }
+
+        if(this.executionErrors.size() == 0) {
+            this.isDirty = false; // Clean the state (remove dirty flag)
+        }
+        else {
+            this.isDirty = true; // Evaluation failed
         }
     }
 
@@ -272,8 +339,15 @@ public class Table implements Element {
         this.definitionType = definitionType;
         this.definitionErrors.clear();
         this.executionErrors.clear();
-        this.definition = null;
-        this.isDirty = true;
+
+        if(this.definitionType == TableDefinitionType.NOOP) {
+            this.definition = null;
+            this.expressionWhere = null;
+        }
+
+        this.setDirty();
+
+        this.removeAll();
     }
     public boolean isDerived() {
         if(this.definitionType == TableDefinitionType.NOOP) {
@@ -312,6 +386,8 @@ public class Table implements Element {
     Expression expressionWhere;
 
     public void where(Evaluator lambda, ColumnPath... paths) {
+        this.setDefinitionType(TableDefinitionType.PROD);
+
         this.expressionWhere = new Expr(lambda, paths);
 
         if(this.hasDependency(this)) {
@@ -321,6 +397,8 @@ public class Table implements Element {
     }
 
     public void where(Evaluator lambda, Column... columns) {
+        this.setDefinitionType(TableDefinitionType.PROD);
+
         this.expressionWhere = new Expr(lambda, columns);
 
         if(this.hasDependency(this)) {
@@ -330,6 +408,8 @@ public class Table implements Element {
     }
 
     public void where(Expression expr) {
+        this.setDefinitionType(TableDefinitionType.PROD);
+
         this.expressionWhere = expr;
 
         if(this.hasDependency(this)) {
@@ -388,7 +468,27 @@ public class Table implements Element {
 		return index;
 	}
 
-	//
+    protected List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
+        List<Column> ret = new ArrayList<>();
+        for(Column col : this.getColumns()) {
+            if(col.getDefinitionType() != ColumnDefinitionType.KEY) continue; // Skip non-key columns
+            if(col.getOutput().isPrimitive()) continue; // Skip primitive columns
+            ret.add(col);
+        }
+        return ret;
+    }
+
+    protected List<Column> getProjColumns() { // Get all incoming proj-columns
+        List<Column> ret = new ArrayList<>();
+        for(Column col : this.getSchema().getColumns()) {
+            if(col.getOutput() != this) continue;
+            if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue; // Skip non-key columns
+            ret.add(col);
+        }
+        return ret;
+    }
+
+    //
 	// Serialization and construction
 	//
 
