@@ -16,10 +16,10 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
     ColumnPath accuPath;
 
-    List<BistroError> definitionErrors = new ArrayList<>();
+    List<BistroError> errors = new ArrayList<>();
     @Override
     public List<BistroError> getErrors() {
-        return this.definitionErrors;
+        return this.errors;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
     protected void evaluateExpr() {
 
-        definitionErrors.clear(); // Clear state
+        errors.clear(); // Clear state
 
         Table mainTable = this.accuPath.getInput(); // Loop/scan table
 
@@ -116,11 +116,11 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
                 result = this.accuExpr.eval(paramValues);
             }
             catch(BistroError e) {
-                this.definitionErrors.add(e);
+                this.errors.add(e);
                 return;
             }
             catch(Exception e) {
-                this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                this.errors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
                 return;
             }
 

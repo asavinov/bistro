@@ -417,6 +417,52 @@ public class Table implements Element {
         }
     }
 
+    // Check whether the specified record (which is not in the table yet) satisfies the where condition
+    // The record provides output values for the specified columns of this table
+    protected boolean isWhereTrue(List<Object> record, List<Column> columns) {
+        if(this.expressionWhere == null) return true;
+
+        List<ColumnPath> paramPaths =  this.expressionWhere.getParameterPaths();
+        Object[] paramValues = new Object[paramPaths.size() + 1];
+
+        //
+        // OPTIMIZE: This array has to be filled only once if we want to evaluate many records
+        //
+        int[] paramColumnIndex = new int[paramPaths.size()]; // For each param path, store the index in the record
+        for(int i=0; i < paramColumnIndex.length; i++) {
+            Column firstSegment = paramPaths.get(i).columns.get(0); // First segment
+            int colIdx = columns.indexOf(firstSegment); // Index of the first segment in the record
+            paramColumnIndex[i] = colIdx;
+        }
+
+        //
+        // Prepare expression parameters
+        //
+        for(int p=0; p < paramPaths.size(); p++) {
+            int keyNo = paramColumnIndex[p];
+            Object recordValue = record.get(keyNo);
+            paramValues[p] = paramPaths.get(p).getValueSkipFirst(recordValue);
+        }
+
+        //
+        // Evaluate expression
+        //
+        boolean result;
+        try {
+            result = (boolean) this.expressionWhere.eval(paramValues);
+        }
+        catch(BistroError e) {
+            this.executionErrors.add(e);
+            return false;
+        }
+        catch(Exception e) {
+            this.executionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+            return false;
+        }
+
+        return result;
+    }
+
     //
     // Search
     //

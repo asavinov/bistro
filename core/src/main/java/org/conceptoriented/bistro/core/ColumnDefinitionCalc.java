@@ -12,11 +12,11 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     Expression expr;
 
-    List<BistroError> definitionErrors = new ArrayList<>();
+    List<BistroError> errors = new ArrayList<>();
 
 	@Override
 	public List<BistroError> getErrors() {
-		return this.definitionErrors;
+		return this.errors;
 	}
 
     @Override
@@ -35,7 +35,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
             return;
         }
 
-        definitionErrors.clear(); // Clear state
+        errors.clear(); // Clear state
 
         Table mainTable = this.column.getInput(); // Loop/scan table
 
@@ -58,11 +58,11 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
                 result = this.expr.eval(paramValues);
             }
             catch(BistroError e) {
-                this.definitionErrors.add(e);
+                this.errors.add(e);
                 return;
             }
             catch(Exception e) {
-                this.definitionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                this.errors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
                 return;
             }
 
