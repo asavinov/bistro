@@ -6,6 +6,25 @@
  |____/|_|___/\__|_|  \___/  ▪ Accumulate
 ```
 
+# Table of Contentx
+
+* [Bistro: Calculate∙Link∙Accumulate](#Bistro-Calculate∙Link∙Accumulate)
+    * [What is Bistro](#What-is-Bistro)
+    * [New Data Processing Paradigm: Calculate-Link-Accumulate (CLA)](#New-Data-Processing-Paradigm-Calculate-Link-Accumulate-CLA)
+    * [Formal Basis: Concept-Oriented Model (COM)](#Formal-Basis-Concept-Oriented-Model-COM)
+    * [Where Bistro is Useful](#Where-Bistro-is-Useful)
+* [Getting Started with Bistro](#Getting-Started-with-Bistro)
+    * [Schema](#Schema)
+    * [Creating Tables](#Creating-Tables)
+    * [Creating Columns](#Creating-Columns)
+    * [Calculate Columns](#Calculate-Columns)
+    * [Link Columns](#Link-Columns)
+    * [Accumulate Columns](#Accumulate-Columns)
+    * [Schema Evaluation](#Schema-Evaluation)
+    * [Column Paths](#Column-Paths)
+    * [Numeric Accumulation](#Numeric-Accumulation)
+* [More Information](#More-Information)
+
 # Bistro: Calculate∙Link∙Accumulate
 
 ## What is Bistro
