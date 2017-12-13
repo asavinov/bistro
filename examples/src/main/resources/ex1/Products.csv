@@ -1,0 +1,46 @@
+ID,Product Code,Product Name,Standard Cost,List Price,Category
+1,NWTB-1,Northwind Traders Chai,13.5,18,Beverages
+3,NWTCO-3,Northwind Traders Syrup,7.5,10,Condiments
+4,NWTCO-4,Northwind Traders Cajun Seasoning,16.5,22,Condiments
+5,NWTO-5,Northwind Traders Olive Oil,16.01,21.35,Oil
+6,NWTJP-6,Northwind Traders Boysenberry Spread,18.75,25,Jams. Preserves
+7,NWTDFN-7,Northwind Traders Dried Pears,22.5,30,Dried Fruit & Nuts
+8,NWTS-8,Northwind Traders Curry Sauce,30,40,Sauces
+14,NWTDFN-14,Northwind Traders Walnuts,17.44,23.25,Dried Fruit & Nuts
+17,NWTCFV-17,Northwind Traders Fruit Cocktail,29.25,39,Canned Fruit & Vegetables
+19,NWTBGM-19,Northwind Traders Chocolate Biscuits Mix,6.9,9.2,Baked Goods & Mixes
+20,NWTJP-6,Northwind Traders Marmalade,60.75,81,Jams. Preserves
+21,NWTBGM-21,Northwind Traders Scones,7.5,10,Baked Goods & Mixes
+34,NWTB-34,Northwind Traders Beer,10.5,14,Beverages
+40,NWTCM-40,Northwind Traders Crab Meat,13.8,18.4,Canned Meat
+41,NWTSO-41,Northwind Traders Clam Chowder,7.24,9.65,Soups
+43,NWTB-43,Northwind Traders Coffee,34.5,46,Beverages
+48,NWTCA-48,Northwind Traders Chocolate,9.56,12.75,Candy
+51,NWTDFN-51,Northwind Traders Dried Apples,39.75,53,Dried Fruit & Nuts
+52,NWTG-52,Northwind Traders Long Grain Rice,5.25,7,Grains
+56,NWTP-56,Northwind Traders Gnocchi,28.5,38,Pasta
+57,NWTP-57,Northwind Traders Ravioli,14.63,19.5,Pasta
+65,NWTS-65,Northwind Traders Hot Pepper Sauce,15.79,21.05,Sauces
+66,NWTS-66,Northwind Traders Tomato Sauce,12.75,17,Sauces
+72,NWTD-72,Northwind Traders Mozzarella,26.1,34.8,Dairy Products
+74,NWTDFN-74,Northwind Traders Almonds,7.5,10,Dried Fruit & Nuts
+77,NWTCO-77,Northwind Traders Mustard,9.75,13,Condiments
+80,NWTDFN-80,Northwind Traders Dried Plums,3,3.5,Dried Fruit & Nuts
+81,NWTB-81,Northwind Traders Green Tea,2,2.99,Beverages
+82,NWTC-82,Northwind Traders Granola,2,4,Cereal
+83,NWTCS-83,Northwind Traders Potato Chips,0.5,1.8,Chips. Snacks
+85,NWTBGM-85,Northwind Traders Brownie Mix,9,12.49,Baked Goods & Mixes
+86,NWTBGM-86,Northwind Traders Cake Mix,10.5,15.99,Baked Goods & Mixes
+87,NWTB-87,Northwind Traders Tea,2,4,Beverages
+88,NWTCFV-88,Northwind Traders Pears,1,1.3,Canned Fruit & Vegetables
+89,NWTCFV-89,Northwind Traders Peaches,1,1.5,Canned Fruit & Vegetables
+90,NWTCFV-90,Northwind Traders Pineapple,1,1.8,Canned Fruit & Vegetables
+91,NWTCFV-91,Northwind Traders Cherry Pie Filling,1,2,Canned Fruit & Vegetables
+92,NWTCFV-92,Northwind Traders Green Beans,1,1.2,Canned Fruit & Vegetables
+93,NWTCFV-93,Northwind Traders Corn,1,1.2,Canned Fruit & Vegetables
+94,NWTCFV-94,Northwind Traders Peas,1,1.5,Canned Fruit & Vegetables
+95,NWTCM-95,Northwind Traders Tuna Fish,0.5,2,Canned Meat
+96,NWTCM-96,Northwind Traders Smoked Salmon,2,4,Canned Meat
+97,NWTC-82,Northwind Traders Hot Cereal,3,5,Cereal
+98,NWTSO-98,Northwind Traders Vegetable Soup,1,1.89,Soups
+99,NWTSO-99,Northwind Traders Chicken Soup,1,1.95,Soups

@@ -76,8 +76,8 @@ public class Example1 {
         // Link column finds its output in the output table
         Column link = schema.createColumn("Thing", events, things);
         link.link(
-                new Column[] { thingName }, // Columns to be used for searching (in the type table)
-                eventThingName // Columns providing criteria (values) for search (in this input table)
+                new Column[] { eventThingName }, // Columns providing criteria (values) for search (in this input table)
+                thingName // Columns to be used for searching (in the type table)
         );
 
         //
@@ -103,9 +103,9 @@ public class Example1 {
         value = calc.getValue(1); // value = 4
 
         // Link column
-        value = link.getValue(0); // value = 1
-        value = link.getValue(1); // value = 0
-        value = link.getValue(2); // value = -1
+        value = link.getValue(0); // value = 1 (id of fridge)
+        value = link.getValue(1); // value = 0 (id of oven)
+        value = link.getValue(2); // value = 1 (id of fridge)
 
         // Accu column
         value = counts.getValue(0); // 1 event from fridge

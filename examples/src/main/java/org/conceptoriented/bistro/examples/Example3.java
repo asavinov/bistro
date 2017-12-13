@@ -1,14 +1,14 @@
 package org.conceptoriented.bistro.examples;
 
-import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.formula.*;
+import org.conceptoriented.bistro.core.Column;
+import org.conceptoriented.bistro.core.Schema;
+import org.conceptoriented.bistro.core.Table;
 
-import java.io.*;
+import java.io.IOException;
 
-public class Example3
-{
+public class Example3 {
 
-    public static String location = "src/main/resources/ex3";
+    public static String location = "src/main/resources/ex1";
 
     public static Schema schema;
 
@@ -26,63 +26,60 @@ public class Example3
 
         Table columnType = schema.getTable("Object");
 
-        Table items = ExUtils.readFromCsv(schema, location, "OrderDetails.csv");
+        Table items = ExUtils.readFromCsv(schema, location, "OrderItems.csv");
 
-        Table products = ExUtils.readFromCsv(schema, location, "Products.csv");
+        Table orders = schema.createTable("Orders");
+        orders.prod(); // This table will be populated by using data from other tables
 
-        Table orders = ExUtils.readFromCsv(schema, location, "Orders.csv");
-
-        Table categories = ExUtils.readFromCsv(schema, location, "Categories.csv");
+        Column ordersId = schema.createColumn("ID", orders, columnType);
+        ordersId.key(); // Key columns specify where the data for this table comes from
 
         //
         // Calculate amount
         //
 
-        // [OrderDetails].[Amount] = [Quantity] * [UnitPrice]
+        // [OrderItems].[Amount] = [Quantity] * [Unit Price]
         Column itemsAmount = schema.createColumn("Amount", items, columnType);
         itemsAmount.calc(
-                new FormulaExp4j("[Quantity] * [UnitPrice]", items)
+                p -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
+                items.getColumn("Quantity"), items.getColumn("Unit Price")
         );
 
         //
-        // Links from OrderItems to Products and Orders
+        // Link from OrderItems to Orders
         //
 
-        // [OrderDetails].[ProductID]: OrderDetails -> Products
-        Column itemsProduct = schema.createColumn("Product", items, products);
-        itemsProduct.link(
-                new Expression[] { new FormulaExp4j("[ProductID]", items) },
-                new Column[] { products.getColumn("ProductID") }
-        );
-
-        // [OrderDetails].[OrderID]: OrderDetails -> Orders
+        // [OrderItems].[Order]: OrderItems -> Orders
         Column itemsOrder = schema.createColumn("Order", items, orders);
-        itemsOrder.link(
-                new Expression[] { new FormulaExp4j("[OrderID]", items) },
-                new Column[] { orders.getColumn("OrderID") }
+        itemsOrder.proj(
+                new Column[] { items.getColumn("Order ID") },
+                orders.getColumn("ID") // Only key columns can be specified here
         );
 
         //
         // Accumulate item characteristics
         //
 
-        // [Products].[Total Amount] = SUM [OrderDetails].[Amount]
-        Column productsAmount = schema.createColumn("Total Amount", products, columnType);
-        productsAmount.setDefaultValue(0.0); // It will be used as an initial value
-        productsAmount.accu(
-                itemsProduct,
-                new FormulaExp4j("[out] + [Amount]", items)
-        );
-
-        // [Order].[Total Amount] = SUM [OrderDetails].[Amount]
+        // [Order].[Total Amount] = SUM [OrderItems].[Amount]
         Column ordersAmount = schema.createColumn("Total Amount", orders, columnType);
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,
-                new FormulaExp4j("[out] + [Amount]", items)
+                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
+                items.getColumn("Amount")
         );
 
         schema.eval();
+
+        //
+        // Evaluate and read values
+        //
+
+        schema.eval();
+
+        Object value;
+
+        value = ordersAmount.getValue(0); // value = 1505.0
     }
 
 }
