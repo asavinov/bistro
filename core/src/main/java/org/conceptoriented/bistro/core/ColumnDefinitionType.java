@@ -6,24 +6,20 @@ public enum ColumnDefinitionType {
 	// These columns are not overwritten automatically during evaluation. They are set and reset only via API and then retain their output during inference.
 	NOOP(0),
 
-    // Key column
-    // Its outputs will be set by the table population procedure during inference for each new instance
-    KEY(10),
-
     // Calculate column
-    CALC(20),
+    CALC(10),
 
     // Link column
     // Find an element in the type table and store it as output
-    LINK(30),
+    LINK(20),
 
     // Project column
     // Append an element to the output table (if does not exist) and store it as an output
-    PROJ(40),
+    PROJ(30),
 
     // Accumulate column
     // Update the output value for each element of a different (fact) table which links to this element
-    ACCU(50),
+    ACCU(40),
 	;
 
 	private int value;

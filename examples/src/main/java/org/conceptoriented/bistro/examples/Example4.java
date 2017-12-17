@@ -36,7 +36,7 @@ public class Example4 {
         categories.prod(); // This table will be populated by using data from other tables
 
         Column categoriesName = schema.createColumn("Name", categories, columnType);
-        categoriesName.key(); // Key columns specify where the data for this table comes from
+        categoriesName.noop(true); // Key columns specify where the data for this table comes from
 
         //
         // Calculate amount

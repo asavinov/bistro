@@ -32,7 +32,7 @@ public class Example3 {
         orders.prod(); // This table will be populated by using data from other tables
 
         Column ordersId = schema.createColumn("ID", orders, columnType);
-        ordersId.key(); // Key columns specify where the data for this table comes from
+        ordersId.noop(true); // Key columns specify where the data for this table comes from
 
         //
         // Calculate amount

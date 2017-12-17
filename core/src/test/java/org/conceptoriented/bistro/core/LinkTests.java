@@ -75,9 +75,9 @@ public class LinkTests {
         t1.prod();
 
         Column t1a = s.createColumn("A", t1);
-        t1a.key();
+        t1a.noop(true);
         Column t1b = s.createColumn("B", t1);
-        t1b.key();
+        t1b.noop(true);
 
         // Add one record to link to
         t1.add();

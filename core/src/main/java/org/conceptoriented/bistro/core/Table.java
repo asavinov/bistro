@@ -145,7 +145,10 @@ public class Table implements Element {
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
 
-        if(this.definition == null) return deps;
+        if(this.getDefinitionType() == TableDefinitionType.NOOP || this.definition == null) {
+            return deps;
+        }
+
         deps = this.definition.getDependencies();
         if(deps == null) deps = new ArrayList<>();
 
@@ -517,7 +520,7 @@ public class Table implements Element {
     protected List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getColumns()) {
-            if(col.getDefinitionType() != ColumnDefinitionType.KEY) continue; // Skip non-key columns
+            if(!col.isKey()) continue; // Skip non-key columns
             if(col.getOutput().isPrimitive()) continue; // Skip primitive columns
             ret.add(col);
         }

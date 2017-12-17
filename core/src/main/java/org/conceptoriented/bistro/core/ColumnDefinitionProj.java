@@ -12,7 +12,7 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         // Check that all specified keys are really key columns of the type table
         Column nonKeyColumn = null;
         for(Column col : this.keyColumns) {
-            if(col.getDefinitionType() != ColumnDefinitionType.KEY) {
+            if(!col.isKey()) {
                 nonKeyColumn = col;
                 break;
             }

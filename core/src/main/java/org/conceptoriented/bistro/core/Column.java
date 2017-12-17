@@ -86,16 +86,15 @@ public class Column implements Element {
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
 
-        if(this.getDefinitionType() == ColumnDefinitionType.KEY) {
-            if(this.getInput().getDefinitionType() == TableDefinitionType.PROD) {
+        if(this.getDefinitionType() == ColumnDefinitionType.NOOP) {
+            if(this.isKey() && this.getInput().getDefinitionType() == TableDefinitionType.PROD) {
                 deps.add(this.getInput()); // Key-columns depend on the prod-table (if any) because they are filled by their population procedure
             }
-            return deps;
         }
-
-        if(this.definition == null) return deps;
-        deps = this.definition.getDependencies();
-        if(deps == null) deps = new ArrayList<>();
+        else if(this.definition != null) {
+            deps = this.definition.getDependencies();
+            if(deps == null) deps = new ArrayList<>();
+        }
 
         return deps;
     }
@@ -276,6 +275,7 @@ public class Column implements Element {
         this.executionErrors.clear();
 
         this.definition = null;
+        this.key = false;
 
         this.setDirty();
     }
@@ -290,17 +290,18 @@ public class Column implements Element {
     // Noop column
     //
 
-    public void noop() {
-        this.setDefinitionType(ColumnDefinitionType.NOOP);
+    // If true, its outputs will be set by the table population procedure during inference for each new instance
+    // It is actually part of the noop-column definition (only noop-columns can be keys)
+    private boolean key = false;
+    public boolean isKey() {
+        return this.key;
     }
 
-    //
-    // Key column
-    //
-
-    public void key() {
-
-        this.setDefinitionType(ColumnDefinitionType.KEY);
+    public void noop(boolean isKey) {
+        this.setDefinitionType(ColumnDefinitionType.NOOP);
+        this.key = true;
+        // TODO: Error check: some other definitions might become invalid if they depend on the key column status
+        //   Either mark this column as having a definition error (so it will skipped), or mark other columns as having definition errors
     }
 
     //

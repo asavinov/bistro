@@ -78,7 +78,7 @@ public class AccuTests {
         Table t = schema.createTable("T");
 
         Column tid = schema.createColumn("Id", t);
-        tid.key();
+        tid.noop(true);
 
         // Define accu column
         Column ta = schema.createColumn("A", t);
