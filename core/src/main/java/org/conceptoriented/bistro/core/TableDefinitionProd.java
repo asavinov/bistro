@@ -21,6 +21,7 @@ public class TableDefinitionProd implements TableDefinition {
 
         // Key-column types have to be populated - we need them to build all their combinations
         List<Column> keyCols = this.table.getKeyColumns();
+        keyCols = keyCols.stream().filter(x -> !x.getOutput().isPrimitive()).collect(Collectors.toList()); // Skip all primitive keys
         List<Table> keyTypes = keyCols.stream().map(x -> x.getOutput()).collect(Collectors.toList());
         ret.addAll(keyTypes);
 

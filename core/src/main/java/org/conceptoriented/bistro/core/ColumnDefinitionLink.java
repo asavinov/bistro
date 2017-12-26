@@ -8,13 +8,13 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     Column column;
 
-    List<Column> keyColumns = new ArrayList<>();
-
     public boolean isProj = false; // Either link-column or proj-columns. Used in sub-classes and methods as a switch
 
     // Two types of definition. Used in methods as a switch
     List<ColumnPath> valuePaths;
     List<Expression> valueExprs;
+
+    List<Column> keyColumns = new ArrayList<>();
 
     List<BistroError> errors = new ArrayList<>();
     @Override
@@ -204,9 +204,9 @@ public class ColumnDefinitionLink implements ColumnDefinition {
     public ColumnDefinitionLink(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
         this.column = column;
 
-        this.keyColumns = Arrays.asList(keyColumns);
-
         this.valuePaths = Arrays.asList(valuePaths);
+
+        this.keyColumns = Arrays.asList(keyColumns);
     }
 
     public ColumnDefinitionLink(Column column, Column[] valueColumns, Column[] keyColumns) {
@@ -217,16 +217,16 @@ public class ColumnDefinitionLink implements ColumnDefinition {
             paths.add(new ColumnPath(col));
         }
 
-        this.keyColumns = Arrays.asList(keyColumns);
-
         this.valuePaths = paths;
+
+        this.keyColumns = Arrays.asList(keyColumns);
     }
 
     public ColumnDefinitionLink(Column column, Expression[] valueExprs, Column[] keyColumns) {
         this.column = column;
 
-        this.keyColumns = Arrays.asList(keyColumns);
-
         this.valueExprs = Arrays.asList(valueExprs);
+
+        this.keyColumns = Arrays.asList(keyColumns);
     }
 }

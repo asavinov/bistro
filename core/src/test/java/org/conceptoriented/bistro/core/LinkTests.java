@@ -50,8 +50,8 @@ public class LinkTests {
         };
 
         t2c.proj(
-                valueExprs,
-                keyColumns
+                valueExprs
+                // keyColumns - by default, if no key columns are specified then existing key columns will be used
         );
         t2c.eval();
 

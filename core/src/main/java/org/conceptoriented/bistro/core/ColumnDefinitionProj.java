@@ -1,5 +1,7 @@
 package org.conceptoriented.bistro.core;
 
+import java.util.List;
+
 class ColumnDefinitionProj extends ColumnDefinitionLink {
 
     void validate() {
@@ -24,18 +26,36 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
 
     public ColumnDefinitionProj(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
         super(column, valuePaths, keyColumns);
+
+        // Use all existing keys by default if not specified
+        if(keyColumns == null || keyColumns.length == 0) {
+            this.keyColumns = column.getOutput().getKeyColumns();
+        }
+
         this.isProj = true;
         this.validate();
     }
 
     public ColumnDefinitionProj(Column column, Column[] valueColumns, Column[] keyColumns) {
         super(column, valueColumns, keyColumns);
+
+        // Use all existing keys by default if not specified
+        if(keyColumns == null || keyColumns.length == 0) {
+            this.keyColumns = column.getOutput().getKeyColumns();
+        }
+
         this.isProj = true;
         this.validate();
     }
 
     public ColumnDefinitionProj(Column column, Expression[] valueExprs, Column[] keyColumns) {
         super(column, valueExprs, keyColumns);
+
+        // Use all existing keys by default if not specified
+        if(keyColumns == null || keyColumns.length == 0) {
+            this.keyColumns = column.getOutput().getKeyColumns();
+        }
+
         this.isProj = true;
         this.validate();
     }

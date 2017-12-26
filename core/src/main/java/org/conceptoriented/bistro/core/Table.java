@@ -521,7 +521,6 @@ public class Table implements Element {
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getColumns()) {
             if(!col.isKey()) continue; // Skip non-key columns
-            if(col.getOutput().isPrimitive()) continue; // Skip primitive columns
             ret.add(col);
         }
         return ret;
