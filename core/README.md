@@ -10,7 +10,7 @@ Bistro-core is a core library of Bistro for schema management, data representati
 
 Group: `org.conceptoriented`
 Artifact: `bistro-core`
-Version: `0.4.0`
+Version: `0.5.0`
 
 ### Maven configuration
 
