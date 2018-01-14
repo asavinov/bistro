@@ -6,8 +6,6 @@
  |____/|_|___/\__|_|  \___/  ▪ Accumulate
 ```
 
-# Table of Contents
-
 * [Bistro: Calculate-Link-Accumulate](#bistro-calculate-link-accumulate)
     * [What is Bistro: a data processing engine](#what-is-bistro-a-data-processing-engine)
     * [How it works: a novel data processing paradigm](#how-it-works-a-novel-data-processing-paradigm)
@@ -40,7 +38,12 @@
 
 At its core, Bistro relies on a novel *column-oriented* logical data model which describes data processing as a DAG of *column operations*. Computations in Bistro are performed by *evaluating* all column definitions each of which describing how this column output values are expressed in terms of other columns. In this sense, it is opposed to most other models and frameworks which are based on table (set) operations for data processing.
 
-Bistro provides three column definition (operation) types: calculate columns, link columns and accumulate columns. This novel *calculate-link-accumulate* (CLA) data processing paradigm is an alternative to conventional SQL-like languages, map-reduce and other set-oriented approaches. In set-oriented approaches, data is being processed by producing new sets (tables, collections, lists etc.) from the data stored in other sets by applying various set operations like join, group-by, map or reduce. In CLA, data is being processed by producing new columns from existing columns by applying three main operations: calculate, link and accumulate. The calculate operation roughly corresponds to the map and SQL select operations, link roughly corresponds to the join operation, and accumulate is a column-oriented analogue of group-by and reduce. Essentially, the use of column definitions makes CLA similar to conventional spreadsheets, which are known to be rather intuitive and easy to use for data processing with the difference that column definitions are used instead of cell formulas.
+Bistro provides three column definition (operation) types: *calculate* columns, *link* columns and *accumulate* columns. This novel *calculate-link-accumulate* (CLA) data processing paradigm is an alternative to conventional SQL-like languages, map-reduce and other set-oriented approaches. In set-oriented approaches, data is being processed by producing new sets (tables, collections, lists etc.) from the data stored in other sets by applying various set operations like join, group-by, map or reduce. In CLA, data is being processed by producing new columns from existing columns by applying three main operations: 
+* calculate - roughly corresponds to the map and SQL select operations
+* link - roughly corresponds to the join operation
+* accumulate - a column-oriented analogue of group-by and reduce
+
+Essentially, the use of column definitions makes CLA similar to conventional spreadsheets, which are known to be rather intuitive and easy to use for data processing with the difference that column definitions are used instead of cell formulas.
 
 ## Formal basis: Concept-Oriented Model
 
@@ -52,12 +55,12 @@ Formally, Bistro relies on the *concept-oriented model* (COM) where the main uni
 
 ### Creating schema
 
-First, it is necessary to create a *schema* which can be thought of as a database and will be a collection of all other elements and parameters: 
+First, it is necessary to create a *schema* object which is essentially a database: 
 ```java
 Schema schema = new Schema("My Schema");
 ```
 
-A schema like tables and columns has an arbitrary (case sensitive) name. The schema is then used to create and access other elements as well as perform various operations with data. 
+The schema is then used to create and access all other elements as well as perform various operations with data. 
 
 ### Creating tables
 
@@ -69,9 +72,9 @@ Table events = schema.createTable("EVENTS");
 
 A table in the concept-oriented model is a mathematical set, that is, a number of (unique) values. In Bistro, all user-defined tables are sets of primitive values the structure of which cannot be changed. These values are of long type and are interpreted as row identifiers without any additional semantics. 
 
-There exist predefined *primitive tables* which consist of only primitive values. Currently, Bistro has only one primitive table with the name `Object` which is a set of Java objects. It is impossible to create another table with this name and do some operations with this table. 
+There exist predefined *primitive tables* which consist of only primitive values. Currently, Bistro has one primitive table with the name `Object` which is a set of Java objects. It is impossible to create another table with this name or do any operations with this table. 
 
-Tables can be accessed by using their name:
+Tables can be found by using their name:
 ```java
 Table table = schema.getTable("THINGS");
 Table objects = schema.getTable("Object"); // Primitive
@@ -87,13 +90,13 @@ Elements are added and removed in the FIFO order, that is, the oldest element is
 ```java
 Range range = table.getIdRange();
 ```
-The `Range` object provides a start id (inclusive) and an end id (exclusive) for this table. These ids can be then used for data access using columns (not tables).
+The `Range` object provides a start id (inclusive) and an end id (exclusive) for this table. These ids can be then used for data access using column objects.
 
 Any table can be used as a *data type* for schema columns.
 
 ### Creating columns
 
-Data in Bistro is stored in columns. Formally, a column is a function and hence it defines a mathematical *mapping* from all table inputs to the values in the output table. Input and output tables of a column are specified during creation: 
+Data in Bistro is stored in columns. Formally, a column is a function and hence it defines a mathematical *mapping* from all table inputs to the values in the output table. Input and output tables of a column are specified in the constructor: 
 ```java
 Column thingName = schema.createColumn("Name", things, objects);
 ```
@@ -103,7 +106,7 @@ A new column does not have a definition and hence it cannot derive its output va
 ```java
 thingName.setValue(0, "fridge");
 thingName.setValue(1, "oven");
-Object value = name.getValue(1);
+Object value = thingName.getValue(1); // "oven"
 ```
 
 ## Defining columns
@@ -112,7 +115,7 @@ Object value = name.getValue(1);
 
 A column might have a *definition* which means that it uses some operation to automatically derive (infer) its output values from the data in other columns (which in turn can derive their outputs from other columns). Depending on the logic behind such inference, there are different column definition types. The simplest derived column type is a *calculate* column: 
 
-> For each input, a calculate column *computes* its output by using the outputs of some other columns of this same table for this same input
+> For each input, a calculate column *computes* its output by using the outputs of other columns of this same table for this same input
 
 For example, we could define a calculate column which increments the value stored in another column:
 ```java
@@ -122,17 +125,17 @@ calc.calc(
         thingName // One parameter to compute the column
 );
 ```
-The first parameter is a lambda function. Its argument `p` is an array of outputs of other columns used to compute the output of the calculate column. The second parameter of the definition specifies the input columns used for calculations. In this example, we want to find the length of the device name and hence we pass this column reference as a parameter. The size of the `p` array has to be equal to the number of columns references passed via the second parameter. 
+The first parameter is a lambda function. Its argument `p` is an array of (output) values of other columns used to compute the output of the calculate column. The second parameter of the definition specifies the columns used for calculations. In this example, we want to find the length of the device name. The size of the `p` array has to be equal to the number of columns references passed via the second parameter (1 in this example). 
 
-There exist also other ways to define calculate columns which can be more convenient in different situations, for example, in the case of complex arithmetic operations or in the case of complex computations implemented programmatically. Note also that column outputs could contain `null` values and all lambda functions must guarantee the validity of its computations including null-safety and type-safety.
+There exist also other ways to define calculate columns which can be more convenient in different situations, for example, in the case of complex arithmetic operations or in the case of complex computations implemented programmatically. Note also that column outputs could contain `null` values and hence all lambda functions must guarantee the validity of its computations including null-safety and type-safety.
 
 ### Link columns
 
-The second column type is a *link* column. Link columns are typed by user (not primitive) tables and their output essentially is a reference to some element in the output table:
+*Link* columns are typed by user (not primitive) tables and their output essentially is a reference to some element in the output table:
 
 > For each input, a link column *finds* its output in the output table by providing equality criteria for the output elements. These values for these criteria are computed from the columns in this table using this input similar to calculate columns.
 
-Let us assume that the "EVENTS" table stores records with a property (column) which can be used to link them to the "THINGS" table:
+Let us assume that the "EVENTS" table stores records with a property (column) which stores a name from the "THINGS" table:
 ```java
 Column eventThingName = schema.createColumn("Thing Name", events, objects);
 
@@ -142,7 +145,7 @@ eventThingName.setValue(1, "fridge");
 eventThingName.setValue(2, "oven");
 ```
 
-This property however cannot be used to access the elements of the "THINGS". Therefore, we define a link column which will directly reference elements in "THINGS":
+This property however cannot be used to access the elements of the "THINGS". Therefore, we define a new link column which will *directly* reference elements from "THINGS":
 ```java
 Column link = schema.createColumn("Thing", events, things);
 link.link(
@@ -150,29 +153,30 @@ link.link(
         eventThingName // Columns providing search criteria (in this input table)
 );
 ```
-This definition essentially means that an event record will directly reference a thing record having the same name, that is, 
+This definition essentially means that an event record will directly reference a thing record having the same name: 
 `EVENTS::Name == THINGS::Name`.
 
 The main benefit of having link columns is that they are evaluated once but can be then used in many other column definitions for *direct* access to elements of another table without searching or joining records. 
 
-
-It is possible that many target elements satisfy the link criteria and then one of them is chosen as the output value. In the case no output element has been found, either `null` is set as the output or a new element is appended depending on the chosen option. There exist also other ways to define links, for example, by providing lambdas for computing link criteria.
+It is possible that many target elements satisfy the link criteria and then one of them is chosen as the output value. In the case no output element has been found, `null` is set as the output. There exist also other ways to define links, for example, by providing lambdas instead of declarative criteria.
 
 ### Accumulate columns
 
-Accumulate columns are intended for data aggregation. In contrast to other columns, an output of an accumulate column is computed incrementally: 
+*Accumulate* columns are intended for data aggregation. In contrast to other columns, an output of an accumulate column is computed incrementally:
 
-> For each input, an accumulate column computes its output by *updating* its current values several times for each element in another table which is mapped to this input by the specified grouping column.
+> For each input, an accumulate column computes its output by *updating* its current value several times for each element in another table which is mapped to this input by the specified grouping column.
 
 It is important that a definition of an accumulate column involves two additional parameters:
 * Link column from the fact table to this table (where the accumulate column is defined), called grouping column
 * Table with the data being aggregated, called fact table (type of the link column)
 
-How the data is being aggregated is specified in the `accumulate` or update function. This function has two major differences from calculate functions:
+How the data is being aggregated is specified in the *accumulate* or update function. This function has two major differences from calculate functions:
 * Its parameters are read from the columns of the fact table - not this table (where the new column is being defined)
-* It receives one additional parameters which is its own current output (resulted from the previous call to this function). The function has to update its own current value using the parameters and return a new value (which it will receive next time).
+* It receives one additional parameters which is its own current output (resulted from the previous call to this function). 
 
-If we want to simply count the number of events for each device then such a column can be defined as follows:
+The function has to update its own current value using the parameters and return a new value (which it will receive next time).
+
+If we want to count the number of events for each device then such a column can be defined as follows:
 ```java
 Column counts = schema.createColumn("Event Count", things, objects);
 counts.accu(
@@ -182,7 +186,7 @@ counts.accu(
 );
 counts.setDefaultValue(0.0); // It will be used as an initial value
 ```
-Here the `link` column maps elements of the "EVENTS" table to elements of the "THINGS" table, and hence an element of "THINGS" (where we define the accumulate column) is a group of all elements of "EVENTS" which reference it via this column. For each element of the "EVENTS", the specified accumulate function will be called and its result stored in the column output. Thus the accumulate function will be called as many times for each input of "THINGS", as it has facts that map to it.
+Here the `link` column maps elements of the "EVENTS" table to elements of the "THINGS" table, and hence an element of "THINGS" (where we define the accumulate column) is a group of all elements of "EVENTS" which reference it via this column. For each element of "EVENTS", the specified accumulate function will be called and its result stored in the column output. Thus the accumulate function will be called as many times for each input of "THINGS", as it has facts that map to it.
 
 ### Numeric accumulation
 
@@ -194,7 +198,7 @@ measure.setValue(1, 2.0);
 measure.setValue(2, 3.0);
 ```
 
-We can find the sum of the measure for each element in the "THINGS" table using this accumulate column:
+We can find the sum of the measure for each element in "THINGS" using this column definition:
 ```java
 Column sums = schema.createColumn("Sum Measure", things, objects);
 sums.accu(
@@ -210,24 +214,24 @@ value = sums.getValue(2); // 3
 
 ### Column paths
 
-A *column path* is a sequence of columns where each next column belongs to the type of the previous column. In programming, column paths are written using dot notation. For example, we could define a column object and then use it to *directly* access the number of events received from this same event device:
+A *column path* is a sequence of columns where each next column belongs to the type of the previous column. Column paths are analogous to dot notation in programming. For example, we could define a column object and then use it to *directly* access the number of events received from this same event device:
 ```java
 ColumnPath path = new ColumnPath(link, accu);
 value = path.getValue(0);
 ```
 
-Many column definition methods accept column paths as parameters rather than simply column. 
+Many column definition methods accept column paths as parameters rather than simple column. 
 
 ## Defining tables
 
 ### Product tables 
 
-When a new table is created it by default has no definition and hence it will not participate in inference. The only way to populate such tables is to add or remove its elements using API. If we want to populate a table using data in other columns and tables then it has to be defined as a *product table*: 
+When a new table is created, it by default has no definition and hence it will not participate in inference. The only way to populate such tables is to add or remove its elements using API. If we want to populate a table using data in other columns and tables then it has to be defined as a *product table*: 
 ```java
 myTable.prod();
 ```
 
-In addition, product tables must have one or more *key columns* of non-primitive type which are defined columns with no definition and an additional parameter specifying that it is a key column: 
+In addition, product tables must have one or more *key columns* of non-primitive type. They are defined as columns with no definition with an additional parameter specifying that it is a key column: 
 ```java
 Column myKey1 = schema.createColumn("Key1", myTable, T1);
 myKey1.noop(true);
@@ -238,7 +242,7 @@ Now the product table will be populated by all combinations of records currently
 
 ### Where functions 
 
-If it is necessary to filter records in a product table then it is necessary to define a where-function. 
+Elements of a table can be filtered by defining a *where-function* which returns a boolean value. 
 
 > A table will store a record only if the where-function is true. 
 
@@ -249,11 +253,11 @@ myTable.where(
         myKey1, myKey2 
 );
 ```
-(Currently, only key columns can be used in a where-function.) 
+(Currently, only key columns can be used in where-functions.) 
 
 ### Project columns 
 
-*Project columns* are also a means of populating tables. 
+*Project* columns are also a means of populating tables. 
 
 > A project column is similar to link columns but in addition it will append a new record to the linked table if it has not been found 
 
@@ -285,19 +289,20 @@ value = counts.getValue(1); // 2 events from oven
 
 # More information
 
-* More information on all aspects of the concept-oriented model and concept-oriented programming including publications can found here:
-    * http://www.conceptoriented.org
-
 * A web application based on the same principles as Bistro can be evaluated here:
-    * http://dc.conceptoriented.com/
+    * http://dc.conceptoriented.com - DataCommandr
 
 * Alexandr Savinov is an author of Bistro as well as the underlying concept-oriented model (COM):
-    * http://conceptoriented.org/savinov
-    * https://www.researchgate.net/profile/Alexandr_Savinov
+    * http://conceptoriented.org - Home page
 
-* Some papers about this approach:
-    * A. Savinov. DataCommandr: Column-Oriented Data Integration, Transformation and Analysis. Proc. IoTBD 2016, 339-347. https://www.researchgate.net/publication/301764506_DataCommandr_Column-Oriented_Data_Integration_Transformation_and_Analysis
-    * A. Savinov. ConceptMix: Self-Service Analytical Data Integration based on the Concept-Oriented Model. A. Savinov. 3rd International Conference on Data Technologies and Applications (DATA 2014), 78-84. https://www.researchgate.net/publication/265301356_ConceptMix_Self-Service_Analytical_Data_Integration_based_on_the_Concept-Oriented_Model
+* Papers related to this approach:
+    * A. Savinov, From Group-By to Accumulation: Data Aggregation Revisited. Proc. IoTBDS 2017, 370-379.
+    https://www.researchgate.net/publication/316551218_From_Group-by_to_Accumulation_Data_Aggregation_Revisited
+    * A. Savinov, Concept-oriented model: the Functional View, Eprint: [arXiv:1606.02237](https://arxiv.org/abs/1606.02237) [cs.DB], 2016.
+    https://www.researchgate.net/publication/303840097_Concept-Oriented_Model_the_Functional_View
+    * A. Savinov, Joins vs. Links or Relational Join Considered Harmful. Proc. IoTBD 2016, 362-368.
+    https://www.researchgate.net/publication/301764816_Joins_vs_Links_or_Relational_Join_Considered_Harmful
+    * A. Savinov, DataCommandr: Column-Oriented Data Integration, Transformation and Analysis. Proc. IoTBD 2016, 339-347. https://www.researchgate.net/publication/301764506_DataCommandr_Column-Oriented_Data_Integration_Transformation_and_Analysis
 
 # License
 
