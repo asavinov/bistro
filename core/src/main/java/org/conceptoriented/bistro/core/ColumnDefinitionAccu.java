@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The logic of accumulate columns.
+ * The logic of evaluation of accumulate columns.
  */
 public class ColumnDefinitionAccu implements ColumnDefinition {
 
@@ -14,7 +14,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
     Expression accuExpr;
     ColumnDefinitionCalc finDefinition;
 
-    ColumnPath accuPath;
+    ColumnPath groupPath;
 
     List<BistroError> errors = new ArrayList<>();
     @Override
@@ -42,7 +42,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
             }
         }
 
-        for(Column col : this.accuPath.columns) {
+        for(Column col : this.groupPath.columns) {
             if(!ret.contains(col)) ret.add(col);
         }
 
@@ -82,7 +82,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
         errors.clear(); // Clear state
 
-        Table mainTable = this.accuPath.getInput(); // Loop/scan table
+        Table mainTable = this.groupPath.getInput(); // Loop/scan table
 
         Range mainRange = mainTable.getIdRange();
 
@@ -94,7 +94,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
             // Find group, that is, projection of the current fact to the group table
-            Object g_out = this.accuPath.getValue(i);
+            Object g_out = this.groupPath.getValue(i);
             if(g_out == null) {
                 continue; // Do not accumulate facts without group
             }
@@ -129,23 +129,23 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         }
     }
 
-    public ColumnDefinitionAccu(Column column, ColumnPath accuPath, Expression accuExpr) {
+    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, Expression accuExpr) {
         this.column = column;
+
+        this.groupPath = groupPath;
 
         this.initDefinition = null;
         this.accuExpr = accuExpr;
         this.finDefinition = null;
-
-        this.accuPath = accuPath;
     }
-    public ColumnDefinitionAccu(Column column, ColumnPath accuPath, Expression initExpr, Expression accuExpr, Expression finExpr) {
+    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, Expression initExpr, Expression accuExpr, Expression finExpr) {
         this.column = column;
+
+        this.groupPath = groupPath;
 
         this.initDefinition = new ColumnDefinitionCalc(column, initExpr);
         this.accuExpr = accuExpr;
         this.finDefinition = new ColumnDefinitionCalc(column, finExpr);
-
-        this.accuPath = accuPath;
     }
 
 }

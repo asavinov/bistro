@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * This class is a basic implementation of the Expression interface.
- * It can be extended to impelment custom expressions.
+ * It can be extended to implement custom expressions.
  */
 public class Expr implements Expression {
 

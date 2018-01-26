@@ -18,8 +18,12 @@ public enum ColumnDefinitionType {
     PROJ(30),
 
     // Accumulate column
-    // Update the output value for each element of a different (fact) table which links to this element
+    // Update the output value for each element of the group
     ACCU(40),
+
+	// Rolling column
+	// Update the output value for each element of  the window taking into account the distance
+	ROLL(50),
 	;
 
 	private int value;

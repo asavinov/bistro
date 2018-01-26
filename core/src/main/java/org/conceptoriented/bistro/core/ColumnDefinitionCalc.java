@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The logic of calculate columns.
+ * The logic of evaluation of calculate columns.
  */
 public class ColumnDefinitionCalc implements ColumnDefinition {
 
