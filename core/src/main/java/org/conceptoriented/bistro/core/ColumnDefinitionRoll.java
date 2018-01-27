@@ -10,6 +10,8 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
 	Column column;
 
+    TableDefinitionWind window;
+
     EvaluatorAccu lambda;
 	ColumnPath[] paths;
 
@@ -30,15 +32,17 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionRoll(Column column, ColumnPath rollPath, double size, EvaluatorAccu lambda, ColumnPath[] paths) {
+    public ColumnDefinitionRoll(Column column, TableDefinitionWind window, EvaluatorAccu lambda, ColumnPath[] paths) {
         this.column = column;
+        this.window = window;
 
         this.lambda = lambda;
         this.paths = paths;
     }
 
-    public ColumnDefinitionRoll(Column column, Column rollColumn, double size, EvaluatorAccu lambda, Column[] columns) {
+    public ColumnDefinitionRoll(Column column, TableDefinitionWind window, EvaluatorAccu lambda, Column[] columns) {
         this.column = column;
+        this.window = window;
 
         this.paths = new ColumnPath[columns.length];
         for (int i = 0; i < columns.length; i++) {

@@ -430,7 +430,7 @@ public class Column implements Element {
     }
 
     // Evaluator + parameters OR Expression + no params
-    public void accu(Column groupPath, Evaluator lambda, Column... columns) {
+    public void accu(Column groupColumn, Evaluator lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         Expression accuExpr;
@@ -439,7 +439,7 @@ public class Column implements Element {
         else
             accuExpr = new Expr(lambda, columns);
 
-        this.definition = new ColumnDefinitionAccu(this, new ColumnPath(groupPath), accuExpr);
+        this.definition = new ColumnDefinitionAccu(this, new ColumnPath(groupColumn), accuExpr);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -450,20 +450,20 @@ public class Column implements Element {
     // Rolling column
     //
 
-    public void roll(ColumnPath rollPath, double size, EvaluatorAccu lambda, ColumnPath... paths) {
+    public void roll(TableDefinitionWind window, EvaluatorAccu lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, rollPath, size, lambda, paths);
+        this.definition = new ColumnDefinitionRoll(this, window, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void roll(Column rollColumn, double size, EvaluatorAccu lambda, Column... columns) {
+    public void roll(TableDefinitionWind window, EvaluatorAccu lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, rollColumn, size, lambda, columns);
+        this.definition = new ColumnDefinitionRoll(this, window, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
