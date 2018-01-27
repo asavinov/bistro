@@ -9,8 +9,6 @@ import java.util.regex.Pattern;
 
 /**
  * This base class is intended to be extended by concrete classes for translating formulas.
- *
- * TODO: add support for http://mathparser.org/
  */
 public class FormulaBase implements Formula {
 
@@ -37,7 +35,7 @@ public class FormulaBase implements Formula {
 	protected ExprDependency outDependency;
 
 	//
-	// EvaluatorExpr interface
+	// Expression interface
 	//
 	@Override public void setParameterPaths(List<ColumnPath> paths) { ; } // Param paths are extracted from formula
 	@Override

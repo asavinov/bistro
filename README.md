@@ -287,6 +287,8 @@ value = counts.getValue(0); // 1 event from fridge
 value = counts.getValue(1); // 2 events from oven
 ```
 
+# History of Bistro
+
 # More information
 
 * A web application based on the same principles as Bistro can be evaluated here:
