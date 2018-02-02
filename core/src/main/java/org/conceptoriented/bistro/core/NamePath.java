@@ -7,16 +7,16 @@ import java.util.List;
  * Ab arbitrary sequence of names which normally represents a column path possibly with a table name as the first elemetn.
  */
 public class NamePath {
-	
+
 	public List<String> names = new ArrayList<String>();
-	
+
 	// Assume that it is a column path, resolve all individual keyColumns relative to the specified table
 	// The returned array contains as many elements as the names in the sequence
 	public ColumnPath resolveColumns(Table table) {
 		List<Column> result = new ArrayList<Column>();
-		
+
 		Schema schema = table.getSchema();
-		
+
 		for(String name : names) {
 			Column column = schema.getColumn(table.getName(), name);
 			if(column == null) { // Cannot resolve
@@ -25,13 +25,13 @@ public class NamePath {
 			result.add(column);
 			table = column.getOutput();
 		}
-		
+
 		return new ColumnPath(result);
 	}
 
 	// Assume that the sequence is a fully qualified name of a column
 	public Column resolveColumn(Schema schema, Table table) { // Table is used only if no table name is available
-		
+
 		String tableName = this.getTableName();
 		if(tableName == null) {
 			if(table != null)
@@ -39,12 +39,12 @@ public class NamePath {
 			else
 				return null;
 		}
-		
+
 		Column column = null;
 		if(getColumnName() != null) {
 			column = schema.getColumn(tableName, getColumnName());
 		}
-		
+
 		return column;
 	}
 

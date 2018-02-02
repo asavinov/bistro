@@ -1,7 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 public enum BistroErrorCode {
-	NONE(0), 
+	NONE(0),
 
 	NAME_RESOLUTION_ERROR(10),
 

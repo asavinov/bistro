@@ -13,11 +13,11 @@ public class ActionBase implements Action {
 	}
 
 	@Override
-    public void setTriggers(Action[] actions) throws BistroError {
+	public void setTriggers(Action[] actions) throws BistroError {
 	}
 
 	@Override
-    public void exec(Context ctx) throws BistroError {
+	public void exec(Context ctx) throws BistroError {
 	}
 
 }

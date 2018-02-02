@@ -5,37 +5,37 @@ public class Range {
     public long start;
     public long end;
 
-	public long getLength() {
-		return end - start;
-	}
-	
-	public boolean isIn(long row) {
-		if(row >= start && row < end) return true;
-		return false;
-	}
+    public long getLength() {
+        return end - start;
+    }
 
-	public boolean isIn(Range r) { // Whether this range is completely covered by (is within) the specified range
-		if(this.start < r.start) return false;
-		if(this.end > r.end) return false;
-		return true;
-	}
+    public boolean isIn(long row) {
+        if(row >= start && row < end) return true;
+        return false;
+    }
 
-	public Range uniteWith(Range r) {
-		r.start = Long.min(this.start, r.start);
-		r.end = Long.max(this.end, r.end);
-		return r;
-	}
+    public boolean isIn(Range r) { // Whether this range is completely covered by (is within) the specified range
+        if(this.start < r.start) return false;
+        if(this.end > r.end) return false;
+        return true;
+    }
 
-	public Range addToEndOf(Range r) { // Add this range to the end of the specified range (by changing the argument). The argument can only become larger.
-		if(this.end > r.end) r.end = this.end;
-		return r;
-	}
+    public Range uniteWith(Range r) {
+        r.start = Long.min(this.start, r.start);
+        r.end = Long.max(this.end, r.end);
+        return r;
+    }
 
-	public Range delFromStartOf(Range r) { // Remove this range from the start of the specified range (by changing the argument)
-		if(this.end > r.start) r.start = this.end;
-		if(r.start > r.end) r.end = r.start; // In the case the whole range is removed
-		return r;
-	}
+    public Range addToEndOf(Range r) { // Add this range to the end of the specified range (by changing the argument). The argument can only become larger.
+        if(this.end > r.end) r.end = this.end;
+        return r;
+    }
+
+    public Range delFromStartOf(Range r) { // Remove this range from the start of the specified range (by changing the argument)
+        if(this.end > r.start) r.start = this.end;
+        if(r.start > r.end) r.end = r.start; // In the case the whole range is removed
+        return r;
+    }
 
     public static int[] intersect(int[] source, int[] target) { // Restrict the source array by elements from the second array
         int size=0;
@@ -58,7 +58,7 @@ public class Range {
 
     @Override
     public String toString() {
-      return String.format("[%s, %s)", start, end);
+        return String.format("[%s, %s)", start, end);
     }
 
     @Override
@@ -79,22 +79,22 @@ public class Range {
 
     @Override
     public int hashCode() {
-    	return Long.hashCode(start) ^ Long.hashCode(end);
+        return Long.hashCode(start) ^ Long.hashCode(end);
     }
 
     public Range(Range range) {
         super();
         this.start = range.start;
         this.end = range.end;
-      }
+    }
 
     public Range(long start, long end) {
         super();
         this.start = start;
         this.end = end;
-      }
+    }
 
     public Range() {
         this(0,0);
-      }
+    }
 }

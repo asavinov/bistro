@@ -8,16 +8,16 @@ import java.util.List;
  */
 public class ColumnDefinitionCalc implements ColumnDefinition {
 
-	Column column;
+    Column column;
 
     Expression expr;
 
     List<BistroError> errors = new ArrayList<>();
 
-	@Override
-	public List<BistroError> getErrors() {
-		return this.errors;
-	}
+    @Override
+    public List<BistroError> getErrors() {
+        return this.errors;
+    }
 
     @Override
     public List<Element> getDependencies() {

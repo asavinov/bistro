@@ -13,6 +13,6 @@ public interface Action {
 
 	public void setTriggers(Action[] actions) throws BistroError;
 
-    public void exec(Context ctx) throws BistroError;
+	public void exec(Context ctx) throws BistroError;
 
 }

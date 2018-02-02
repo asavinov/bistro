@@ -7,19 +7,19 @@ import org.conceptoriented.bistro.core.NamePath;
 
 public class QNameBuilder extends QNameBaseVisitor<NamePath> {
 
-	@Override 
-	public NamePath visitQname(QNameParser.QnameContext ctx) {
-		NamePath n = new NamePath();
-		
+    @Override
+    public NamePath visitQname(QNameParser.QnameContext ctx) {
+        NamePath n = new NamePath();
+
         int nameCount = ctx.name().size();
         for (int i = 0; i < nameCount; i++)
         {
-        	String name = GetName(ctx.name(i));
-        	n.names.add(name);
+            String name = GetName(ctx.name(i));
+            n.names.add(name);
         }
-        
+
         return n;
-	}
+    }
 
     protected String GetName(QNameParser.NameContext context)
     {
@@ -37,7 +37,7 @@ public class QNameBuilder extends QNameBaseVisitor<NamePath> {
         return name;
     }
 
-	public NamePath buildQName(String str)
+    public NamePath buildQName(String str)
     {
         QNameBuilder builder = this;
 

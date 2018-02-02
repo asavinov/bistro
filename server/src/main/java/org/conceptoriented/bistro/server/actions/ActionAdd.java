@@ -17,15 +17,15 @@ public class ActionAdd implements Action {
 	}
 
 	@Override
-    public void setTriggers(Action[] actions) throws BistroError {
+	public void setTriggers(Action[] actions) throws BistroError {
 	}
 
 	@Override
-    public void exec(Context ctx) throws BistroError {
+	public void exec(Context ctx) throws BistroError {
 
-	    // Read record from the context
+		// Read record from the context
 
-        // Add record to the table
+		// Add record to the table
 
 	}
 

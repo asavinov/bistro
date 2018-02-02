@@ -12,13 +12,13 @@ public enum TableDefinitionType {
 	}
 
 	public static TableDefinitionType fromInt(int value) {
-	    for (TableDefinitionType kind : TableDefinitionType.values()) {
-	        if (kind.getValue() == value) {
-	            return kind;
-	        }
-	    }
-	    return TableDefinitionType.NOOP;
-	 }
+		for (TableDefinitionType kind : TableDefinitionType.values()) {
+			if (kind.getValue() == value) {
+				return kind;
+			}
+		}
+		return TableDefinitionType.NOOP;
+	}
 
 	private TableDefinitionType(int value) {
 		this.value = value;

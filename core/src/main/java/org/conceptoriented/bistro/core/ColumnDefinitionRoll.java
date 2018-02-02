@@ -8,19 +8,19 @@ import java.util.List;
  */
 public class ColumnDefinitionRoll implements ColumnDefinition {
 
-	Column column;
+    Column column;
 
     TableDefinitionWind window;
 
     EvaluatorAccu lambda;
-	ColumnPath[] paths;
+    ColumnPath[] paths;
 
     List<BistroError> errors = new ArrayList<>();
 
-	@Override
-	public List<BistroError> getErrors() {
-		return this.errors;
-	}
+    @Override
+    public List<BistroError> getErrors() {
+        return this.errors;
+    }
 
     @Override
     public List<Element> getDependencies() {

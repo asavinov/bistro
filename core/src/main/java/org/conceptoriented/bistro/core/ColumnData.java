@@ -9,18 +9,18 @@ import java.util.UUID;
  */
 public class ColumnData {
 
-	private final UUID id;
-	public UUID getId() {
-		return this.id;
-	}
+    private final UUID id;
+    public UUID getId() {
+        return this.id;
+    }
 
-	//
-	// Data
-	//
-	
-	private Range idRange = new Range(); // All valid input ids for which outputs are stored - other ids are not valid and will produce exception or arbitrary value (garbage)
+    //
+    // Data
+    //
 
-	private static int INITIAL_SIZE = 10;
+    private Range idRange = new Range(); // All valid input ids for which outputs are stored - other ids are not valid and will produce exception or arbitrary value (garbage)
+
+    private static int INITIAL_SIZE = 10;
     private static int INCREMENT_SIZE = 5;
     private Object[] values; // This array stores the output columnPaths
 
@@ -30,29 +30,29 @@ public class ColumnData {
 
     private int startIdOffset = 0; // Cell of the array where the start id is stored
 
-	private int id2offset(long id) {
-		return this.startIdOffset + ((int) (id - this.idRange.start));
-	}
+    private int id2offset(long id) {
+        return this.startIdOffset + ((int) (id - this.idRange.start));
+    }
 
-	//
-	// Data access
-	//
-	
-	protected Object getValue(long id) { return this.values[id2offset(id)]; }
+    //
+    // Data access
+    //
 
-	protected void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
+    protected Object getValue(long id) { return this.values[id2offset(id)]; }
 
-	protected void setValue(Object value) { // All
-		Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
-	}
-	protected void setValue() { // All default value (depends on the column data type)
-		this.setValue(defaultValue);
-	}
+    protected void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
 
-	protected void add() { this.add(1); }
+    protected void setValue(Object value) { // All
+        Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
+    }
+    protected void setValue() { // All default value (depends on the column data type)
+        this.setValue(defaultValue);
+    }
+
+    protected void add() { this.add(1); }
     protected void add(long count) { // Remove the oldest records with lowest ids
 
-		// Check if not enough space and allocate more if necessary
+        // Check if not enough space and allocate more if necessary
         int additionalSize = (this.startIdOffset + (int)idRange.getLength() + (int)count) - this.values.length;
         if(additionalSize > 0) { // More space is needed
             additionalSize = ((additionalSize/INCREMENT_SIZE) + 1) * INCREMENT_SIZE; // How many increments we need to cover the additional size
@@ -66,7 +66,7 @@ public class ColumnData {
     }
 
     protected void remove() { this.remove(1); }
-	protected void remove(long count) { // Remove the oldest records with lowest ids
+    protected void remove(long count) { // Remove the oldest records with lowest ids
 
         if(count > 0) { // Remove oldest
             // Delete
@@ -95,21 +95,21 @@ public class ColumnData {
         }
         else {
         }
-	}
+    }
     protected void removeAll() {
         this.idRange.start = 0;
         this.idRange.end = 0;
         this.startIdOffset = 0;
     }
 
-	public ColumnData(long start, long end) {
-		this.id = UUID.randomUUID();
+    public ColumnData(long start, long end) {
+        this.id = UUID.randomUUID();
 
-		// Initialize storage
-		this.values = new Object[INITIAL_SIZE];
+        // Initialize storage
+        this.values = new Object[INITIAL_SIZE];
 
-		// Initially no data but the ids start from what is specified in parameters
-		this.idRange.start = start;
+        // Initially no data but the ids start from what is specified in parameters
+        this.idRange.start = start;
         this.idRange.end = start;
 
         // Now the end will move and space will be added if necessary

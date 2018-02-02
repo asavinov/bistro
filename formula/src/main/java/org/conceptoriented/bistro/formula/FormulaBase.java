@@ -14,10 +14,10 @@ public class FormulaBase implements Formula {
 
 	public static String OUT_VARIABLE_NAME = "out";
 
-    public boolean isExp4j = true;
-    public boolean isEvalex = false;
+	public boolean isExp4j = true;
+	public boolean isEvalex = false;
 
-    private static QNameBuilder parser = new QNameBuilder();
+	private static QNameBuilder parser = new QNameBuilder();
 
 	// Formula
 	protected String formula;
@@ -53,23 +53,23 @@ public class FormulaBase implements Formula {
 		for(int p=0; p<this.exprDependencies.size(); p++) {
 
 			// Read and prepare the parameter value
-		    Object value = params[p];
+			Object value = params[p];
 			if(value == null && !this.isEquality) {
-                value = Double.NaN;
-            }
+				value = Double.NaN;
+			}
 			else if(value instanceof String && !this.isEquality) {
-			    if( ((String) value).isEmpty() )
-			        value = Double.NaN;
-			    else
-			        try {
-                        value = Double.valueOf((String) value);
-                    }
-                    catch(NumberFormatException e){
-                        throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error converting string to double. " + e.getMessage(), e);
-                    }
+				if( ((String) value).isEmpty() )
+					value = Double.NaN;
+				else
+					try {
+						value = Double.valueOf((String) value);
+					}
+					catch(NumberFormatException e){
+						throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error converting string to double. " + e.getMessage(), e);
+					}
 			}
 
-            // Set the parameter value in the expression
+			// Set the parameter value in the expression
 			ExprDependency dep = this.exprDependencies.get(p);
 			try {
 				if(this.isEquality) {
@@ -83,13 +83,13 @@ public class FormulaBase implements Formula {
 				}
 			}
 			catch(Exception e) {
-			    throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
+				throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 		}
 
 		// Set current output value (if used)
 		if(this.outDependency != null && params.length > this.exprDependencies.size()) { // If the output is provided as the last element
-            Object out = params[this.exprDependencies.size()];
+			Object out = params[this.exprDependencies.size()];
 			if(out == null) out = Double.NaN;
 			try {
 				if(this.isEquality) {
@@ -103,7 +103,7 @@ public class FormulaBase implements Formula {
 				}
 			}
 			catch(Exception e) {
-                throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
+				throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 		}
 
@@ -127,49 +127,49 @@ public class FormulaBase implements Formula {
 		return ret;
 	}
 
-    //
-    // Translate
-    //
+	//
+	// Translate
+	//
 
-    private BistroError translateError;
-    public void translate(String formula) {
-        this.translateError = null;
-        this.formula = formula;
-        if(this.formula == null || this.formula.isEmpty()) return;
+	private BistroError translateError;
+	public void translate(String formula) {
+		this.translateError = null;
+		this.formula = formula;
+		if(this.formula == null || this.formula.isEmpty()) return;
 
-        try {
-            this.parse();
-        }
-        catch(Exception err) {
-            if(this.translateError == null) { // Status has not been set by the failed method
-                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Parse error", "Cannot parse the formula.", err);
-            }
-            return;
-        }
-        if(this.translateError != null) return;
+		try {
+			this.parse();
+		}
+		catch(Exception err) {
+			if(this.translateError == null) { // Status has not been set by the failed method
+				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Parse error", "Cannot parse the formula.", err);
+			}
+			return;
+		}
+		if(this.translateError != null) return;
 
-        try {
-            this.bind();
-        }
-        catch(Exception err) {
-            if(this.translateError == null) { // Status has not been set by the failed method
-                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve symbols.", err);
-            }
-            return;
-        }
-        if(this.translateError != null) return;
+		try {
+			this.bind();
+		}
+		catch(Exception err) {
+			if(this.translateError == null) { // Status has not been set by the failed method
+				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve symbols.", err);
+			}
+			return;
+		}
+		if(this.translateError != null) return;
 
-        try {
-            this.build();
-        }
-        catch(Exception err) {
-            if(this.translateError == null) { // Status has not been set by the failed method
-                this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Build error", "Cannot build evaluator object.", err);
-            }
-            return;
-        }
-        if(this.translateError != null) return;
-    }
+		try {
+			this.build();
+		}
+		catch(Exception err) {
+			if(this.translateError == null) { // Status has not been set by the failed method
+				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Build error", "Cannot build evaluator object.", err);
+			}
+			return;
+		}
+		if(this.translateError != null) return;
+	}
 
 	//
 	// Parse
@@ -230,7 +230,7 @@ public class FormulaBase implements Formula {
 			}
 		}
 
-    	//
+		//
 		// Process the paths
 		//
 		for(ExprDependency dep : this.exprDependencies) {
@@ -238,7 +238,7 @@ public class FormulaBase implements Formula {
 			dep.qname = this.parsePath(dep.pathName); // TODO: There might be errors here, e.g., wrong characters in names
 		}
 
-    	//
+		//
 		// Detect identity expressions which have a single parameter without operations
 		// It is a workaround to solve the problem of non-numeric expressions (used in links) which cannot be evaluated by a native expression library.
 		// For equalities, the evaluator will process them separately without using native evaluator.
@@ -400,13 +400,13 @@ public class FormulaBase implements Formula {
 		// Validate
 		//
 		vars.forEach(x -> exp.setVariable(x, new BigDecimal(1.0)));
-    	try {
-    		exp.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
-    	}
-    	catch(com.udojava.evalex.Expression.ExpressionException ee) {
+		try {
+			exp.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
+		}
+		catch(com.udojava.evalex.Expression.ExpressionException ee) {
 			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expr error.", ee.getMessage(), ee);
 			return null;
-    	}
+		}
 
 		return exp;
 	}
@@ -433,24 +433,24 @@ public class FormulaBase implements Formula {
 		return buf.toString();
 	}
 
-    public static FormulaBase createInstance(String clazz, String formula, Table table) throws BistroError {
+	public static FormulaBase createInstance(String clazz, String formula, Table table) throws BistroError {
 
-        FormulaBase ude = null;
+		FormulaBase ude = null;
 
-        if(clazz.equals(Formula.Exp4j)) {
-            ude = new FormulaExp4j(formula, table);
-        }
-        else if(clazz.equals(Formula.Evalex)) {
-            ude = new FormulaEvalex(formula, table);
-        }
-        else {
-            ; // TODO: Error - Expression class not available/implemented
-        }
+		if(clazz.equals(Formula.Exp4j)) {
+			ude = new FormulaExp4j(formula, table);
+		}
+		else if(clazz.equals(Formula.Evalex)) {
+			ude = new FormulaEvalex(formula, table);
+		}
+		else {
+			; // TODO: Error - Expression class not available/implemented
+		}
 
-        return ude;
-    }
+		return ude;
+	}
 
-    public FormulaBase() {
+	public FormulaBase() {
 	}
 	public FormulaBase(String formula, Table table) {
 		this.formula = formula;

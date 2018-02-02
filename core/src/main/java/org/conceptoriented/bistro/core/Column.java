@@ -7,41 +7,41 @@ import java.util.stream.Collectors;
 
 public class Column implements Element {
 
-	private Schema schema;
-	public Schema getSchema() {
-		return this.schema;
-	}
-	
-	private final UUID id;
-	public UUID getId() {
-		return this.id;
-	}
+    private Schema schema;
+    public Schema getSchema() {
+        return this.schema;
+    }
 
-	private String name;
-	public String getName() {
-		return this.name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	private Table input;
-	public Table getInput() {
-		return this.input;
-	}
-	public void setInput(Table table) {
-		this.input = table;
-	}
+    private final UUID id;
+    public UUID getId() {
+        return this.id;
+    }
 
-	private Table output;
-	public Table getOutput() {
-		return this.output;
-	}
-	public void setOutput(Table table) { this.output = table; this.setValue(null); }
+    private String name;
+    public String getName() {
+        return this.name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    private Table input;
+    public Table getInput() {
+        return this.input;
+    }
+    public void setInput(Table table) {
+        this.input = table;
+    }
+
+    private Table output;
+    public Table getOutput() {
+        return this.output;
+    }
+    public void setOutput(Table table) { this.output = table; this.setValue(null); }
 
     //
-	// Data (public)
-	//
+    // Data (public)
+    //
 
     private ColumnData data;
 
@@ -61,7 +61,7 @@ public class Column implements Element {
     //
 
     protected void add() { this.data.add(); this.isDirty = true; }
-	protected void add(long count) { this.data.add(count); this.isDirty = true; }
+    protected void add(long count) { this.data.add(count); this.isDirty = true; }
 
     protected void remove() { this.data.remove(1); this.isDirty = true; }
     protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
@@ -471,37 +471,37 @@ public class Column implements Element {
     }
 
     //
-	// Serialization and construction
-	//
+    // Serialization and construction
+    //
 
-	@Override
-	public String toString() {
-		return "[" + getName() + "]: " + input.getName() + " -> " + output.getName();
-	}
-	
-	@Override
-	public boolean equals(Object aThat) {
-		if (this == aThat) return true;
-		if ( !(aThat instanceof Column) ) return false;
-		
-		Column that = (Column)aThat;
-		
-		if(!that.getId().toString().equals(id.toString())) return false;
-		
-		return true;
-	}
+    @Override
+    public String toString() {
+        return "[" + getName() + "]: " + input.getName() + " -> " + output.getName();
+    }
 
-	public Column(Schema schema, String name, Table input, Table output) {
-		this.schema = schema;
-		this.id = UUID.randomUUID();
-		this.name = name;
-		this.input = input;
-		this.output = output;
-		
-		// Where its output values come from
-		this.definitionType = ColumnDefinitionType.NOOP;
+    @Override
+    public boolean equals(Object aThat) {
+        if (this == aThat) return true;
+        if ( !(aThat instanceof Column) ) return false;
 
-		// Where its output values are stored
-		this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
-	}
+        Column that = (Column)aThat;
+
+        if(!that.getId().toString().equals(id.toString())) return false;
+
+        return true;
+    }
+
+    public Column(Schema schema, String name, Table input, Table output) {
+        this.schema = schema;
+        this.id = UUID.randomUUID();
+        this.name = name;
+        this.input = input;
+        this.output = output;
+
+        // Where its output values come from
+        this.definitionType = ColumnDefinitionType.NOOP;
+
+        // Where its output values are stored
+        this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
+    }
 }

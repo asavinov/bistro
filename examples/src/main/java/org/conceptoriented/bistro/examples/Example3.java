@@ -12,7 +12,7 @@ public class Example3 {
 
     public static Schema schema;
 
-	public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
 
         //
         // Create schema
