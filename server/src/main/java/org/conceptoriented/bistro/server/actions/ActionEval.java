@@ -23,7 +23,7 @@ public class ActionEval implements Action {
 	}
 
 	@Override
-	public void exec(Context ctx) throws BistroError {
+	public void run() {
 
 		// Read record from the context
 
