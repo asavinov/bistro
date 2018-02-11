@@ -1,14 +1,12 @@
 package org.conceptoriented.bistro.server.actions;
 
-import org.conceptoriented.bistro.core.BistroError;
-import org.conceptoriented.bistro.core.Table;
-import org.conceptoriented.bistro.server.Action;
-import org.conceptoriented.bistro.server.Context;
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.*;
 
 /**
  * Remove record(s) from a table.
  */
-public class ActionRemove implements Action {
+public class ActionRemove extends ActionBase {
 
 	@Override
 	public void start() throws BistroError {

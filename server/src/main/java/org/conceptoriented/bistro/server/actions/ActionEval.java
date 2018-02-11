@@ -1,14 +1,12 @@
 package org.conceptoriented.bistro.server.actions;
 
-import org.conceptoriented.bistro.core.BistroError;
-import org.conceptoriented.bistro.core.Table;
-import org.conceptoriented.bistro.server.Action;
-import org.conceptoriented.bistro.server.Context;
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.*;
 
 /**
  * Evalute schema.
  */
-public class ActionEval implements Action {
+public class ActionEval extends ActionBase {
 
 	@Override
 	public void start() throws BistroError {

@@ -450,20 +450,20 @@ public class Column implements Element {
     // Rolling column
     //
 
-    public void roll(TableDefinitionWind window, EvaluatorAccu lambda, ColumnPath... paths) {
+    public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, window, lambda, paths);
+        this.definition = new ColumnDefinitionRoll(this, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void roll(TableDefinitionWind window, EvaluatorAccu lambda, Column... columns) {
+    public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, window, lambda, columns);
+        this.definition = new ColumnDefinitionRoll(this, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

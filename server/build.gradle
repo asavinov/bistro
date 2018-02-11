@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 
 jar {
     baseName = 'bistro-server'
-    version =  '0.5.0'
+    version =  '0.6.0-SNAPSHOT'
 }
 
 repositories {
@@ -30,10 +30,10 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-server'
-version = '0.5.0'
+version = '0.6.0-SNAPSHOT'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.5.0")
+    compile("org.conceptoriented:bistro-core:0.6.0-SNAPSHOT")
     testCompile("junit:junit:4.12")
 }
 
@@ -50,7 +50,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-server'
-            //version '0.5.0'
+            //version '0.6.0-SNAPSHOT'
 
             //artifact jar
             artifact sourcesJar

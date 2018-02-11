@@ -1,14 +1,12 @@
 package org.conceptoriented.bistro.server.actions;
 
-import org.conceptoriented.bistro.core.BistroError;
-import org.conceptoriented.bistro.core.Table;
-import org.conceptoriented.bistro.server.Action;
-import org.conceptoriented.bistro.server.Context;
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.*;
 
 /**
  * Regularly wake up and trigger this action.
  */
-public class ActionTimer implements Action {
+public class ActionTimer extends ActionBase {
 
 	@Override
 	public void start() throws BistroError {

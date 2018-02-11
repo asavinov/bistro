@@ -6,7 +6,7 @@ import org.conceptoriented.bistro.server.*;
 /**
  * Add record to a table.
  */
-public class ActionAdd implements Action {
+public class ActionAdd extends ActionBase {
 
 	@Override
 	public void start() throws BistroError {
