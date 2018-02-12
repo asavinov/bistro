@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class Example3 {
 
-    public static String location = "src/main/resources/ex1";
+    public static String location = "src/main/resources/ds1";
 
     public static Schema schema;
 

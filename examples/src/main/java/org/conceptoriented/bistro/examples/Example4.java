@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class Example4 {
 
-    public static String location = "src/main/resources/ex1";
+    public static String location = "src/main/resources/ds1";
 
     public static Schema schema;
 
@@ -18,7 +18,7 @@ public class Example4 {
         // Create schema
         //
 
-        schema = new Schema("Example 2");
+        schema = new Schema("Example 4");
 
         //
         // Create tables and columns by loading data from CSV files

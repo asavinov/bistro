@@ -45,7 +45,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
             }
         }
 
-        return null;
+        return ret;
     }
 
     @Override

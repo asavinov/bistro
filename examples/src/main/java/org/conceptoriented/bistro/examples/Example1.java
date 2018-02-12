@@ -10,7 +10,7 @@ public class Example1 {
         // Create schema
         //
 
-        Schema schema = new Schema("My Schema");
+        Schema schema = new Schema("Example 1");
 
         //
         // Create tables

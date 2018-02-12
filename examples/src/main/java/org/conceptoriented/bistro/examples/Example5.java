@@ -8,7 +8,7 @@ import java.io.*;
 public class Example5
 {
 
-    public static String location = "src/main/resources/ex2";
+    public static String location = "src/main/resources/ds2";
 
     public static Schema schema;
 

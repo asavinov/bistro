@@ -13,6 +13,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'antlr'
 apply plugin: 'eclipse'
+apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 jar {

@@ -6,7 +6,7 @@ import java.io.*;
 
 public class Example2 {
 
-    public static String location = "src/main/resources/ex1";
+    public static String location = "src/main/resources/ds1";
 
     public static Schema schema;
 
