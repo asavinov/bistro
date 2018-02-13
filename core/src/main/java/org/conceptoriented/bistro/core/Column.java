@@ -453,7 +453,7 @@ public class Column implements Element {
     public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, sizePast, sizeFuture, lambda, paths);
+        this.definition = new ColumnDefinitionRoll(this, null, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -463,7 +463,27 @@ public class Column implements Element {
     public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, sizePast, sizeFuture, lambda, columns);
+        this.definition = new ColumnDefinitionRoll(this, null, sizePast, sizeFuture, lambda, columns);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void roll(ColumnPath distancePath, int sizePast, int sizeFuture, EvaluatorRoll lambda, ColumnPath... paths) {
+        this.setDefinitionType(ColumnDefinitionType.ROLL);
+
+        this.definition = new ColumnDefinitionRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void roll(Column distanceColumn, int sizePast, int sizeFuture, EvaluatorRoll lambda, Column... columns) {
+        this.setDefinitionType(ColumnDefinitionType.ROLL);
+
+        this.definition = new ColumnDefinitionRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

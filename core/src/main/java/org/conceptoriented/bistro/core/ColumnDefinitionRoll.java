@@ -1,5 +1,7 @@
 package org.conceptoriented.bistro.core;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,11 +14,20 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
     Column column;
 
     // Dimensions for computing distance/weight
-    ColumnPath[] dimensions = null;
+    ColumnPath distancePath = null;
     // Examples:
     // Empty - row id (distance between row ids)
     // One - time or 1D space. difference of values in this column
     // Two - 2D space
+
+    private double computeDistance(long pastId, long futureId) { // It is essentially a comparator so maybe check the corresponding standard interface
+        if(distancePath == null) {
+            return (double)(futureId - pastId);
+        }
+        else {
+            return ((Number)this.distancePath.getValue(futureId)).doubleValue() - ((Number)this.distancePath.getValue(pastId)).doubleValue();
+        }
+    }
 
     // Constraint: only elements within the specified distance from the central (group) element will be accumulated
     double sizePast; // Window size (past, smaller ids)
@@ -55,14 +66,6 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
         this.column.setValue(); // Initialize to default value
 
-        if(dimensions == null || dimensions.length == 0) {
-            this.evalRows();
-        }
-
-    }
-
-    public void evalRows() {
-
         Table mainTable = this.column.getInput(); // Loop/scan table
 
         Range mainRange = mainTable.getIdRange();
@@ -78,14 +81,12 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
             // Move min border forward until it satisfies distance (assume inclusive)
             for( ; min_id <= i; min_id++) {
-                double distance = i - min_id; // Compute distance
-                if(distance <= sizePast) break; // Inside window
+                if(computeDistance(min_id, i) < sizePast) break; // Inside window
             }
 
             // Move max border forward until it does not satisfies distance (and assume exclusive)
             for( ; max_id < mainRange.end; max_id++) {
-                double distance = max_id - i; // Compute distance
-                if(distance > sizeFuture) break; // Outside window
+                if(computeDistance(i, max_id) > sizeFuture) break; // Outside window
             }
 
             //
@@ -102,10 +103,10 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
                 // Compute distance
                 //
                 if(fact_id <= i) {
-                    distance = i - fact_id;
+                    distance = computeDistance(fact_id, i);
                 }
                 else {
-                    distance = fact_id - i;
+                    distance = computeDistance(i, fact_id);
                 }
 
                 //
@@ -137,8 +138,10 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionRoll(Column column, double sizePast, double sizeFuture, EvaluatorRoll lambda, ColumnPath[] paths) {
+    public ColumnDefinitionRoll(Column column, ColumnPath distancePath, double sizePast, double sizeFuture, EvaluatorRoll lambda, ColumnPath[] paths) {
         this.column = column;
+
+        this.distancePath = distancePath;
 
         this.sizePast = sizePast;
         this.sizeFuture = sizeFuture;
@@ -147,8 +150,8 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
         this.paths = paths;
     }
 
-    public ColumnDefinitionRoll(Column column, double sizePast, double sizeFuture, EvaluatorRoll lambda, Column[] columns) {
-        this(column, sizePast, sizeFuture, lambda, new ColumnPath[] {});
+    public ColumnDefinitionRoll(Column column, Column distanceColumn, double sizePast, double sizeFuture, EvaluatorRoll lambda, Column[] columns) {
+        this(column, distanceColumn != null ? new ColumnPath(distanceColumn) : null, sizePast, sizeFuture, lambda, new ColumnPath[] {});
 
         this.paths = new ColumnPath[columns.length];
         for (int i = 0; i < columns.length; i++) {
