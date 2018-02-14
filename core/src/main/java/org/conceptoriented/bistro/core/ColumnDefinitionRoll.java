@@ -48,6 +48,12 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
     public List<Element> getDependencies() {
         List<Element> ret = new ArrayList<>();
 
+        if(this.distancePath != null) {
+            for(Column col : this.distancePath.columns) {
+                if(!ret.contains(col)) ret.add(col);
+            }
+        }
+
         if(this.paths != null) {
             for(ColumnPath path : this.paths) {
                 for(Column col : path.columns) {
