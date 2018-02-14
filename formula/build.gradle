@@ -3,9 +3,9 @@ buildscript {
         flatDir {
             dirs "$rootProject.projectDir"
         }
-		mavenLocal()
-		mavenCentral()
-	}
+        mavenLocal()
+        mavenCentral()
+    }
     dependencies {
     }
 }
@@ -15,6 +15,10 @@ apply plugin: 'antlr'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 jar {
     baseName = 'bistro-formula'
@@ -50,7 +54,7 @@ dependencies {
 // https://docs.gradle.org/current/userguide/antlr_plugin.html
 generateGrammarSource {
     maxHeapSize = "64m"
-	arguments += ["-visitor", "-listener", "-long-messages"]
+    arguments += ["-visitor", "-listener", "-long-messages"]
 }
 
 task wrapper(type: Wrapper) {
