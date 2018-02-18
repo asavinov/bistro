@@ -467,6 +467,20 @@ public class Table implements Element {
     }
 
     //
+    // Range table
+    //
+
+    public void range(Object origin, Object period, Long length) {
+        this.setDefinitionType(TableDefinitionType.RANGE); // Reset definition
+
+        this.definition = new TableDefinitionRange(this, origin, period, length); // Create definition
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    //
     // Search
     //
 

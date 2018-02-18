@@ -8,11 +8,11 @@ public class TableDefinitionProd implements TableDefinition {
 
     Table table;
 
-    List<BistroError> definitionErrors = new ArrayList<>();
+    List<BistroError> errors = new ArrayList<>();
 
     @Override
     public List<BistroError> getErrors() {
-        return this.definitionErrors;
+        return this.errors;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class TableDefinitionProd implements TableDefinition {
                 //
                 boolean whereTrue = this.table.isWhereTrue(record, keyColumns);
                 if(this.table.getExecutionErrors().size() > 0) {
-                    this.definitionErrors.addAll(this.table.getExecutionErrors());
+                    this.errors.addAll(this.table.getExecutionErrors());
                     return;
                 }
 

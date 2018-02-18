@@ -3,6 +3,7 @@ package org.conceptoriented.bistro.core;
 public enum TableDefinitionType {
 	NOOP(0), // No definition
 	PROD(10), // Product table
+	RANGE(20), // Range table
 	;
 
 	private int value;
