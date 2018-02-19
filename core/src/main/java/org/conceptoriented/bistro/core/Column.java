@@ -68,6 +68,8 @@ public class Column implements Element {
 
     protected void removeAll() { this.data.removeAll(); this.isDirty = true; }
 
+    protected long findSorted(Number value) { return this.data.findSorted(value); }
+
     //
     // Element interface
     //
@@ -368,6 +370,16 @@ public class Column implements Element {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLink(this, valueExprs, keyColumns);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void link(ColumnPath valuePath) { // Link to range table (using inequality)
+        this.setDefinitionType(ColumnDefinitionType.LINK);
+
+        this.definition = new ColumnDefinitionLink(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

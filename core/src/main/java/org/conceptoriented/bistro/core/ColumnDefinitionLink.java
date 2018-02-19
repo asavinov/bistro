@@ -57,13 +57,50 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     @Override
     public void eval() {
-        if(this.valuePaths != null) {
+        if(this.column.getOutput().getDefinitionType() == TableDefinitionType.RANGE) {
+            this.evalRange();
+        }
+        else if(this.valuePaths != null) {
             this.evalPaths();
         }
         else if(this.valueExprs != null) {
             this.evalExprs();
         }
     }
+
+    protected void evalRange() {
+
+        errors.clear(); // Clear state
+
+        Table typeTable = this.column.getOutput();
+
+        Table mainTable = this.column.getInput();
+
+        // Currently we make full scan by re-evaluating all existing input ids
+        Range mainRange = this.column.getInput().getIdRange();
+
+        //
+        // Prepare value paths/exprs for search/find
+        //
+        //List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
+        //List<Object[]> rhsParamValues = new ArrayList<>();
+        Object rhsResult;
+
+        for(long i=mainRange.start; i < mainRange.end; i++) {
+
+            // Retreive the fact property value
+            rhsResult = this.valuePaths.get(0).getValue(i);
+
+            //
+            // Find an element in the type table which corresponds to this value (can be null if not found and not added)
+            //
+            Object out = typeTable.findNumber((Number)rhsResult, this.isProj);
+
+            // Update output
+            this.column.setValue(i, out);
+        }
+    }
+
     protected void evalPaths() {
 
         errors.clear(); // Clear state
@@ -71,6 +108,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         Table typeTable = this.column.getOutput();
 
         Table mainTable = this.column.getInput();
+
         // Currently we make full scan by re-evaluating all existing input ids
         Range mainRange = this.column.getInput().getIdRange();
 
@@ -122,6 +160,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         }
 
     }
+
     protected void evalExprs() {
 
         errors.clear(); // Clear state
@@ -228,5 +267,11 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         this.valueExprs = Arrays.asList(valueExprs);
 
         this.keyColumns = Arrays.asList(keyColumns);
+    }
+
+    public ColumnDefinitionLink(Column column, ColumnPath valuePath) {
+        this.column = column;
+
+        this.valuePaths = Arrays.asList(valuePath);
     }
 }

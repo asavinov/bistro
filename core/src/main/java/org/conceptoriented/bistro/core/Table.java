@@ -495,6 +495,7 @@ public class Table implements Element {
         Range searchRange = this.getIdRange();
         long index = -1;
         for(long i=searchRange.start; i<searchRange.end; i++) { // Scan all records and compare
+            // OPTIMIZATION: We could create or use an index and then binary search
 
             boolean found = true;
             for(int j=0; j<columns.size(); j++) {
@@ -526,6 +527,50 @@ public class Table implements Element {
         if(index < 0 && append) {
             index = this.add();
             this.setValues(index, columns, values);
+        }
+
+        return index;
+    }
+
+    public long findNumber(Number value, boolean append) { // Find in range table (using inequality)
+        if(this.getDefinitionType() != TableDefinitionType.RANGE) {
+            return -1;
+        }
+
+        TableDefinitionRange def = (TableDefinitionRange)this.definition;
+
+        Column rangeColumn = def.getRangeColumn();
+        Column intervalColumn = def.getIntervalColumn();
+
+        Range searchRange = this.getIdRange();
+
+        // Data in a range table is known to be sorted
+        long index = rangeColumn.findSorted(value);
+
+        if(index >= 0) { // Found. On the interval border
+            ;
+        }
+        else if(index < 0) { // Not found. Inside interval.
+            index = -index - 1; // Insertion index
+
+            if(index == searchRange.start) { // Before first element
+                index = -1;
+            }
+            if(index >= searchRange.end) { // After last element
+                Number lastValue = (Number)rangeColumn.getValue(searchRange.end-1);
+                if((double)value >= (double)lastValue + (double)def.period) { // Too high value
+                    index = -1;
+                }
+            }
+            else { // Between two raster points
+                Number rangeValue = (Number)rangeColumn.getValue(index);
+                index = index - 1; // Left border
+            }
+        }
+
+        // If not found then add if requested
+        if(index < 0 && append) {
+            ; // TODO: Not implemented
         }
 
         return index;

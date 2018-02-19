@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.UUID;
 
 /**
@@ -32,6 +33,9 @@ public class ColumnData {
 
     private int id2offset(long id) {
         return this.startIdOffset + ((int) (id - this.idRange.start));
+    }
+    private long offset2id(int offset) {
+        return this.idRange.start + (offset - this.startIdOffset);
     }
 
     //
@@ -101,6 +105,27 @@ public class ColumnData {
         this.idRange.end = 0;
         this.startIdOffset = 0;
     }
+
+    // Return insert index
+    public long findSorted(Number value) {
+        // The data is supposed to be sorted (for example, range table or time stamps)
+        int insertIndex = Arrays.binarySearch(this.values, this.startIdOffset, (int)(this.startIdOffset+this.idRange.getLength()), value, new NumberComparator());
+        long id = offset2id(insertIndex);
+        return id;
+    }
+    class NumberComparator<T extends Number & Comparable> implements Comparator<T> {
+        public int compare( T a, T b ) throws ClassCastException {
+            return a.compareTo( b );
+        }
+    }
+    class DoubleComparator implements Comparator<Number> { // Cast to some type like Double
+        public int compare(Number a, Number b){
+            return Double.compare(a.doubleValue(), b.doubleValue());
+        }
+    }
+
+
+
 
     public ColumnData(long start, long end) {
         this.id = UUID.randomUUID();
