@@ -537,6 +537,9 @@ public class Table implements Element {
             return -1;
         }
 
+        if(value == null) return -1; // Not permitted in range tables
+        if(Double.isNaN(value.doubleValue())) return -1; // Not permitted in range tables
+
         TableDefinitionRange def = (TableDefinitionRange)this.definition;
 
         Column rangeColumn = def.getRangeColumn();
@@ -556,15 +559,18 @@ public class Table implements Element {
             if(index == searchRange.start) { // Before first element
                 index = -1;
             }
-            if(index >= searchRange.end) { // After last element
+            else if(index >= searchRange.end) { // After last element
                 Number lastValue = (Number)rangeColumn.getValue(searchRange.end-1);
                 if((double)value >= (double)lastValue + (double)def.period) { // Too high value
                     index = -1;
                 }
+                else {
+                    index = index - 1; // Closest left border
+                }
             }
             else { // Between two raster points
                 Number rangeValue = (Number)rangeColumn.getValue(index);
-                index = index - 1; // Left border
+                index = index - 1; // Closest left border
             }
         }
 

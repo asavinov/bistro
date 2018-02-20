@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
 
+import static java.util.Arrays.binarySearch;
+
 /**
  * It is responsible for explicit representation of a function, that is, a mapping from input ids to output columnPaths.
  * This representation can be changed by setting outputs for certain inputs. And it is possible to request outputs.
@@ -108,24 +110,14 @@ public class ColumnData {
 
     // Return insert index
     public long findSorted(Number value) {
+
         // The data is supposed to be sorted (for example, range table or time stamps)
-        int insertIndex = Arrays.binarySearch(this.values, this.startIdOffset, (int)(this.startIdOffset+this.idRange.getLength()), value, new NumberComparator());
+        int insertIndex = Arrays.binarySearch(this.values, this.startIdOffset, (int)(this.startIdOffset+this.idRange.getLength()), value);
+
         long id = offset2id(insertIndex);
+
         return id;
     }
-    class NumberComparator<T extends Number & Comparable> implements Comparator<T> {
-        public int compare( T a, T b ) throws ClassCastException {
-            return a.compareTo( b );
-        }
-    }
-    class DoubleComparator implements Comparator<Number> { // Cast to some type like Double
-        public int compare(Number a, Number b){
-            return Double.compare(a.doubleValue(), b.doubleValue());
-        }
-    }
-
-
-
 
     public ColumnData(long start, long end) {
         this.id = UUID.randomUUID();

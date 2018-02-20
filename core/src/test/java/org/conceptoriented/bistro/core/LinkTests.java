@@ -65,7 +65,6 @@ public class LinkTests {
     }
 
     Schema createSchema() {
-        // Create and configure: schema, tables, keyColumns
         Schema s = new Schema("My Schema");
 
         //
@@ -101,6 +100,80 @@ public class LinkTests {
         t2.add();
         t2a.setValue(1, 10.0);
         t2b.setValue(1, "ccc");
+
+        return s;
+    }
+
+    @Test
+    public void linkRangeTest() {
+        Schema s = createSchema2();
+        Table t = s.getTable("T");
+        Table t2 = s.getTable("T2");
+        Column t2c = t2.getColumn("C");
+
+        // Use column valuePaths
+        Column valueColumn = t2.getColumn("A");
+
+        t2c.link(
+                new ColumnPath(valueColumn)
+        );
+
+        s.eval();
+
+        // Check correctness of dependencies
+        List<Element> t2c_deps = t2c.getDependencies();
+        assertTrue(t2c_deps.contains(t2.getColumn("A")));
+        assertTrue(t2c_deps.contains(t));
+
+        // Range table has to be populated
+        assertEquals(5L, t.getLength());
+
+        // Check links
+        assertEquals(-1L, t2c.getValue(0));
+        assertEquals(0L, t2c.getValue(1));
+        assertEquals(0L, t2c.getValue(2));
+        assertEquals(1L, t2c.getValue(3));
+        assertEquals(4L, t2c.getValue(4));
+        assertEquals(4L, t2c.getValue(5)); // !!!
+        assertEquals(-1L, t2c.getValue(6));
+        assertEquals(-1L, t2c.getValue(7));
+    }
+
+    Schema createSchema2() { // For links to range table
+        Schema s = new Schema("My Schema 2");
+
+        //
+        // Table 1 (range table)
+        //
+        Table t1 = s.createTable("T");
+
+        Column t1a = s.createColumn("A", t1);
+        t1a.noop(true);
+        Column t1b = s.createColumn("B", t1);
+        t1b.noop(true);
+
+        t1.range(10.0, 20.0, 5L);
+
+        //
+        // Table 2 (referencing table)
+        //
+        Table t2 = s.createTable("T2");
+
+        Column t2a = s.createColumn("A", t2);
+        Column t2b = s.createColumn("B", t2);
+
+        Column t2c = s.createColumn("C", t2, t1);
+
+        // Add two records to link from
+        t2.add(8);
+        t2a.setValue(0, -200.0); // Too low
+        t2a.setValue(1, 10.0); // Exactly very first point
+        t2a.setValue(2, 20.0); // Between first and second points
+        t2a.setValue(3, 30.0); // Second point
+        t2a.setValue(4, 90.0); // Last point
+        t2a.setValue(5, 95.0); // After last point but within interval
+        t2a.setValue(6, 200.0); // Too high
+        t2a.setValue(7, Double.NaN); // NaN
 
         return s;
     }
