@@ -2,6 +2,9 @@ package org.conceptoriented.bistro.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.floor;
 
 public class TableDefinitionRange implements TableDefinition {
 
@@ -95,7 +98,13 @@ public class TableDefinitionRange implements TableDefinition {
     public List<Element> getDependencies() {
         List<Element> ret = new ArrayList<>();
 
-        // TODO:
+        // All incoming (populating) proj-columns (if any)
+        List<Column> projCols = this.table.getProjColumns();
+        // And their input tables which have to be populated before
+        List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());
+
+        ret.addAll(projCols);
+        ret.addAll(projTabs);
 
         return ret;
     }
@@ -164,7 +173,7 @@ public class TableDefinitionRange implements TableDefinition {
 
     }
 
-    long addNumber() { // Append a new number interval
+    long addNumber(Number value) { // Append a new interval the specified value belongs to as well as all intervals between the last one
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
@@ -177,37 +186,67 @@ public class TableDefinitionRange implements TableDefinition {
         // Constraint
         long intervalCount = ((Number)this.end).longValue();
 
-        //
-        // Generate one interval
-        //
-
         Double intervalValue = originValue;
         long intervalNo = 0;
-        if(this.table.getLength() > 0) {
-            intervalValue = (Double) rasterColumn.getValue(this.table.getIdRange().end - 1);
+        long id = -1;
+
+        //
+        // Special case: empty table (no interval to append after)
+        //
+        if(this.table.getLength() == 0) {
+
+            intervalNo = (long) Math.floor( ((Double)value - originValue) / intervalPeriod );
+            intervalValue = originValue + intervalNo * intervalPeriod;
+
+            // Add interval if it satisfies constraints
+            if(intervalNo >= 0 && intervalNo < intervalCount) {
+                // Append a new interval to the table
+                id = this.table.add();
+                rasterColumn.setValue(id, intervalValue);
+                if(intervalColumn != null) {
+                    intervalColumn.setValue(id, intervalNo);
+                }
+            }
+        }
+        //
+        // Append new interval(s) after an existing interval
+        //
+        else {
+
+            // Find initial (previous) interval
+            id = this.table.getIdRange().end - 1;
+            intervalValue = (Double) rasterColumn.getValue(id);
             if(intervalColumn != null) {
-                intervalNo = (long) intervalColumn.getValue(this.table.getIdRange().end - 1);
+                intervalNo = (long) intervalColumn.getValue(id);
             }
 
-            // Iterate to the next interval
-            intervalValue += intervalPeriod;
-            intervalNo++;
+            while(true) {
+                // If the current interval covers the value then break
+                if((double)value < intervalValue + intervalPeriod) {
+                    break;
+                }
+
+                // Iterate to the next interval
+                intervalValue += intervalPeriod;
+                intervalNo++;
+
+                // Add interval if it satisfies constraints
+                if(intervalNo >= 0 && intervalNo < intervalCount) {
+                    // Append a new interval to the table
+                    id = this.table.add();
+                    rasterColumn.setValue(id, intervalValue);
+                    if(intervalColumn != null) {
+                        intervalColumn.setValue(id, intervalNo);
+                    }
+                }
+                else {
+                    id = -1; // Does not satisfies constraints
+                    break;
+                }
+            }
         }
 
-        // Check constraint: dif the current interval is end
-        boolean isEnd = ! (intervalNo < intervalCount);
-        if(isEnd) {
-            return -1;
-        }
-
-        // Append a new interval to the table
-        long id = this.table.add();
-        rasterColumn.setValue(id, intervalValue);
-        if(intervalColumn != null) {
-            intervalColumn.setValue(id, intervalNo);
-        }
-
-        return id;
+        return id; // Return last appended interval - not necessarily that covering the value
     }
 
     public TableDefinitionRange(Table table, Object origin, Object period, Long length) {

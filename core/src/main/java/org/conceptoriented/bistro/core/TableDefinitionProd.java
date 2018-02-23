@@ -25,7 +25,7 @@ public class TableDefinitionProd implements TableDefinition {
         List<Table> keyTypes = keyCols.stream().map(x -> x.getOutput()).collect(Collectors.toList());
         ret.addAll(keyTypes);
 
-        // All incoming (populating) proj-columns
+        // All incoming (populating) proj-columns (if any)
         List<Column> projCols = this.table.getProjColumns();
         // And their input tables which have to be populated before
         List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());

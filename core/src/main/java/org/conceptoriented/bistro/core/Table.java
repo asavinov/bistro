@@ -551,35 +551,44 @@ public class Table implements Element {
 
         Range idRange = this.getIdRange();
 
-        // Data in a range table is known to be sorted
+        // Data in a range table is supposed to be sorted
         long index = rangeColumn.findSorted(value);
 
-        if(index < 0) { // Not found. The value is between two raster points (inside interval).
+        if(index >= 0) { // If positive, then it is id of the found value
+            ;
+        }
+        if(index < 0) { // If negatvie, then not found, and (-index-1) is id of the nearest greater value
+            index = -index - 1; // Insertion index. Id of the next greater value
 
-            long insertIndex = -index - 1; // Insertion index. Just before the next greater value
-
-            if(insertIndex == idRange.start) { // Before first element. Insertion in range not possible (range is supposed to be monotonically growing)
+            if(idRange.getLength() == 0) { // Special case: no elements
+                // Proj: insert interval corresponding to the value as the very first interval in the range
                 index = -1;
             }
-            else if(insertIndex >= idRange.end) { // After last element. Either belongs to last interval or append (of one or more intervals) is needed
+            else if(index == idRange.start) { // Before first element. Insertion in range not possible (range is supposed to be monotonically growing)
+                // Proj: no insertion possible before existing intervals
+                index = -1;
+            }
+            else if(index < idRange.end) { // Between two raster points of an existing interval
+                // Proj: no insertion needed - link to the existing interval
+                index = index - 1; // Closest left border
+            }
+            else if(index >= idRange.end) { // After last element
 
                 Number lastValue = (Number)rangeColumn.getValue(idRange.end-1);
 
-                if((double)value >= (double)lastValue + (double)def.period) { // Too high value
-                    index = -1;
-                }
-                else {
+                if((double)value < (double)lastValue + (double)def.period) {
+                    // Proj: no insertion needed - link to the existing interval
                     index = index - 1; // Closest left border
                 }
-            }
-            else { // Between two raster points of an existing interval.
-                Number rangeValue = (Number)rangeColumn.getValue(index);
-                index = index - 1; // Closest left border
+                else { // Too high value
+                    // Proj: insert interval corresponding to the value as well as all intervals before the last existing interval
+                    index = -1;
+                }
             }
 
-            // If not found then add if requested (and if can be appended at the end)
-            if(index >= 0 && append) {
-                def.addNumber();
+            // If not found, and can be appended, and requested, then append the value (interval and all previous intevals before the last existing one)
+            if(index < 0 && append) {
+                index = def.addNumber(value);
             }
         }
 
