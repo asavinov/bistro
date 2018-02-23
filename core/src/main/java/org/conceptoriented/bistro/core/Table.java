@@ -532,35 +532,39 @@ public class Table implements Element {
         return index;
     }
 
-    public long findNumber(Number value, boolean append) { // Find in range table (using inequality)
-        if(this.getDefinitionType() != TableDefinitionType.RANGE) {
+    // Use inequality for finding interval this number belongs to and return id of the record representing this interval
+    // This method works for number ranges (not date ranges)
+    public long findRange(Number value, boolean append) {
+
+        if(this.getDefinitionType() != TableDefinitionType.RANGE) { // Works only for range tables
             return -1;
         }
 
-        if(value == null) return -1; // Not permitted in range tables
-        if(Double.isNaN(value.doubleValue())) return -1; // Not permitted in range tables
+        // Range tables do not have nulls or NaNs
+        if(value == null) return -1;
+        if(Double.isNaN(value.doubleValue())) return -1;
 
         TableDefinitionRange def = (TableDefinitionRange)this.definition;
 
         Column rangeColumn = def.getRangeColumn();
         Column intervalColumn = def.getIntervalColumn();
 
-        Range searchRange = this.getIdRange();
+        Range idRange = this.getIdRange();
 
         // Data in a range table is known to be sorted
         long index = rangeColumn.findSorted(value);
 
-        if(index >= 0) { // Found. On the interval border
-            ;
-        }
-        else if(index < 0) { // Not found. Inside interval.
-            index = -index - 1; // Insertion index
+        if(index < 0) { // Not found. The value is between two raster points (inside interval).
 
-            if(index == searchRange.start) { // Before first element
+            long insertIndex = -index - 1; // Insertion index. Just before the next greater value
+
+            if(insertIndex == idRange.start) { // Before first element. Insertion in range not possible (range is supposed to be monotonically growing)
                 index = -1;
             }
-            else if(index >= searchRange.end) { // After last element
-                Number lastValue = (Number)rangeColumn.getValue(searchRange.end-1);
+            else if(insertIndex >= idRange.end) { // After last element. Either belongs to last interval or append (of one or more intervals) is needed
+
+                Number lastValue = (Number)rangeColumn.getValue(idRange.end-1);
+
                 if((double)value >= (double)lastValue + (double)def.period) { // Too high value
                     index = -1;
                 }
@@ -568,15 +572,15 @@ public class Table implements Element {
                     index = index - 1; // Closest left border
                 }
             }
-            else { // Between two raster points
+            else { // Between two raster points of an existing interval.
                 Number rangeValue = (Number)rangeColumn.getValue(index);
                 index = index - 1; // Closest left border
             }
-        }
 
-        // If not found then add if requested
-        if(index < 0 && append) {
-            ; // TODO: Not implemented
+            // If not found then add if requested (and if can be appended at the end)
+            if(index >= 0 && append) {
+                def.addNumber();
+            }
         }
 
         return index;

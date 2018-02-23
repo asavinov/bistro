@@ -1,5 +1,6 @@
 package org.conceptoriented.bistro.core;
 
+import java.util.Arrays;
 import java.util.List;
 
 class ColumnDefinitionProj extends ColumnDefinitionLink {
@@ -55,6 +56,13 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         if(keyColumns == null || keyColumns.length == 0) {
             this.keyColumns = column.getOutput().getKeyColumns();
         }
+
+        this.isProj = true;
+        this.validate();
+    }
+
+    public ColumnDefinitionProj(Column column, ColumnPath valuePath) {
+        super(column, valuePath);
 
         this.isProj = true;
         this.validate();

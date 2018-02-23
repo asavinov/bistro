@@ -376,7 +376,7 @@ public class Column implements Element {
         }
     }
 
-    public void link(ColumnPath valuePath) { // Link to range table (using inequality)
+    public void link(ColumnPath valuePath) { // Link to range table (using inequality as a condition)
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLink(this, valuePath);
@@ -414,6 +414,16 @@ public class Column implements Element {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valueExprs, keyColumns);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void proj(ColumnPath valuePath) { // Project to range table (using inequality as a condition)
+        this.setDefinitionType(ColumnDefinitionType.PROJ);
+
+        this.definition = new ColumnDefinitionProj(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

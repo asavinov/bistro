@@ -116,10 +116,12 @@ public class TableDefinitionRange implements TableDefinition {
     public void populateDatetime() {
         // TODO:
     }
+    long addDate() { // Append a new date interval
+        // TODO:
+        return -1;
+    }
 
     public void populateNumber() {
-
-        Schema schema = this.table.getSchema();
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
@@ -128,6 +130,8 @@ public class TableDefinitionRange implements TableDefinition {
         // Prepare parameters by converting or casting
         Double originValue = ((Number)this.origin).doubleValue();
         Double intervalPeriod = ((Number)this.period).doubleValue();
+
+        // Constraint
         long intervalCount = ((Number)this.end).longValue();
 
         //
@@ -140,13 +144,13 @@ public class TableDefinitionRange implements TableDefinition {
         // Start from 0 and continue iterating till the end is detected
         while(true) {
 
-            // Determine if the current interval is end (interpret interval according to options)
+            // Check constraint: dif the current interval is end
             boolean isEnd = ! (intervalNo < intervalCount);
             if(isEnd) {
                 break;
             }
 
-            // Insert this interval into the table
+            // Append a new interval to the table
             long id = this.table.add();
             rasterColumn.setValue(id, intervalValue);
             if(intervalColumn != null) {
@@ -158,6 +162,52 @@ public class TableDefinitionRange implements TableDefinition {
             intervalNo++;
         }
 
+    }
+
+    long addNumber() { // Append a new number interval
+
+        // Find columns to be set during population
+        Column rasterColumn = this.getRangeColumn();
+        Column intervalColumn = this.getIntervalColumn();
+
+        // Prepare parameters by converting or casting
+        Double originValue = ((Number)this.origin).doubleValue();
+        Double intervalPeriod = ((Number)this.period).doubleValue();
+
+        // Constraint
+        long intervalCount = ((Number)this.end).longValue();
+
+        //
+        // Generate one interval
+        //
+
+        Double intervalValue = originValue;
+        long intervalNo = 0;
+        if(this.table.getLength() > 0) {
+            intervalValue = (Double) rasterColumn.getValue(this.table.getIdRange().end - 1);
+            if(intervalColumn != null) {
+                intervalNo = (long) intervalColumn.getValue(this.table.getIdRange().end - 1);
+            }
+
+            // Iterate to the next interval
+            intervalValue += intervalPeriod;
+            intervalNo++;
+        }
+
+        // Check constraint: dif the current interval is end
+        boolean isEnd = ! (intervalNo < intervalCount);
+        if(isEnd) {
+            return -1;
+        }
+
+        // Append a new interval to the table
+        long id = this.table.add();
+        rasterColumn.setValue(id, intervalValue);
+        if(intervalColumn != null) {
+            intervalColumn.setValue(id, intervalNo);
+        }
+
+        return id;
     }
 
     public TableDefinitionRange(Table table, Object origin, Object period, Long length) {

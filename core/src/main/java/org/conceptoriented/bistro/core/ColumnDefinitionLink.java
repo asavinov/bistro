@@ -94,7 +94,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
             //
             // Find an element in the type table which corresponds to this value (can be null if not found and not added)
             //
-            Object out = typeTable.findNumber((Number)rhsResult, this.isProj);
+            Object out = typeTable.findRange((Number)rhsResult, this.isProj);
 
             // Update output
             this.column.setValue(i, out);
