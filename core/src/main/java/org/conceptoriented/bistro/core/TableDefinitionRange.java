@@ -2,6 +2,7 @@ package org.conceptoriented.bistro.core;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,39 +90,18 @@ public class TableDefinitionRange implements TableDefinition {
 
     @Override
     public void populate() {
-        if(this.rangeType.equals("Number")) {
-            this.populateNumber();
-        }
-        else if(this.rangeType.equals("Duration")) {
-            this.populateDuration();
-        }
-    }
-
-    protected void populateNumber() {
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
         Column intervalColumn = this.getIntervalColumn();
 
-        // Prepare parameters by converting or casting
-        Double originValue = ((Number)this.origin).doubleValue();
-        Double intervalPeriod = ((Number)this.period).doubleValue();
-
-        // Constraint
-        long intervalCount = ((Number)this.end).longValue();
-
-        //
-        // Generate all intervals
-        //
-
-        Double intervalValue = originValue;
-        long intervalNo = 0;
-
         // Start from 0 and continue iterating till the end is detected
+        Object intervalValue = this.origin;
+        long intervalNo = 0;
         while(true) {
 
             // Check constraint: dif the current interval is end
-            if(intervalNo >= intervalCount) {
+            if(intervalNo >= (long)this.end) {
                 break;
             }
 
@@ -132,50 +112,18 @@ public class TableDefinitionRange implements TableDefinition {
                 intervalColumn.setValue(id, intervalNo);
             }
 
-            // Iterate to the next interval
-            intervalValue += intervalPeriod;
-            intervalNo++;
-        }
-    }
-
-    public void populateDuration() {
-
-        // Find columns to be set during population
-        Column rasterColumn = this.getRangeColumn();
-        Column intervalColumn = this.getIntervalColumn();
-
-        // Prepare parameters by converting or casting
-        Instant originValue = (Instant)this.origin;
-        Duration intervalPeriod = (Duration)this.period;
-
-        // Constraint
-        long intervalCount = ((Number)this.end).longValue();
-
-        //
-        // Generate all intervals
-        //
-
-        Instant intervalValue = originValue;
-        long intervalNo = 0;
-
-        // Start from 0 and continue iterating till the end is detected
-        while(true) {
-
-            // Check constraint: dif the current interval is end
-            if(intervalNo >= intervalCount) {
-                break;
+            // Iterate the value
+            if(this.rangeType.equals("Number")) {
+                intervalValue = (Double)intervalValue + (Double)this.period;
+            }
+            else if(this.rangeType.equals("Duration")) {
+                intervalValue = ((Instant)intervalValue).plus((Duration)this.period);
+            }
+            else if(this.rangeType.equals("Period")) {
+                intervalValue = ((LocalDate)intervalValue).plus((Period)this.period);
             }
 
-            // Append a new interval to the table
-            long id = this.table.add();
-            rasterColumn.setValue(id, intervalValue);
-            if(intervalColumn != null) {
-                intervalColumn.setValue(id, intervalNo);
-            }
-
-            // Iterate to the next interval
-            intervalValue = intervalValue.plus(intervalPeriod);
-            intervalNo++;
+            intervalNo++; // Iterate interval number
         }
     }
 
@@ -277,9 +225,9 @@ public class TableDefinitionRange implements TableDefinition {
             this.origin = ((Instant)origin);
             this.period = (Duration)period;
         }
-        else if(period instanceof Period && origin instanceof Instant) {
+        else if(period instanceof Period && origin instanceof LocalDate) {
             this.rangeType = "Period";
-            this.origin = ((Instant)origin);
+            this.origin = ((LocalDate)origin);
             this.period = (Period)period;
         }
         else {

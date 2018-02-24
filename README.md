@@ -322,7 +322,7 @@ Thus project columns will always have some output value by linking to some exist
 
 ### Range tables
 
-> A *range* populates itself with records which represent intervals on some abstract axis
+> A *range* table populates itself with records which represent intervals on an axis of certain type
 
 A range table can be defined on a numeric axis. In this case, each its record will represent a numeric interval. For example, the following table will generate 5 numeric intervals starting from 10.0 and each interval having length 20.0:
 
@@ -331,6 +331,8 @@ myTable.range(
         10.0, 20.0, 5L
 );
 ```
+
+It is also possible to define ranges of time durations and date periods.
 
 A typical use of range tables is aggregation over (numeric or date) intervals usig inequality conditions as opposed to aggregation over discrete values using equality of values as a condition belonging to a group.
 
