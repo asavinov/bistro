@@ -234,3 +234,20 @@ public class LinkTests {
     }
 
 }
+
+// TODO: We need to implement convenience methods of range table for working with intervals like
+// find(value) - find interval for this value (if any) as its representative raster point or as two values (borders)
+// getLeft/getRight(i) or getStart(i)/getEnd(i) (return either values or indexes) which will return indexes like [i,i+1) depending on options
+// These should be specific only to range tables, so maybe implement them in Definition (which is essentially treated as a Column subclass with a field referencing its super-object)..
+// Use cases:
+// - in link-column, if we had a high value then we had to determine whether it is too high, or it still belongs to the last interval
+//   We had to do interval arithmetics which is wrong -instead, we have to call some method which determines whether this value belongs to some interval (i-th interval or whatever).
+
+// TODO: Update DefinitionProj validate() method accordingly to work with range target (maybe add validate for DefinitionLink and other defs)
+
+// TODO: The whole logic of proj depends on the isProj flag and is implemented in the find method of the table class.
+// In the case of range tables, we use findRange. However, it is unaware of intervals.
+// So we either we implement the interval-specific part ourselves, e.g,. find method returns only insert-point and we then decide what to insert and how to insert (interval-specific).
+// Or this find method is made interval-aware, that is, essentially a method of a range table, e.g., implemented in range table definition.
+// Note that currrently it is already interval-aware. Maybe rename it to findInterval or findInRange.
+// Note also that it will have to also work with Date ranges, so we need some kind of generic logic of procesing either in one generic method or in two implementations.

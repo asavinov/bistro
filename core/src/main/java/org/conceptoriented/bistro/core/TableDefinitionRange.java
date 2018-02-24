@@ -1,14 +1,18 @@
 package org.conceptoriented.bistro.core;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.floor;
-
 public class TableDefinitionRange implements TableDefinition {
 
     Table table; // Used only if materialized as a table
+
+    // Determines which data type is used for the range (Double, Duration, Period etc.)
+    String rangeType;
 
     // It is a point on the axis the counting starts from (not necessarily included in the range)
     // It could be some date in calendar (e.g., midnight) or it could be a mean value of a variable when producing quantiles
@@ -39,51 +43,25 @@ public class TableDefinitionRange implements TableDefinition {
         return columns.get(1);
     }
 
-    protected  boolean isDatetimeRange() {
-        return false;
-    }
-    protected  boolean isNumberRange() {
-
-        // Origin value represents the type of the raster values
-        if(!(this.origin instanceof Number)) {
-            return false;
-        }
-
-        if(!(this.period instanceof Number)) {
-            return false;
-        }
-
-        if(!(this.start instanceof Number) || !(this.end instanceof Number)) {
-            return false;
-        }
-
-        return true;
-    }
-
     void validate() {
 
-        if(this.isDatetimeRange()) {
-            ; // ZODO:
+        // At least one numeric column is needed to store the range values
+        Column rasterColumn = this.getRangeColumn();
+        if(rasterColumn == null) {
+            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A range table must have at least one noop column for storing range values."));
+            return;
         }
-        else if(this.isNumberRange()) {
-            // At least one numeric column is needed to store the range values
-            Column rasterColumn = this.getRangeColumn();
-            if(rasterColumn == null) {
-                this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A range table must have at least one noop column for storing range values."));
-            }
 
-            // This columns must be primitive one
-            if(!rasterColumn.getOutput().isPrimitive()) {
-                this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be a primitive column."));
-            }
-
-            // This column has to be noop
-            if(rasterColumn.getDefinitionType() != ColumnDefinitionType.NOOP) {
-                this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be NOOP column."));
-            }
+        // This columns must be primitive one
+        if(!rasterColumn.getOutput().isPrimitive()) {
+            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be a primitive column."));
+            return;
         }
-        else {
-            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "Cannot determine range type (numeric or datetime)."));
+
+        // This column has to be noop
+        if(rasterColumn.getDefinitionType() != ColumnDefinitionType.NOOP) {
+            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be NOOP column."));
+            return;
         }
     }
 
@@ -111,26 +89,15 @@ public class TableDefinitionRange implements TableDefinition {
 
     @Override
     public void populate() {
-        if(this.isDatetimeRange()) {
-            this.populateDatetime();
-        }
-        else if(this.isNumberRange()) {
+        if(this.rangeType.equals("Number")) {
             this.populateNumber();
         }
-        else {
-            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "Cannot determine range type (numeric or datetime)."));
+        else if(this.rangeType.equals("Duration")) {
+            this.populateDuration();
         }
     }
 
-    public void populateDatetime() {
-        // TODO:
-    }
-    long addDate() { // Append a new date interval
-        // TODO:
-        return -1;
-    }
-
-    public void populateNumber() {
+    protected void populateNumber() {
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
@@ -154,8 +121,7 @@ public class TableDefinitionRange implements TableDefinition {
         while(true) {
 
             // Check constraint: dif the current interval is end
-            boolean isEnd = ! (intervalNo < intervalCount);
-            if(isEnd) {
+            if(intervalNo >= intervalCount) {
                 break;
             }
 
@@ -170,10 +136,51 @@ public class TableDefinitionRange implements TableDefinition {
             intervalValue += intervalPeriod;
             intervalNo++;
         }
-
     }
 
-    long addNumber(Number value) { // Append a new interval the specified value belongs to as well as all intervals between the last one
+    public void populateDuration() {
+
+        // Find columns to be set during population
+        Column rasterColumn = this.getRangeColumn();
+        Column intervalColumn = this.getIntervalColumn();
+
+        // Prepare parameters by converting or casting
+        Instant originValue = (Instant)this.origin;
+        Duration intervalPeriod = (Duration)this.period;
+
+        // Constraint
+        long intervalCount = ((Number)this.end).longValue();
+
+        //
+        // Generate all intervals
+        //
+
+        Instant intervalValue = originValue;
+        long intervalNo = 0;
+
+        // Start from 0 and continue iterating till the end is detected
+        while(true) {
+
+            // Check constraint: dif the current interval is end
+            if(intervalNo >= intervalCount) {
+                break;
+            }
+
+            // Append a new interval to the table
+            long id = this.table.add();
+            rasterColumn.setValue(id, intervalValue);
+            if(intervalColumn != null) {
+                intervalColumn.setValue(id, intervalNo);
+            }
+
+            // Iterate to the next interval
+            intervalValue = intervalValue.plus(intervalPeriod);
+            intervalNo++;
+        }
+    }
+
+    // Append a new interval the specified value belongs to as well as all intervals between the last one
+    protected long addNumber(Number value) {
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
@@ -249,13 +256,38 @@ public class TableDefinitionRange implements TableDefinition {
         return id; // Return last appended interval - not necessarily that covering the value
     }
 
+    long addDate() { // Append a new date interval
+        // TODO:
+        return -1;
+    }
+
     public TableDefinitionRange(Table table, Object origin, Object period, Long length) {
         this.table = table;
 
-        this.origin = origin;
-        this.period = period;
+        this.validate();
+
+        // Determine type of range
+        if(period instanceof Number && origin instanceof Number) {
+            this.rangeType = "Number";
+            this.origin = ((Number)origin).doubleValue();
+            this.period = ((Number)period).doubleValue();
+        }
+        else if(period instanceof Duration && origin instanceof Instant) {
+            this.rangeType = "Duration";
+            this.origin = ((Instant)origin);
+            this.period = (Duration)period;
+        }
+        else if(period instanceof Period && origin instanceof Instant) {
+            this.rangeType = "Period";
+            this.origin = ((Instant)origin);
+            this.period = (Period)period;
+        }
+        else {
+            this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "Cannot determine range data type. Use appropriate data types in parameters."));
+        }
 
         this.start = (Long) 0L;
         this.end = (Long) length;
+
     }
 }

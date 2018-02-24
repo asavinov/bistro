@@ -35,7 +35,7 @@
 
 ## What is Bistro: a data processing engine
 
-Bistro is a light-weight *data processing engine* which changes the way data is being processed. As a *general-purpose* data processing engine, Bistro can be applied to many problems like data integration, data migration, extract-transform-load (ETL), big data processing, stream analytics, big data processing. 
+Bistro is a light-weight column-oriented *data processing engine* which radically changes the way data is being processed. As a *general-purpose* data processing engine, Bistro can be applied to such problems like big data processing, data integration, data migration, extract-transform-load (ETL), stream analytics, IoT analytics. Bistro is based on a novel data model and is an alternative to map-reduce, conventional SQL-like languages and other set-oriented approaches.
 
 ## How it works: a novel data processing paradigm
 
