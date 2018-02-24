@@ -1,5 +1,9 @@
 package org.conceptoriented.bistro.core;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 
 public class Table implements Element {
@@ -527,69 +531,6 @@ public class Table implements Element {
         if(index < 0 && append) {
             index = this.add();
             this.setValues(index, columns, values);
-        }
-
-        return index;
-    }
-
-    // Use inequality for finding interval this number belongs to and return id of the record representing this interval
-    // This method works for number ranges (not date ranges)
-    public long findRange(Number value, boolean append) {
-
-        if(this.getDefinitionType() != TableDefinitionType.RANGE) { // Works only for range tables
-            return -1;
-        }
-
-        // Range tables do not have nulls or NaNs
-        if(value == null) return -1;
-        if(Double.isNaN(value.doubleValue())) return -1;
-
-        TableDefinitionRange def = (TableDefinitionRange)this.definition;
-
-        Column rangeColumn = def.getRangeColumn();
-        Column intervalColumn = def.getIntervalColumn();
-
-        Range idRange = this.getIdRange();
-
-        // Data in a range table is supposed to be sorted
-        long index = rangeColumn.findSorted(value);
-
-        if(index >= 0) { // If positive, then it is id of the found value
-            ;
-        }
-        if(index < 0) { // If negatvie, then not found, and (-index-1) is id of the nearest greater value
-            index = -index - 1; // Insertion index. Id of the next greater value
-
-            if(idRange.getLength() == 0) { // Special case: no elements
-                // Proj: insert interval corresponding to the value as the very first interval in the range
-                index = -1;
-            }
-            else if(index == idRange.start) { // Before first element. Insertion in range not possible (range is supposed to be monotonically growing)
-                // Proj: no insertion possible before existing intervals
-                index = -1;
-            }
-            else if(index < idRange.end) { // Between two raster points of an existing interval
-                // Proj: no insertion needed - link to the existing interval
-                index = index - 1; // Closest left border
-            }
-            else if(index >= idRange.end) { // After last element
-
-                Number lastValue = (Number)rangeColumn.getValue(idRange.end-1);
-
-                if((double)value < (double)lastValue + (double)def.period) {
-                    // Proj: no insertion needed - link to the existing interval
-                    index = index - 1; // Closest left border
-                }
-                else { // Too high value
-                    // Proj: insert interval corresponding to the value as well as all intervals before the last existing interval
-                    index = -1;
-                }
-            }
-
-            // If not found, and can be appended, and requested, then append the value (interval and all previous intevals before the last existing one)
-            if(index < 0 && append) {
-                index = def.addNumber(value);
-            }
         }
 
         return index;

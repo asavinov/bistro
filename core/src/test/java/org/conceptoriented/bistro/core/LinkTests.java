@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -104,106 +106,110 @@ public class LinkTests {
         return s;
     }
 
-    @Test
-    public void linkRangeTest() {
-        Schema s = createSchema2();
-        Table t = s.getTable("T"); // Group range table
-        Table t2 = s.getTable("T2"); // Fact table
+    //
+    // Link and project to number range
+    //
 
-        Column t2a = t2.getColumn("A");
+    @Test
+    public void linkRangeNumberTest() {
+        Schema s = createSchemaNumber();
+        Table t = s.getTable("R"); // Group range table
+        Table f = s.getTable("F"); // Fact table
+
+        Column f_a = f.getColumn("A");
 
         //
         // Define link column
         //
-        Column t2c = t2.getColumn("C");
-        t2c.link(
-                new ColumnPath(t2a) // This column values will be mapped to intervals
+        Column f_b = f.getColumn("B");
+        f_b.link(
+                new ColumnPath(f_a) // This column values will be mapped to intervals
         );
 
         s.eval();
 
         // Check correctness of dependencies
-        List<Element> t2c_deps = t2c.getDependencies();
-        assertTrue(t2c_deps.contains(t2.getColumn("A")));
-        assertTrue(t2c_deps.contains(t));
+        List<Element> f_c_deps = f_b.getDependencies();
+        assertTrue(f_c_deps.contains(f.getColumn("A")));
+        assertTrue(f_c_deps.contains(t));
 
         // Population size
         assertEquals(5L, t.getLength());
 
         // Check links
-        assertEquals(-1L, t2c.getValue(0));
-        assertEquals(0L, t2c.getValue(1));
-        assertEquals(0L, t2c.getValue(2));
-        assertEquals(1L, t2c.getValue(3));
-        assertEquals(4L, t2c.getValue(4));
-        assertEquals(4L, t2c.getValue(5)); // !!!
-        assertEquals(-1L, t2c.getValue(6));
-        assertEquals(-1L, t2c.getValue(7));
+        assertEquals(-1L, f_b.getValue(0));
+        assertEquals(0L, f_b.getValue(1));
+        assertEquals(0L, f_b.getValue(2));
+        assertEquals(1L, f_b.getValue(3));
+        assertEquals(4L, f_b.getValue(4));
+        assertEquals(4L, f_b.getValue(5));
+        assertEquals(-1L, f_b.getValue(6));
+        assertEquals(-1L, f_b.getValue(7));
     }
 
     @Test
-    public void projRangeTest() {
-        Schema s = createSchema2();
-        Table t = s.getTable("T"); // Group range table
-        Table t2 = s.getTable("T2"); // Fact table
+    public void projRangeNumberTest() {
+        Schema s = createSchemaNumber();
+        Table t = s.getTable("R"); // Group range table
+        Table f = s.getTable("F"); // Fact table
 
         // Modify definition to allow for more intervals
         t.range(
                 10.0, // Origin: unchanged
                 20.0, // Step: unchanged
-                8L // Count: 7 instead of 5
+                8L // Count: 8 instead of 5
         );
 
         // Add more facts to be mapped to non-existing intervals
-        Column t2a = t2.getColumn("A");
-        t2a.setValue(6, 110.0); // 1 interval has to be added [110,130)
-        t2a.setValue(7, 160.0); // 2 intervals have to be added [130,150) and [150,170)
-        t2.add();
-        t2a.setValue(8, 260.0); // No intervals have to be added because exceeds the maximum count
+        Column f_a = f.getColumn("A");
+        f_a.setValue(6, 110.0); // 1 interval has to be added [110,130)
+        f_a.setValue(7, 160.0); // 2 intervals have to be added [130,150) and [150,170)
+        f.add();
+        f_a.setValue(8, 260.0); // No intervals have to be added because exceeds the maximum count
 
         //
         // Define proj column
         //
-        Column t2c = t2.getColumn("C");
-        t2c.proj(
-                new ColumnPath(t2.getColumn("A")) // This column values will be mapped to intervals
+        Column f_b = f.getColumn("B");
+        f_b.proj(
+                new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
         );
 
         s.eval();
 
         // Check correctness of dependencies
-        List<Element> t2c_deps = t2c.getDependencies();
-        assertTrue(t2c_deps.contains(t2.getColumn("A")));
-        assertTrue(!t2c_deps.contains(t)); // Proj column does not depend on the range table
+        List<Element> f_c_deps = f_b.getDependencies();
+        assertTrue(f_c_deps.contains(f.getColumn("A")));
+        assertTrue(!f_c_deps.contains(t)); // Proj column does not depend on the range table
 
         // Range table depends on the incoming proj-column and its input table
         List<Element> t_deps = t.getDependencies();
-        assertTrue(t_deps.contains(t2c));
-        assertTrue(t_deps.contains(t2));
+        assertTrue(t_deps.contains(f_b));
+        assertTrue(t_deps.contains(f));
 
         // Population size
         assertEquals(8L, t.getLength());
 
         // Check links
-        assertEquals(5L, t2c.getValue(6));
-        assertEquals(7L, t2c.getValue(7));
-        assertEquals(-1L, t2c.getValue(8));
+        assertEquals(5L, f_b.getValue(6));
+        assertEquals(7L, f_b.getValue(7));
+        assertEquals(-1L, f_b.getValue(8));
     }
 
-    Schema createSchema2() { // For links to range table
+    Schema createSchemaNumber() { // For links to range table
         Schema s = new Schema("My Schema 2");
 
         //
         // Table 1 (range table)
         //
-        Table t1 = s.createTable("T");
+        Table t = s.createTable("R");
 
-        Column t1a = s.createColumn("A", t1);
-        t1a.noop(true);
-        Column t1b = s.createColumn("B", t1);
-        t1b.noop(true);
+        Column t_a = s.createColumn("V", t);
+        t_a.noop(true);
+        Column t_i = s.createColumn("I", t);
+        t_i.noop(true);
 
-        t1.range(
+        t.range(
                 10.0, // Origin of the raster
                 20.0, // Step of the reaster (interval length)
                 5L // How many intervals in the raster
@@ -212,42 +218,155 @@ public class LinkTests {
         //
         // Table 2 (referencing table)
         //
-        Table t2 = s.createTable("T2");
+        Table f = s.createTable("F");
 
-        Column t2a = s.createColumn("A", t2);
-        Column t2b = s.createColumn("B", t2);
-
-        Column t2c = s.createColumn("C", t2, t1);
+        Column f_a = s.createColumn("A", f);
 
         // Add two records to link from
-        t2.add(8);
-        t2a.setValue(0, -200.0); // Too low
-        t2a.setValue(1, 10.0); // Exactly very first point
-        t2a.setValue(2, 20.0); // Between first and second points
-        t2a.setValue(3, 30.0); // Second point
-        t2a.setValue(4, 90.0); // Last point
-        t2a.setValue(5, 100.0); // After last point but within the last interval
-        t2a.setValue(6, 200.0); // Too high
-        t2a.setValue(7, Double.NaN); // NaN
+        f.add(8);
+        f_a.setValue(0, -200.0); // Too low
+        f_a.setValue(1, 10.0); // Exactly very first point
+        f_a.setValue(2, 20.0); // Between first and second points
+        f_a.setValue(3, 30.0); // Second point
+        f_a.setValue(4, 90.0); // Last point
+        f_a.setValue(5, 100.0); // After last point but within the last interval
+        f_a.setValue(6, 200.0); // Too high
+        f_a.setValue(7, Double.NaN); // NaN
+
+        Column f_b = s.createColumn("B", f, t);
 
         return s;
     }
 
+    //
+    // Link and project to duration range
+    //
+
+    @Test
+    public void linkRangeDurationTest() {
+        Schema s = createSchemaDuration();
+        Table t = s.getTable("R"); // Group range table
+        Table f = s.getTable("F"); // Fact table
+
+        Column f_a = f.getColumn("A");
+
+        //
+        // Define link column
+        //
+        Column f_b = f.getColumn("B");
+        f_b.link(
+                new ColumnPath(f_a) // This column values will be mapped to intervals
+        );
+
+        s.eval();
+
+        // Check correctness of dependencies
+        List<Element> f_c_deps = f_b.getDependencies();
+        assertTrue(f_c_deps.contains(f.getColumn("A")));
+        assertTrue(f_c_deps.contains(t));
+
+        // Population size
+        assertEquals(2L, t.getLength());
+
+        // Check links
+        assertEquals(-1L, f_b.getValue(0));
+        assertEquals(0L, f_b.getValue(1));
+        assertEquals(0L, f_b.getValue(2));
+        assertEquals(1L, f_b.getValue(3));
+        assertEquals(1L, f_b.getValue(4));
+        assertEquals(1L, f_b.getValue(5));
+        assertEquals(-1L, f_b.getValue(6));
+        assertEquals(-1L, f_b.getValue(7));
+    }
+
+    @Test
+    public void projRangeDurationTest() {
+        Schema s = createSchemaDuration();
+        Table t = s.getTable("R"); // Group range table
+        Table f = s.getTable("F"); // Fact table
+
+        // Modify definition to allow for more intervals
+        t.range(
+                Instant.parse("2018-01-01T00:45:00.00Z"),
+                Duration.ofHours(2),
+                5L // Count: 5 instead of 2
+        );
+
+        // Add more facts to be mapped to non-existing intervals
+        Column f_a = f.getColumn("A");
+        f_a.setValue(6, Instant.parse("2018-01-01T04:45:00.00Z")); // 1 interval has to be added
+        f_a.setValue(7, Instant.parse("2018-01-01T09:45:00.00Z")); // 2 intervals have to be added
+        f.add();
+        f_a.setValue(8, Instant.parse("2018-01-01T12:45:00.00Z")); // No intervals have to be added because exceeds the maximum count
+
+        //
+        // Define proj column
+        //
+        Column f_b = f.getColumn("B");
+        f_b.proj(
+                new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
+        );
+
+        s.eval();
+
+        // Check correctness of dependencies
+        List<Element> f_c_deps = f_b.getDependencies();
+        assertTrue(f_c_deps.contains(f.getColumn("A")));
+        assertTrue(!f_c_deps.contains(t)); // Proj column does not depend on the range table
+
+        // Range table depends on the incoming proj-column and its input table
+        List<Element> t_deps = t.getDependencies();
+        assertTrue(t_deps.contains(f_b));
+        assertTrue(t_deps.contains(f));
+
+        // Population size
+        assertEquals(5L, t.getLength());
+
+        // Check links
+        assertEquals(2L, f_b.getValue(6));
+        assertEquals(4L, f_b.getValue(7));
+        assertEquals(-1L, f_b.getValue(8));
+    }
+
+    Schema createSchemaDuration() { // For links to range table
+        Schema s = new Schema("My Schema 3");
+
+        //
+        // Table 1 (range table)
+        //
+        Table t = s.createTable("R");
+
+        Column t_a = s.createColumn("V", t);
+        t_a.noop(true);
+        Column t_i = s.createColumn("I", t);
+        t_i.noop(true);
+
+        t.range(
+                Instant.parse("2018-01-01T00:45:00.00Z"),
+                Duration.ofHours(2),
+                2L
+        );
+
+        //
+        // Table 2 (referencing table)
+        //
+        Table f = s.createTable("F");
+
+        Column f_a = s.createColumn("A", f);
+
+        // Add two records to link from
+        f.add(8);
+        f_a.setValue(0, Instant.parse("2017-01-01T00:00:00.00Z")); // Too low
+        f_a.setValue(1, Instant.parse("2018-01-01T00:45:00.00Z")); // Exactly very first point
+        f_a.setValue(2, Instant.parse("2018-01-01T01:46:00.00Z")); // Between first and second points
+        f_a.setValue(3, Instant.parse("2018-01-01T02:45:00.00Z")); // Second and last point
+        f_a.setValue(4, Instant.parse("2018-01-01T02:45:00.00Z")); // Last point
+        f_a.setValue(5, Instant.parse("2018-01-01T03:45:00.00Z")); // After last point but within the last interval
+        f_a.setValue(6, Instant.parse("2019-01-01T00:00:00.00Z")); // Too high
+        f_a.setValue(7, null); // null
+
+        Column f_b = s.createColumn("B", f, t);
+
+        return s;
+    }
 }
-
-// TODO: We need to implement convenience methods of range table for working with intervals like
-// find(value) - find interval for this value (if any) as its representative raster point or as two values (borders)
-// getLeft/getRight(i) or getStart(i)/getEnd(i) (return either values or indexes) which will return indexes like [i,i+1) depending on options
-// These should be specific only to range tables, so maybe implement them in Definition (which is essentially treated as a Column subclass with a field referencing its super-object)..
-// Use cases:
-// - in link-column, if we had a high value then we had to determine whether it is too high, or it still belongs to the last interval
-//   We had to do interval arithmetics which is wrong -instead, we have to call some method which determines whether this value belongs to some interval (i-th interval or whatever).
-
-// TODO: Update DefinitionProj validate() method accordingly to work with range target (maybe add validate for DefinitionLink and other defs)
-
-// TODO: The whole logic of proj depends on the isProj flag and is implemented in the find method of the table class.
-// In the case of range tables, we use findRange. However, it is unaware of intervals.
-// So we either we implement the interval-specific part ourselves, e.g,. find method returns only insert-point and we then decide what to insert and how to insert (interval-specific).
-// Or this find method is made interval-aware, that is, essentially a method of a range table, e.g., implemented in range table definition.
-// Note that currrently it is already interval-aware. Maybe rename it to findInterval or findInRange.
-// Note also that it will have to also work with Date ranges, so we need some kind of generic logic of procesing either in one generic method or in two implementations.

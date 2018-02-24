@@ -1,9 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Period;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +29,104 @@ public class TableDefinitionRange implements TableDefinition {
     // Options for interpreting an exact position of the interval and the corresponding conditions
     Object closed; // Which end is closed: left (default) or right
     Object label; // Does the point represents left end (default) or right end
+
+    protected Object getNext(Object value) {
+        Object nextValue = null;
+
+        if(this.rangeType.equals("Number")) {
+            nextValue = (Double)value + (Double)this.period;
+        }
+        else if(this.rangeType.equals("Duration")) {
+            nextValue = ((Instant)value).plus((Duration)this.period);
+        }
+        else if(this.rangeType.equals("Period")) {
+            nextValue = ((LocalDate)value).plus((Period)this.period);
+        }
+
+        return nextValue;
+    }
+
+    // Get interval value and number the specified value belongs to
+    protected Object[] getInterval(Object value) {
+
+        Object intervalValue = null;
+        Long intervalNo = -1L;
+
+        if(this.rangeType.equals("Number")) {
+            intervalNo = (long) Math.floor( ((double)value - (double)this.origin) / (double)this.period);
+            intervalValue = (double)this.origin + intervalNo * (double)this.period;
+        }
+        else if(this.rangeType.equals("Duration")) {
+            if(((Instant)value).isBefore((Instant)this.origin)) {
+                ; // Not found
+            }
+            else {
+                Instant pos = (Instant)this.origin;
+                Instant next;
+                for(intervalNo = 0L; intervalNo < (Long)this.end; intervalNo++) {
+                    next = pos.plus((Duration)this.period);
+                    if(next.isAfter((Instant)value)) {
+                        break;
+                    }
+                    pos = next;
+                }
+                intervalValue = pos;
+            }
+        }
+        else if(this.rangeType.equals("Period")) {
+            if(((LocalTime)value).isBefore((LocalTime)this.origin)) {
+                ; // Not found
+            }
+            LocalDate pos = (LocalDate)this.origin;
+            LocalDate next;
+            for(intervalNo = 0L; intervalNo < (Long)this.end; intervalNo++) {
+                next = pos.plus((Period)this.period);
+                if(next.isAfter((LocalDate)value)) {
+                    break;
+                }
+                pos = next;
+            }
+            intervalValue = pos;
+        }
+
+        Object[] ret = new Object[] { intervalValue, intervalNo };
+
+        return ret;
+    }
+
+
+    protected boolean inInterval(Object intervalValue, Object value) { // Check if the value is within the specified interval
+
+        if(this.rangeType.equals("Number")) {
+            double nextValue = (Double)intervalValue + (Double)this.period;
+
+            if((double)value >= (double)intervalValue && (double)value < nextValue) {
+                return true;
+            }
+        }
+        else if(this.rangeType.equals("Duration")) {
+            Instant nextValue = ((Instant)intervalValue).plus((Duration)this.period);
+
+            if(((Instant)value).equals((Instant)intervalValue)) {
+                return true;
+            }
+            if(((Instant)value).isAfter((Instant)intervalValue) && ((Instant)value).isBefore(nextValue)) {
+                return true;
+            }
+        }
+        else if(this.rangeType.equals("Period")) {
+            LocalDate nextValue = ((LocalDate)intervalValue).plus((Period)this.period);
+
+            if(((LocalDate)value).equals((LocalDate)intervalValue)) {
+                return true;
+            }
+            if(((LocalDate)value).isAfter((LocalDate)intervalValue) && ((LocalDate)value).isBefore(nextValue)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     protected Column getRangeColumn() {
         List<Column> columns = this.table.getColumns();
@@ -112,46 +207,29 @@ public class TableDefinitionRange implements TableDefinition {
                 intervalColumn.setValue(id, intervalNo);
             }
 
-            // Iterate the value
-            if(this.rangeType.equals("Number")) {
-                intervalValue = (Double)intervalValue + (Double)this.period;
-            }
-            else if(this.rangeType.equals("Duration")) {
-                intervalValue = ((Instant)intervalValue).plus((Duration)this.period);
-            }
-            else if(this.rangeType.equals("Period")) {
-                intervalValue = ((LocalDate)intervalValue).plus((Period)this.period);
-            }
-
+            intervalValue = this.getNext(intervalValue); // Iterate the value
             intervalNo++; // Iterate interval number
         }
     }
 
     // Append a new interval the specified value belongs to as well as all intervals between the last one
-    protected long addNumber(Number value) {
+    protected long add(Object value) {
 
         // Find columns to be set during population
         Column rasterColumn = this.getRangeColumn();
         Column intervalColumn = this.getIntervalColumn();
 
-        // Prepare parameters by converting or casting
-        Double originValue = ((Number)this.origin).doubleValue();
-        Double intervalPeriod = ((Number)this.period).doubleValue();
-
         // Constraint
         long intervalCount = ((Number)this.end).longValue();
 
-        Double intervalValue = originValue;
+        Object intervalValue = this.origin;
         long intervalNo = 0;
         long id = -1;
+        if(this.table.getLength() == 0) { // Special case: empty table (no interval to append after)
 
-        //
-        // Special case: empty table (no interval to append after)
-        //
-        if(this.table.getLength() == 0) {
-
-            intervalNo = (long) Math.floor( ((Double)value - originValue) / intervalPeriod );
-            intervalValue = originValue + intervalNo * intervalPeriod;
+            Object[] interval = this.getInterval(value);
+            intervalValue = interval[0];
+            intervalNo = (Long)interval[1];
 
             // Add interval if it satisfies constraints
             if(intervalNo >= 0 && intervalNo < intervalCount) {
@@ -163,26 +241,23 @@ public class TableDefinitionRange implements TableDefinition {
                 }
             }
         }
-        //
-        // Append new interval(s) after an existing interval
-        //
-        else {
+        else { // Append new interval(s) after an existing interval
 
             // Find initial (previous) interval
             id = this.table.getIdRange().end - 1;
-            intervalValue = (Double) rasterColumn.getValue(id);
+            intervalValue = rasterColumn.getValue(id);
             if(intervalColumn != null) {
                 intervalNo = (long) intervalColumn.getValue(id);
             }
 
             while(true) {
                 // If the current interval covers the value then break
-                if((double)value < intervalValue + intervalPeriod) {
+                if(this.inInterval(intervalValue, value)) {
                     break;
                 }
 
                 // Iterate to the next interval
-                intervalValue += intervalPeriod;
+                intervalValue = this.getNext(intervalValue);
                 intervalNo++;
 
                 // Add interval if it satisfies constraints
@@ -204,9 +279,62 @@ public class TableDefinitionRange implements TableDefinition {
         return id; // Return last appended interval - not necessarily that covering the value
     }
 
-    long addDate() { // Append a new date interval
-        // TODO:
-        return -1;
+    // Use inequality for finding interval this object belongs to and return id of the record representing this interval
+    protected long findRange(Object value, boolean append) {
+
+        // Range tables do not have nulls or NaNs
+        if(value == null) return -1;
+        if(!(value instanceof Number || value instanceof Instant || value instanceof LocalDate)) {
+            return -1; // Wrong use
+        }
+
+        Column rangeColumn = this.getRangeColumn();
+        Column intervalColumn = this.getIntervalColumn();
+
+        Range idRange = this.table.getIdRange();
+
+        long index = rangeColumn.findSorted(value); // Data in a range table is supposed to be sorted
+
+        if(index >= 0) { // If positive, then it is id of the found value
+            ;
+        }
+        if(index < 0) { // If negatvie, then not found, and (-index-1) is id of the nearest greater value
+            index = -index - 1; // Insertion index. Id of the next greater value
+
+            if(idRange.getLength() == 0) { // Special case: no elements
+                // Proj: insert interval corresponding to the value as the very first interval in the range
+                index = -1;
+            }
+            else if(index == idRange.start) { // Before first element. Insertion in range not possible (range is supposed to be monotonically growing)
+                // Proj: no insertion possible before existing intervals
+                index = -1;
+            }
+            else if(index < idRange.end) { // Between two raster points of an existing interval
+                // Proj: no insertion needed - link to the existing interval
+                index = index - 1; // Closest left border
+            }
+            else if(index >= idRange.end) { // After last element
+
+                Object lastValue = rangeColumn.getValue(idRange.end-1);
+
+                boolean inInterval = this.inInterval(lastValue, value);
+                if(inInterval) {
+                    // Proj: no insertion needed - link to the existing interval
+                    index = index - 1; // Closest left border
+                }
+                else { // Too high value
+                    // Proj: insert interval corresponding to the value as well as all intervals before the last existing interval
+                    index = -1;
+                }
+            }
+
+            // If not found, and can be appended, and requested, then append the value (interval and all previous intevals before the last existing one)
+            if(index < 0 && append) {
+                index = this.add(value); // Add one interval as well as intervals between the last one
+            }
+        }
+
+        return index;
     }
 
     public TableDefinitionRange(Table table, Object origin, Object period, Long length) {

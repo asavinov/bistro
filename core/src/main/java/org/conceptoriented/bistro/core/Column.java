@@ -68,7 +68,7 @@ public class Column implements Element {
 
     protected void removeAll() { this.data.removeAll(); this.isDirty = true; }
 
-    protected long findSorted(Number value) { return this.data.findSorted(value); }
+    protected long findSorted(Object value) { return this.data.findSorted(value); }
 
     //
     // Element interface

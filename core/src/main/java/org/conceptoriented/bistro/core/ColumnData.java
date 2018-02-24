@@ -109,7 +109,7 @@ public class ColumnData {
     }
 
     // Return insert index
-    public long findSorted(Number value) {
+    public long findSorted(Object value) {
 
         // The data is supposed to be sorted (for example, range table or time stamps)
         int insertIndex = Arrays.binarySearch(this.values, this.startIdOffset, (int)(this.startIdOffset+this.idRange.getLength()), value);

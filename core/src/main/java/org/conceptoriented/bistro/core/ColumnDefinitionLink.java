@@ -73,6 +73,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         errors.clear(); // Clear state
 
         Table typeTable = this.column.getOutput();
+        TableDefinitionRange rangeZableDef = (TableDefinitionRange)typeTable.definition;
 
         Table mainTable = this.column.getInput();
 
@@ -88,13 +89,13 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
         for(long i=mainRange.start; i < mainRange.end; i++) {
 
-            // Retreive the fact property value
+            // Retrieve the fact property value
             rhsResult = this.valuePaths.get(0).getValue(i);
 
             //
             // Find an element in the type table which corresponds to this value (can be null if not found and not added)
             //
-            Object out = typeTable.findRange((Number)rhsResult, this.isProj);
+            Object out = rangeZableDef.findRange(rhsResult, this.isProj);
 
             // Update output
             this.column.setValue(i, out);
