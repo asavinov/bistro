@@ -101,14 +101,17 @@ public class Example1 {
         // Calculate column
         value = calc.getValue(0); // value = 6
         value = calc.getValue(1); // value = 4
+        if(((Number)value).longValue() != 4) System.out.println(">>> UNEXPECTED RESULT.");
 
         // Link column
         value = link.getValue(0); // value = 1 (id of fridge)
         value = link.getValue(1); // value = 0 (id of oven)
         value = link.getValue(2); // value = 1 (id of fridge)
+        if(((Number)value).longValue() != 1) System.out.println(">>> UNEXPECTED RESULT.");
 
         // Accu column
         value = counts.getValue(0); // 1 event from fridge
         value = counts.getValue(1); // 2 events from oven
+        if(((Number)value).longValue() != 2) System.out.println(">>> UNEXPECTED RESULT.");
     }
 }

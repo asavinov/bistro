@@ -1,12 +1,12 @@
 ```
   ____  _     _
  | __ )(_)___| |_ _ __ ___  ___________________________
- |  _ \| / __| __| '__/ _ \                            
+ |  _ \| / __| __| '__/ _ \ 
  | |_) | \__ \ |_| | | (_) |  C O L U M N S  F I R S T 
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-* [Bistro: Calculate-Link-Accumulate](#bistro-calculate-link-accumulate)
+* [Bistro: columns first](#bistro-columns-first)
     * [What is Bistro: a data processing engine](#what-is-bistro-a-data-processing-engine)
     * [How it works: a novel data processing paradigm](#how-it-works-a-novel-data-processing-paradigm)
     * [Formal basis: Concept-Oriented Model](#formal-basis-concept-oriented-model)
@@ -31,7 +31,7 @@
     * [Schema evaluation](#schema-evaluation)
 * [More information](#more-information)
 
-# Bistro: Calculate-Link-Accumulate
+# Bistro: columns first
 
 ## What is Bistro: a data processing engine
 

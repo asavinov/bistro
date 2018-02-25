@@ -30,6 +30,17 @@ public class TableDefinitionRange implements TableDefinition {
     Object closed; // Which end is closed: left (default) or right
     Object label; // Does the point represents left end (default) or right end
 
+    private Column rangeColumn;
+    protected Column getRangeColumn() {
+        List<Column> columns = this.table.getColumns();
+        return columns.get(0);
+    }
+    private Column intervalColumn;
+    protected Column getIntervalColumn() {
+        List<Column> columns = this.table.getColumns();
+        return columns.get(1);
+    }
+
     protected Object getNext(Object value) {
         Object nextValue = null;
 
@@ -94,7 +105,6 @@ public class TableDefinitionRange implements TableDefinition {
         return ret;
     }
 
-
     protected boolean inInterval(Object intervalValue, Object value) { // Check if the value is within the specified interval
 
         if(this.rangeType.equals("Number")) {
@@ -128,34 +138,22 @@ public class TableDefinitionRange implements TableDefinition {
         return false;
     }
 
-    protected Column getRangeColumn() {
-        List<Column> columns = this.table.getColumns();
-
-        return columns.get(0);
-    }
-    protected Column getIntervalColumn() {
-        List<Column> columns = this.table.getColumns();
-
-        return columns.get(1);
-    }
-
     void validate() {
 
         // At least one numeric column is needed to store the range values
-        Column rasterColumn = this.getRangeColumn();
-        if(rasterColumn == null) {
+        if(this.rangeColumn == null) {
             this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A range table must have at least one noop column for storing range values."));
             return;
         }
 
         // This columns must be primitive one
-        if(!rasterColumn.getOutput().isPrimitive()) {
+        if(!this.rangeColumn.getOutput().isPrimitive()) {
             this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be a primitive column."));
             return;
         }
 
         // This column has to be noop
-        if(rasterColumn.getDefinitionType() != ColumnDefinitionType.NOOP) {
+        if(this.rangeColumn.getDefinitionType() != ColumnDefinitionType.NOOP) {
             this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be NOOP column."));
             return;
         }
@@ -186,10 +184,6 @@ public class TableDefinitionRange implements TableDefinition {
     @Override
     public void populate() {
 
-        // Find columns to be set during population
-        Column rasterColumn = this.getRangeColumn();
-        Column intervalColumn = this.getIntervalColumn();
-
         // Start from 0 and continue iterating till the end is detected
         Object intervalValue = this.origin;
         long intervalNo = 0;
@@ -202,9 +196,9 @@ public class TableDefinitionRange implements TableDefinition {
 
             // Append a new interval to the table
             long id = this.table.add();
-            rasterColumn.setValue(id, intervalValue);
-            if(intervalColumn != null) {
-                intervalColumn.setValue(id, intervalNo);
+            this.rangeColumn.setValue(id, intervalValue);
+            if(this.intervalColumn != null) {
+                this.intervalColumn.setValue(id, intervalNo);
             }
 
             intervalValue = this.getNext(intervalValue); // Iterate the value
@@ -214,10 +208,6 @@ public class TableDefinitionRange implements TableDefinition {
 
     // Append a new interval the specified value belongs to as well as all intervals between the last one
     protected long add(Object value) {
-
-        // Find columns to be set during population
-        Column rasterColumn = this.getRangeColumn();
-        Column intervalColumn = this.getIntervalColumn();
 
         // Constraint
         long intervalCount = ((Number)this.end).longValue();
@@ -235,9 +225,9 @@ public class TableDefinitionRange implements TableDefinition {
             if(intervalNo >= 0 && intervalNo < intervalCount) {
                 // Append a new interval to the table
                 id = this.table.add();
-                rasterColumn.setValue(id, intervalValue);
-                if(intervalColumn != null) {
-                    intervalColumn.setValue(id, intervalNo);
+                this.rangeColumn.setValue(id, intervalValue);
+                if(this.intervalColumn != null) {
+                    this.intervalColumn.setValue(id, intervalNo);
                 }
             }
         }
@@ -245,9 +235,9 @@ public class TableDefinitionRange implements TableDefinition {
 
             // Find initial (previous) interval
             id = this.table.getIdRange().end - 1;
-            intervalValue = rasterColumn.getValue(id);
-            if(intervalColumn != null) {
-                intervalNo = (long) intervalColumn.getValue(id);
+            intervalValue = this.rangeColumn.getValue(id);
+            if(this.intervalColumn != null) {
+                intervalNo = (long) this.intervalColumn.getValue(id);
             }
 
             while(true) {
@@ -264,9 +254,9 @@ public class TableDefinitionRange implements TableDefinition {
                 if(intervalNo >= 0 && intervalNo < intervalCount) {
                     // Append a new interval to the table
                     id = this.table.add();
-                    rasterColumn.setValue(id, intervalValue);
-                    if(intervalColumn != null) {
-                        intervalColumn.setValue(id, intervalNo);
+                    this.rangeColumn.setValue(id, intervalValue);
+                    if(this.intervalColumn != null) {
+                        this.intervalColumn.setValue(id, intervalNo);
                     }
                 }
                 else {
@@ -288,12 +278,9 @@ public class TableDefinitionRange implements TableDefinition {
             return -1; // Wrong use
         }
 
-        Column rangeColumn = this.getRangeColumn();
-        Column intervalColumn = this.getIntervalColumn();
-
         Range idRange = this.table.getIdRange();
 
-        long index = rangeColumn.findSorted(value); // Data in a range table is supposed to be sorted
+        long index = this.rangeColumn.findSorted(value); // Data in a range table is supposed to be sorted
 
         if(index >= 0) { // If positive, then it is id of the found value
             ;
@@ -315,7 +302,7 @@ public class TableDefinitionRange implements TableDefinition {
             }
             else if(index >= idRange.end) { // After last element
 
-                Object lastValue = rangeColumn.getValue(idRange.end-1);
+                Object lastValue = this.rangeColumn.getValue(idRange.end-1);
 
                 boolean inInterval = this.inInterval(lastValue, value);
                 if(inInterval) {
@@ -339,6 +326,10 @@ public class TableDefinitionRange implements TableDefinition {
 
     public TableDefinitionRange(Table table, Object origin, Object period, Long length) {
         this.table = table;
+
+        // Find columns to be set during population
+        this.rangeColumn = this.getRangeColumn();
+        this.intervalColumn = this.getIntervalColumn();
 
         this.validate();
 

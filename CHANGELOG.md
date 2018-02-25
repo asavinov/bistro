@@ -1,9 +1,13 @@
 # Change Log
 
+* v0.6.0 (2018-02-25)
+    * Link and project columns to range tables
+    * Range tables
+    * Rolling accumulate columns
 * v0.5.0 (2017-12-28)
-    * Product tables 
-    * Project columns 
-    * Key columns 
+    * Product tables
+    * Project columns
+    * Key columns
     * Where (filter) functions
     * Evaluation of both tables and columns
 * v0.4.0 (2017-11-19) - Variable number of arguments instead of arrays, new examples, refactoring column definitions

@@ -21,7 +21,7 @@ configurations.all {
 
 jar {
     baseName = 'bistro-examples'
-    version =  '0.6.0-SNAPSHOT'
+    version =  '0.6.0'
 
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
@@ -39,11 +39,11 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-examples'
-version = '0.6.0-SNAPSHOT'
+version = '0.6.0'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.6.0-SNAPSHOT")
-    compile("org.conceptoriented:bistro-formula:0.6.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.6.0")
+    compile("org.conceptoriented:bistro-formula:0.6.0")
 
     antlr("org.antlr:antlr4:4.7.1")
 

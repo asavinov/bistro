@@ -98,13 +98,19 @@ public class Example4 {
         Object value;
 
         value = itemsAmount.getValue(32); // value = 533.75 = 25 * 21.35
+        if(Math.abs((double)value - 533.75) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
         value = itemsProduct.getValue(32); // value = 3
+        if(((Number)value).longValue() != 3) System.out.println(">>> UNEXPECTED RESULT.");
 
         value = productsAmount.getValue(3); // value = 533.75 * 1 item
+        if(Math.abs((double)value - 533.75) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
         value = productsCategory.getValue(3); // value = 2
+        if(((Number)value).longValue() != 2) System.out.println(">>> UNEXPECTED RESULT.");
 
         value = categoriesAmount.getValue(2); // value = 533.75 * 1 product
+        if(Math.abs((double)value - 533.75) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
         value = categoriesName.getValue(2); // value = "Oil"
+        if(!((String)value).equals("Oil")) System.out.println(">>> UNEXPECTED RESULT.");
     }
 
 }

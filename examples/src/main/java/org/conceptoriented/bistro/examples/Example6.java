@@ -79,21 +79,21 @@ public class Example6 {
         value = spanDaily.getValue(6); // value = 1.860920666013707
         value = spanDaily.getValue(7); // value = 2.514506769825934
         value = spanDaily.getValue(99); // value = 24.29761718053468
-        if(Math.abs((double)value - 24.29761718053468) > 1e-10) System.out.println("UNEXPECTED RESULT.");
+        if(Math.abs((double)value - 24.29761718053468) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
         value = spanWeekly.getValue(0); // value = 0.2792906018712485
         value = spanWeekly.getValue(1); // value = 0.546182019205143
         value = spanWeekly.getValue(6); // value = 1.6796769410665702
         value = spanWeekly.getValue(7); // value = 1.7596015920275978
         value = spanWeekly.getValue(99); // value = 16.36032122029923
-        if(Math.abs((double)value - 16.36032122029923) > 1e-10) System.out.println("UNEXPECTED RESULT.");
+        if(Math.abs((double)value - 16.36032122029923) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
         value = spanWeeklyExp.getValue(0); // value = 1.23694526739464
         value = spanWeeklyExp.getValue(1); // value = 1.6370774693408667
         value = spanWeeklyExp.getValue(6); // value = 1.6303675306364669
         value = spanWeeklyExp.getValue(7); // value = 2.1895729057377022
         value = spanWeeklyExp.getValue(99); // value = 20.678198203000097
-        if(Math.abs((double)value - 20.678198203000097) > 1e-10) System.out.println("UNEXPECTED RESULT.");
+        if(Math.abs((double)value - 20.678198203000097) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 
 }

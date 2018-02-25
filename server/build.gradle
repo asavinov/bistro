@@ -15,9 +15,13 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 jar {
     baseName = 'bistro-server'
-    version =  '0.6.0-SNAPSHOT'
+    version =  '0.6.0'
 }
 
 repositories {
@@ -31,10 +35,10 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-server'
-version = '0.6.0-SNAPSHOT'
+version = '0.6.0'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.6.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.6.0")
     testCompile("junit:junit:4.12")
 }
 
@@ -51,7 +55,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-server'
-            //version '0.6.0-SNAPSHOT'
+            //version '0.6.0'
 
             //artifact jar
             artifact sourcesJar

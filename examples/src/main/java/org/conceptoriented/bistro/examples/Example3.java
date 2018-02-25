@@ -80,6 +80,7 @@ public class Example3 {
         Object value;
 
         value = ordersAmount.getValue(0); // value = 1505.0
+        if(Math.abs((double)value - 1505.0) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 
 }
