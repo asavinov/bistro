@@ -65,7 +65,7 @@ public class Example3 {
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,
-                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
+                (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
                 items.getColumn("Amount")
         );
 

@@ -14,18 +14,18 @@ public class Expr implements Expression {
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
-    Evaluator evaluateLambda;
+    EvaluatorCalc evaluateLambda;
     @Override public Object eval(Object[] params) throws BistroError {
         return evaluateLambda.eval(params);
     }
 
-    public Expr(Evaluator eval, ColumnPath... params) {
+    public Expr(EvaluatorCalc eval, ColumnPath... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new ColumnPath[]{};
         this.setParameterPaths(Arrays.asList(params));
     }
-    public Expr(Evaluator eval, Column... params) {
+    public Expr(EvaluatorCalc eval, Column... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new Column[]{};

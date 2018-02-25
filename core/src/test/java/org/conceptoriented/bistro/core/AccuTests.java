@@ -37,29 +37,13 @@ public class AccuTests {
         ta.setDefaultValue(0.0);
         ta.accu(
                 t2g,
-                p -> 2.0 * (Double)p[0] + (Double)p[1],
+                (a,p) -> 2.0 * (Double)p[0] + (Double)a,
                 t2.getColumn("Id")
         );
         ta.eval();
 
         // Check correctness of dependencies
         List<Element> ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
-        assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-
-        // Expression
-        ta.accu(
-                new ColumnPath(t2g),
-                new CustomAccuExpr(new ColumnPath(t2.getColumn("Id")))
-        );
-        s.eval(); // It has to also eval the accu (group) keyColumns
-
-        // Check correctness of dependencies
-        ta_deps = ta.getDependencies();
         assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
         assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
 
@@ -117,22 +101,4 @@ public class AccuTests {
         return schema;
     }
 
-}
-
-class CustomAccuExpr implements Expression {
-
-    List<ColumnPath> inputPaths = new ArrayList<>(); // The expression parameters are bound to these input column valuePaths
-    @Override public void setParameterPaths(List<ColumnPath> paths) { this.inputPaths.addAll(paths); }
-    @Override public List<ColumnPath> getParameterPaths() { return inputPaths; }
-
-    @Override public Object eval(Object[] params) {
-        double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
-        double outVal = params[1] == null ? Double.NaN : ((Number)params[1]).doubleValue();
-        return 2.0 * param + outVal; // " 2.0 * [Id] + [out] "
-    }
-    public CustomAccuExpr() {
-    }
-    public CustomAccuExpr(ColumnPath... params) {
-        this.setParameterPaths(Arrays.asList(params));
-    }
 }

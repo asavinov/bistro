@@ -72,12 +72,12 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionCalc(Column column, Evaluator lambda, ColumnPath[] paths) {
+    public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, ColumnPath[] paths) {
         this.column = column;
         this.expr = new Expr(lambda, paths);
     }
 
-    public ColumnDefinitionCalc(Column column, Evaluator lambda, Column[] columns) {
+    public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, Column[] columns) {
         this.column = column;
         ColumnPath[] paths = new ColumnPath[columns.length];
         for (int i = 0; i < columns.length; i++) {

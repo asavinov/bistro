@@ -142,8 +142,9 @@ public class Tests {
         Expression expr = new FormulaExp4j(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
         ta.accu(
-                new ColumnPath(t2g),
-                expr
+                t2g,
+                (a,p) -> (Double)a + 2.0 * (Double)p[0],
+                t2.getColumn("Id")
         );
         ta.eval();
 

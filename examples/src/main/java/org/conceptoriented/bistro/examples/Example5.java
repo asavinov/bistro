@@ -71,7 +71,8 @@ public class Example5
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,
-                new FormulaExp4j("[out] + [Amount]", items)
+                (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items)
+                itemsAmount
         );
 
         // [Order].[Total Amount] = SUM [OrderDetails].[Amount]
@@ -79,7 +80,8 @@ public class Example5
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,
-                new FormulaExp4j("[out] + [Amount]", items)
+                (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items),
+                itemsAmount
         );
 
         schema.eval();

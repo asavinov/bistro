@@ -310,7 +310,7 @@ public class Column implements Element {
     // Calcuate column
     //
 
-    public void calc(Evaluator lambda, ColumnPath... paths) {
+    public void calc(EvaluatorCalc lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, paths);
@@ -321,7 +321,7 @@ public class Column implements Element {
         }
     }
 
-    public void calc(Evaluator lambda, Column... columns) {
+    public void calc(EvaluatorCalc lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, columns);
@@ -434,34 +434,22 @@ public class Column implements Element {
     // Accumulate column
     //
 
-    // Evaluator + parameters OR Expression + no params
-    public void accu(ColumnPath groupPath, Evaluator lambda, ColumnPath... paths) {
+    // EvaluatorCalc + parameters OR Expression + no params
+    public void accu(ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
-        Expression accuExpr;
-        if(lambda instanceof Expression)
-            accuExpr = (Expression)lambda;
-        else
-            accuExpr = new Expr(lambda, paths);
-
-        this.definition = new ColumnDefinitionAccu(this, groupPath, accuExpr);
+        this.definition = new ColumnDefinitionAccu(this, groupPath, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    // Evaluator + parameters OR Expression + no params
-    public void accu(Column groupColumn, Evaluator lambda, Column... columns) {
+    // EvaluatorCalc + parameters OR Expression + no params
+    public void accu(Column groupColumn, EvaluatorAccu lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
-        Expression accuExpr;
-        if(lambda instanceof Expression)
-            accuExpr = (Expression)lambda;
-        else
-            accuExpr = new Expr(lambda, columns);
-
-        this.definition = new ColumnDefinitionAccu(this, new ColumnPath(groupColumn), accuExpr);
+        this.definition = new ColumnDefinitionAccu(this, groupColumn, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

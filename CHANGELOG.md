@@ -1,5 +1,7 @@
 # Change Log
 
+* v0.7.0-SNAPSHOT (under development)
+    * New evaluator interface for accumulate columns
 * v0.6.0 (2018-02-25)
     * Link and project columns to range tables
     * Range tables

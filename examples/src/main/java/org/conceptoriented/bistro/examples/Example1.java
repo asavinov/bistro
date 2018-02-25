@@ -87,7 +87,7 @@ public class Example1 {
         Column counts = schema.createColumn("Event Count", things, objects);
         counts.accu(
                 link, // How to group/map facts to this table
-                p -> (Double)p[0] + 1.0 // How to accumulate/update
+                (a,p) -> (Double)a + 1.0 // How to accumulate/update
                 // Nothing to aggregate except for counting
         );
         counts.setDefaultValue(0.0); // It will be used as an initial value

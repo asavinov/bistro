@@ -1,0 +1,9 @@
+package org.conceptoriented.bistro.core;
+
+/**
+ * This methods knows how to update an aggregate given a fact (group member) described by its parameters.
+ */
+@FunctionalInterface
+public interface EvaluatorAccu {
+    public Object eval(Object aggregate, Object[] params) throws BistroError;
+}

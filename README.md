@@ -219,12 +219,12 @@ If we want to count the number of events for each device then such a column can 
 
 ```java
 Column counts = schema.createColumn("Event Count", things, objects);
+counts.setDefaultValue(0.0); // It will be used as an initial value
 counts.accu(
         link, // How to group facts
-        p -> (Double)p[0] + 1.0 // How to accumulate/update
+        (a,p) -> (Double)p[0] + 1.0 // How to accumulate/update
         // No additional parameters because we only count
 );
-counts.setDefaultValue(0.0); // It will be used as an initial value
 ```
 
 Here the `link` column maps elements of the "EVENTS" table to elements of the "THINGS" table, and hence an element of "THINGS" (where we define the accumulate column) is a group of all elements of "EVENTS" which reference it via this column. For each element of "EVENTS", the specified accumulate function will be called and its result stored in the column output. Thus the accumulate function will be called as many times for each input of "THINGS", as it has facts that map to it.
@@ -244,9 +244,10 @@ We can find the sum of the measure for each element in "THINGS" using this colum
 
 ```java
 Column sums = schema.createColumn("Sum Measure", things, objects);
+sums.setDefaultValue(0.0); // Start accumulatoin from this value
 sums.accu(
         link, // Grouping column
-        p -> (Double)p[0] + (Double)p[1], // Add the measure for each new fact
+        (a,p) -> (Double)a + (Double)p[0], // Add measure to the current aggregate
         measure // Measure
 );
 

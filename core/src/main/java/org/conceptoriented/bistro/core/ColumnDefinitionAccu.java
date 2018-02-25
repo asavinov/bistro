@@ -10,11 +10,13 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
     Column column;
 
+    ColumnPath groupPath;
+
     ColumnDefinitionCalc initDefinition;
-    Expression accuExpr;
+    EvaluatorAccu lambda;
     ColumnDefinitionCalc finDefinition;
 
-    ColumnPath groupPath;
+    ColumnPath[] paths;
 
     List<BistroError> errors = new ArrayList<>();
     @Override
@@ -31,9 +33,11 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
                 if(!ret.contains(dep)) ret.add(dep);
             }
         }
-        if(this.accuExpr != null) {
-            for(Column col : ColumnPath.getColumns(this.accuExpr.getParameterPaths())) {
-                if(!ret.contains(col)) ret.add(col);
+        if(this.paths != null && this.lambda != null) {
+            for(ColumnPath path : this.paths) {
+                for(Column col : path.columns) {
+                    if(!ret.contains(col)) ret.add(col);
+                }
             }
         }
         if(this.finDefinition != null) {
@@ -55,30 +59,30 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         //
         // Initialization
         //
-        if(this.initDefinition == null) { // Default
-            this.column.setValue(); // Initialize to default value
+        if(this.initDefinition != null) { // Default
+            this.initDefinition.eval();
         }
         else {
-            this.initDefinition.eval();
+            this.column.setValue(); // Initialize to default value
         }
 
         //
         // Accumulation
         //
-        this.evaluateExpr();
+        this.evaluateAccu();
 
         //
         // Finalization
         //
-        if(this.finDefinition == null) { // Default
-            ; // Skip finalization if not specified
+        if(this.finDefinition != null) { // Default
+            this.finDefinition.eval();
         }
         else {
-            this.finDefinition.eval();
+            ; // Skip finalization if not specified
         }
     }
 
-    protected void evaluateExpr() {
+    protected void evaluateAccu() {
 
         errors.clear(); // Clear state
 
@@ -87,9 +91,9 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         Range mainRange = mainTable.getIdRange();
 
         // Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading valuePaths
-        List<ColumnPath> paramPaths = this.accuExpr.getParameterPaths();
-        Object[] paramValues = new Object[paramPaths.size() + 1]; // Will store valuePaths for all params and current output at the end
+        Object[] paramValues = new Object[this.paths.length]; // Will store valuePaths for all params
         Object result; // Will be written to output for each input
+        Object aggregate;
 
         for(long i=mainRange.start; i<mainRange.end; i++) {
 
@@ -104,16 +108,16 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
             }
 
             // Read all parameter valuePaths
-            for(int p=0; p<paramPaths.size(); p++) {
-                paramValues[p] = paramPaths.get(p).getValue(i);
+            for(int p=0; p<this.paths.length; p++) {
+                paramValues[p] = this.paths[p].getValue(i);
             }
 
-            // Read current out value and store as the last element of parameter array
-            paramValues[paramValues.length-1] = this.column.getValue(g); // [ACCU-specific] [FIN-specific]
+            // Read current out value
+            aggregate = this.column.getValue(g);
 
             // Evaluate
             try {
-                result = this.accuExpr.eval(paramValues);
+                result = this.lambda.eval(aggregate, paramValues);
             }
             catch(BistroError e) {
                 this.errors.add(e);
@@ -129,23 +133,43 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         }
     }
 
-    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, Expression accuExpr) {
+    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath[] paths) {
         this.column = column;
 
         this.groupPath = groupPath;
 
         this.initDefinition = null;
-        this.accuExpr = accuExpr;
+        this.lambda = lambda;
         this.finDefinition = null;
+
+        this.paths = paths;
     }
-    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, Expression initExpr, Expression accuExpr, Expression finExpr) {
+
+    public ColumnDefinitionAccu(Column column, Column groupColumn, EvaluatorAccu lambda, Column[] columns) {
+        this.column = column;
+
+        this.groupPath = new ColumnPath(groupColumn);
+
+        this.initDefinition = null;
+        this.lambda = lambda;
+        this.finDefinition = null;
+
+        this.paths = new ColumnPath[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            this.paths[i] = new ColumnPath(columns[i]);
+        }
+    }
+
+    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorCalc initLambda, EvaluatorAccu lambda, EvaluatorCalc finLambda, ColumnPath[] paths) {
         this.column = column;
 
         this.groupPath = groupPath;
 
-        this.initDefinition = new ColumnDefinitionCalc(column, initExpr);
-        this.accuExpr = accuExpr;
-        this.finDefinition = new ColumnDefinitionCalc(column, finExpr);
+        this.initDefinition = new ColumnDefinitionCalc(column, initLambda, paths);
+        this.lambda = lambda;
+        this.finDefinition = new ColumnDefinitionCalc(column, finLambda, paths);
+
+        this.paths = paths;
     }
 
 }

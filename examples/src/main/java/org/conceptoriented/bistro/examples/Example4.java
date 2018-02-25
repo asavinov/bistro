@@ -76,7 +76,7 @@ public class Example4 {
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,
-                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
+                (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
                 items.getColumn("Amount")
         );
 
@@ -85,7 +85,7 @@ public class Example4 {
         categoriesAmount.setDefaultValue(0.0); // It will be used as an initial value
         categoriesAmount.accu(
                 productsCategory,
-                p -> (double)p[0] + (double)p[1], // [Amount] + [out]
+                (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
                 products.getColumn("Total Amount")
         );
 

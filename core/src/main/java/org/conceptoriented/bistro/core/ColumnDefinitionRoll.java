@@ -38,7 +38,6 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
     ColumnPath[] paths;
 
     List<BistroError> errors = new ArrayList<>();
-
     @Override
     public List<BistroError> getErrors() {
         return this.errors;

@@ -76,7 +76,7 @@ public class Example8 {
         priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
         priceVolumeSum.accu(
                 timestamp2hour,
-                p -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)p[2], // [Price] * [Amount] + [out]
+                (a,p) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)a, // [Price] * [Amount] + [out]
                 quotes.getColumn("Price"), quotes.getColumn("Amount")
         );
 
@@ -84,7 +84,7 @@ public class Example8 {
         volumeSum.setDefaultValue(0.0); // It will be used as an initial value
         volumeSum.accu(
                 timestamp2hour, // Time stamp
-                p -> Double.valueOf((String)p[0]) + (double)p[1], // [Amount] + [out]
+                (a,p) -> Double.valueOf((String)p[0]) + (double)a, // [Amount] + [out]
                 quotes.getColumn("Amount")
         );
 

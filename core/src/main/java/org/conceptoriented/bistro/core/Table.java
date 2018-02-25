@@ -1,9 +1,5 @@
 package org.conceptoriented.bistro.core;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.*;
 
 public class Table implements Element {
@@ -392,7 +388,7 @@ public class Table implements Element {
 
     Expression expressionWhere;
 
-    public void where(Evaluator lambda, ColumnPath... paths) {
+    public void where(EvaluatorCalc lambda, ColumnPath... paths) {
         this.setDefinitionType(TableDefinitionType.PROD);
 
         this.expressionWhere = new Expr(lambda, paths);
@@ -403,7 +399,7 @@ public class Table implements Element {
         }
     }
 
-    public void where(Evaluator lambda, Column... columns) {
+    public void where(EvaluatorCalc lambda, Column... columns) {
         this.setDefinitionType(TableDefinitionType.PROD);
 
         this.expressionWhere = new Expr(lambda, columns);
