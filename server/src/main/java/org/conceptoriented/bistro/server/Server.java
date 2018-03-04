@@ -2,6 +2,8 @@ package org.conceptoriented.bistro.server;
 
 import org.conceptoriented.bistro.core.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -58,22 +60,21 @@ public class Server {
         this.queue = null;
     }
 
-    public void submit(Action action) {
+    public void submit(ActionSequence sequence) {
 
         // Store in the action time when it was added to the queue
         long submitTime = System.currentTimeMillis();
 
-        // When the action really starts execution (in another thread), we need to store time (of retrieving from the queue)
+        // When the action really starts executing (in another thread), we need to store time (of retrieving from the queue)
 
-        this.executor.submit(action);
+        this.executor.submit(sequence);
 
-        //
-        // Stop all registered actions
-        //
 
     }
 
-
+    public void submit(Action action) { // Convenience method
+        this.submit(new ActionSequence(action));
+    }
 
     //
     // Registration
@@ -90,6 +91,8 @@ public class Server {
         return "Server";
     }
 
-    public Server() {
+    public Server(Schema schema) {
+        this.schema = schema;
     }
 }
+

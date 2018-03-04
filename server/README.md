@@ -1,8 +1,11 @@
-# Bistro-server: a light-weight server for in-stream analytics
+# Bistro Stream: a light-weight stream analytics engine
 
-# What is Bistro-server
+# What is Bistro Stream
 
-Bistro-server is a light-weight server for in-stream analytics which changes the way stream data is being processed.
+Bistro Stream is a light-weight stream analytics engine which changes the way stream data is processed.
+Different to other streaming engines, Bistro Stream defines its data processing logic using a column-oriented approach rather than a set-oriented approach.
+In particular, it does not use such difficult to comprehend and execute operations like join and group-by.
+As a light-weight engine, it is intended for IoT.
 
 ## How to use
 
@@ -10,7 +13,7 @@ Bistro-server is a light-weight server for in-stream analytics which changes the
 
 Group: `org.conceptoriented`
 Artifact: `bistro-server`
-Version: `0.5.0`
+Version: `0.6.0`
 
 ### Maven configuration
 

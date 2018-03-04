@@ -3,6 +3,8 @@ package org.conceptoriented.bistro.server.actions;
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
 
+import java.time.Duration;
+
 /**
  * Regularly wake up and trigger this action.
  */
@@ -29,7 +31,7 @@ public class ActionTimer extends ActionBase {
 
 	}
 
-	public ActionTimer(long period) {
+	public ActionTimer(Duration duration) {
 
 	}
 
