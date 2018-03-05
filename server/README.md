@@ -7,6 +7,9 @@ Different to other streaming engines, Bistro Stream defines its data processing 
 In particular, it does not use such difficult to comprehend and execute operations like join and group-by.
 As a light-weight engine, it is intended for IoT.
 
+For IoT (Internet of Things) applications and services, it is important to be able to analyze data as it is being created by producing results immediately.
+In edge analytics, it is important to produce results as close to the data source as possible - at the edge of the network (as opposed to cloud computing where data is transmitted to a centralized server for analysis).
+
 ## How to use
 
 ### Artifacts

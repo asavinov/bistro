@@ -10,9 +10,12 @@ public interface Action extends Runnable {
     public Context getContext();
     public void setContext(Context context);
 
+    public Action getNext();
+    public void setNext(Action action);
+
     public void start() throws BistroError;
 
     public void stop() throws BistroError;
 
-    public void setTriggers(Action[] actions) throws BistroError;
+    public void setLambda(Runnable lambda);
 }

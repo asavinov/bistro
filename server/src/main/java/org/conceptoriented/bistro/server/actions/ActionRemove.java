@@ -17,10 +17,6 @@ public class ActionRemove extends ActionBase {
 	}
 
 	@Override
-	public void setTriggers(Action[] actions) throws BistroError {
-	}
-
-	@Override
 	public void run() {
 
 		// Read record from the context
@@ -29,7 +25,8 @@ public class ActionRemove extends ActionBase {
 
 	}
 
-	public ActionRemove(Table table) {
+	public ActionRemove(Server server, Table table) {
+		super(server);
 
 	}
 

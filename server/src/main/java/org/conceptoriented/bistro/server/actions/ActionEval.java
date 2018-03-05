@@ -17,10 +17,6 @@ public class ActionEval extends ActionBase {
 	}
 
 	@Override
-	public void setTriggers(Action[] actions) throws BistroError {
-	}
-
-	@Override
 	public void run() {
 
 		// Read record from the context
@@ -29,7 +25,8 @@ public class ActionEval extends ActionBase {
 
 	}
 
-	public ActionEval() {
+	public ActionEval(Server server) {
+		super(server);
 
 	}
 

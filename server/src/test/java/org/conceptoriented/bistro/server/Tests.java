@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.actions.*;
@@ -23,47 +24,61 @@ public class Tests {
     }
 
     @Test
-    public void serverTest()
+    public void timerTest()
     {
         // Create schema
         Schema schema = new Schema("My Scheam");
+        Table table = schema.createTable("T");
+        Column c = schema.createColumn("C", table);
 
         Server server = new Server(schema);
 
         //
-        // Create actions
+        // Create necessary actions
         //
 
         // Create a timer action
-        Action timer = new ActionTimer(Duration.ofSeconds(1));
-        // TODO: Either customize it with the logic or add next action for adding record
+        Action timer = new ActionTimer(server,200);
 
         // Create action for adding a constant event
+        String message = "Hello Server (from Timer)!";
+        Runnable task = () -> {
+            long id = table.add();
+            c.setValue(id, message);
+        };
+        timer.setLambda(task);
 
-        // Create a listener action (http or kafka or whatever)
-        // The logic of its lambda is what to do with incoming events/requests
-        // Normally it is addition but we can define it directly here or in the next action.
-        // When initialized, it connects to the hub/port and starts listening.
-        // Its callback method knows about the server
-        // It will submit itself (with no action - maybe only data preparation) with a table add action (as next action) to the server.
-        // Alternatively, it can submit only itself, and then it has to be able to add a record
-
-        // Create a table add action
-        // When executed, it will read its input JSON, parse it, and add to the specified table
+        server.addAction(timer);
 
         //
+        // Run the server
+        //
+
         // All actions have to be initialized
-        //
-        server.start();
+        try {
+            server.start();
+        } catch (BistroError bistroError) {
+            bistroError.printStackTrace();
+            fail("Error starting server.");
+        }
 
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            fail("Interrupted while waiting for the server to do its work.");
+        }
 
+        // All actions have to be stopped.
+        try {
+            server.stop();
+        } catch (BistroError bistroError) {
+            bistroError.printStackTrace();
+            fail("Error stopping server.");
+        }
 
-        //
-        // All actions have to be freed.
-        //
-        server.stop();
-
-        assertTrue(true);
+        assertEquals(1L, table.getLength() );
+        assertEquals(message, c.getValue(0));
     }
 
 }
