@@ -5,10 +5,10 @@ import org.conceptoriented.bistro.core.*;
 /**
  * Elementary user-defined action executed against the current state of the data.
  */
-public interface Action extends Runnable {
+public interface Action extends ExecuteAction {
 
-    public Context getContext();
-    public void setContext(Context context);
+    public Server getServer();
+    public void setServer(Server server);
 
     public Action getNext();
     public void setNext(Action action);
@@ -17,5 +17,6 @@ public interface Action extends Runnable {
 
     public void stop() throws BistroError;
 
-    public void setLambda(Runnable lambda);
+    public void setLambda(ExecuteAction lambda);
 }
+

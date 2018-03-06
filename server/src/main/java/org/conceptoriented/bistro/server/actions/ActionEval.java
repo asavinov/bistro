@@ -17,7 +17,7 @@ public class ActionEval extends ActionBase {
 	}
 
 	@Override
-	public void run() {
+	public void run(Context context) throws BistroError {
 
 		// Read record from the context
 

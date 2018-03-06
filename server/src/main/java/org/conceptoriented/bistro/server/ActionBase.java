@@ -1,19 +1,17 @@
 package org.conceptoriented.bistro.server;
 
-import org.conceptoriented.bistro.core.BistroError;
+import org.conceptoriented.bistro.core.*;
 
 public class ActionBase implements Action {
 
     public Server server;
-
-    Context context;
     @Override
-    public Context getContext() {
-        return this.context;
+    public Server getServer() {
+        return this.server;
     }
     @Override
-    public void setContext(Context context) {
-        this.context = context;
+    public void setServer(Server server) {
+        this.server = server;
     }
 
     protected Action next;
@@ -34,16 +32,17 @@ public class ActionBase implements Action {
     public void stop() throws BistroError {
     }
 
-    Runnable lambda;
-    public void setLambda(Runnable lambda) {
+    ExecuteAction lambda;
+    @Override
+    public void setLambda(ExecuteAction lambda) {
         this.lambda = lambda;
     }
 
     @Override
-    public void run() {
+    public void run(Context context) throws BistroError {
         // The action is really starts executing (in a worker thread). We might want to store real start time here
         if(this.lambda != null) {
-            lambda.run();
+            lambda.run(context);
         }
     }
 

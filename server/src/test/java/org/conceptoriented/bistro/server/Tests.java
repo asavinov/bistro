@@ -11,8 +11,6 @@ import static org.junit.Assert.fail;
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.actions.*;
 
-import java.time.Duration;
-
 public class Tests {
 
     @BeforeClass
@@ -37,16 +35,15 @@ public class Tests {
         // Create necessary actions
         //
 
-        // Create a timer action
-        Action timer = new ActionTimer(server,200);
-
-        // Create action for adding a constant event
+        // Create a timer action which will add a constant message to the table
         String message = "Hello Server (from Timer)!";
-        Runnable task = () -> {
-            long id = table.add();
-            c.setValue(id, message);
-        };
-        timer.setLambda(task);
+        Action timer = new ActionTimer(server,200);
+        timer.setLambda(
+                x -> {
+                    long id = table.add();
+                    c.setValue(id, message);
+                }
+        );
 
         server.addAction(timer);
 

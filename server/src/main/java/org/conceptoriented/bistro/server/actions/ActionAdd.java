@@ -17,14 +17,13 @@ public class ActionAdd extends ActionBase {
     }
 
     @Override
-    public void run() {
+    public void run(Context context) throws BistroError {
 
         // Read record from the context
 
         // Add record to the table
 
     }
-
     public ActionAdd(Server server, Table table) {
         super(server);
 

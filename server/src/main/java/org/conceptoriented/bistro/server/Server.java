@@ -5,14 +5,20 @@ import org.conceptoriented.bistro.core.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
 
     Schema schema;
-
     ReentrantLock schemaLock = new ReentrantLock();
+
+    protected List<BistroError> errors = new ArrayList<>();
+    public List<BistroError> getErrors() {
+        return this.errors;
+    }
+    public void addError(BistroError error) {
+        this.errors.add(error);
+    }
 
     //
     // Executor service
@@ -22,6 +28,8 @@ public class Server {
     ExecutorService executor;
 
     public void start() throws BistroError {
+
+        this.errors.clear();
 
         //
         // Start executor service
@@ -67,7 +75,7 @@ public class Server {
 
         long submitTime = System.currentTimeMillis(); // The time when the action was added to the queue
 
-        this.executor.submit(new ActionSequence(this,action)); // Add to the queue where it will wait for the next free worker thread
+        this.executor.submit(new Task(this,action)); // Add to the queue where it will wait for the next free worker thread
 
     }
 
