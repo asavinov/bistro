@@ -4,22 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ActionSequence extends ActionBase {
-    List<Action> actions = new ArrayList<>();
+
+    protected Action start;
 
     @Override
     public void run() {
         // Sequentially run all actions
-        for (Action a : this.actions) {
+        for(Action a = this.start; a != null; a = a.getNext()) {
             a.run();
         }
     }
 
-    public ActionSequence(Action action) {
-        this.actions.add(action);
-    }
-    public ActionSequence(Action[] actions) {
-        for (Action a : actions) {
-            this.actions.add(a);
-        }
+    public ActionSequence(Server server, Action action) {
+        super(server);
+        this.start = action;
     }
 }

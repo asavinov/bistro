@@ -21,7 +21,7 @@ public class Server {
     BlockingQueue<Runnable> queue;
     ExecutorService executor;
 
-    public void start() {
+    public void start() throws BistroError {
 
         //
         // Start executor service
@@ -35,10 +35,13 @@ public class Server {
         //
         // Start all registered actions
         //
+        for(Action a : this.actions) {
+            a.start();
+        }
 
     }
 
-    public void stop() {
+    public void stop() throws BistroError {
         if(this.executor != null) {
             try {
                 System.out.println("Attempt to shutdown executor");
@@ -60,30 +63,25 @@ public class Server {
         this.queue = null;
     }
 
-    public void submit(ActionSequence sequence) {
+    public void submit(Action action) {
 
-        // Store in the action time when it was added to the queue
-        long submitTime = System.currentTimeMillis();
+        long submitTime = System.currentTimeMillis(); // The time when the action was added to the queue
 
-        // When the action really starts executing (in another thread), we need to store time (of retrieving from the queue)
+        this.executor.submit(new ActionSequence(this,action)); // Add to the queue where it will wait for the next free worker thread
 
-        this.executor.submit(sequence);
-
-
-    }
-
-    public void submit(Action action) { // Convenience method
-        this.submit(new ActionSequence(action));
     }
 
     //
     // Registration
     //
 
-    public void addAction() {
+    List<Action> actions = new ArrayList<>();
+    public void addAction(Action action) {
+        this.actions.add(action);
     }
 
-    public void removeAction() {
+    public void removeAction(Action action) {
+        this.actions.remove(action);
     }
 
     @Override

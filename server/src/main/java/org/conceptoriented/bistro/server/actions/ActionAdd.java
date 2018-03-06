@@ -8,29 +8,25 @@ import org.conceptoriented.bistro.server.*;
  */
 public class ActionAdd extends ActionBase {
 
-	@Override
-	public void start() throws BistroError {
-	}
+    @Override
+    public void start() throws BistroError {
+    }
 
-	@Override
-	public void stop() throws BistroError {
-	}
+    @Override
+    public void stop() throws BistroError {
+    }
 
-	@Override
-	public void setTriggers(Action[] actions) throws BistroError {
-	}
+    @Override
+    public void run() {
 
-	@Override
-	public void run() {
+        // Read record from the context
 
-		// Read record from the context
+        // Add record to the table
 
-		// Add record to the table
+    }
 
-	}
+    public ActionAdd(Server server, Table table) {
+        super(server);
 
-	public ActionAdd(Table table) {
-
-	}
-
+    }
 }
