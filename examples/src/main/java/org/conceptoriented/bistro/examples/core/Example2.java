@@ -1,6 +1,7 @@
-package org.conceptoriented.bistro.examples;
+package org.conceptoriented.bistro.examples.core;
 
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.examples.*;
 
 import java.io.*;
 

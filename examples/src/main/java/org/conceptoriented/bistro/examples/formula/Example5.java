@@ -1,9 +1,10 @@
-package org.conceptoriented.bistro.examples;
+package org.conceptoriented.bistro.examples.formula;
+
+import java.io.*;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.formula.*;
-
-import java.io.*;
+import org.conceptoriented.bistro.examples.*;
 
 public class Example5
 {

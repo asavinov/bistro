@@ -1,13 +1,11 @@
-package org.conceptoriented.bistro.examples;
-
-import org.conceptoriented.bistro.core.Column;
-import org.conceptoriented.bistro.core.ColumnPath;
-import org.conceptoriented.bistro.core.Schema;
-import org.conceptoriented.bistro.core.Table;
+package org.conceptoriented.bistro.examples.core;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.examples.*;
 
 public class Example8 {
 

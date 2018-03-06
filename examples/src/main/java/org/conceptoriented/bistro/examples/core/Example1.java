@@ -1,4 +1,4 @@
-package org.conceptoriented.bistro.examples;
+package org.conceptoriented.bistro.examples.core;
 
 import org.conceptoriented.bistro.core.*;
 
