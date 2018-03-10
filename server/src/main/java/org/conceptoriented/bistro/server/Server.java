@@ -41,9 +41,9 @@ public class Server {
         //this.executor = Executors.newSingleThreadExecutor();
 
         //
-        // Start all registered actions
+        // Start all registered connectors
         //
-        for(Action a : this.actions) {
+        for(Connector a : this.connectors) {
             a.start();
         }
 
@@ -71,25 +71,29 @@ public class Server {
         this.queue = null;
     }
 
-    public void submit(Action action) {
+    public void submit(Task task) {
 
-        long submitTime = System.currentTimeMillis(); // The time when the action was added to the queue
+        long submitTime = System.currentTimeMillis(); // The time when the connector was added to the queue
 
-        this.executor.submit(new Task(this,action)); // Add to the queue where it will wait for the next free worker thread
+        this.executor.submit(task); // Add to the queue where it will wait for the next free worker thread
 
+    }
+
+    public void submit(Action action, Context context) {
+        this.submit(new Task(action, context));
     }
 
     //
     // Registration
     //
 
-    List<Action> actions = new ArrayList<>();
-    public void addAction(Action action) {
-        this.actions.add(action);
+    List<Connector> connectors = new ArrayList<>();
+    public void addAction(Connector connector) {
+        this.connectors.add(connector);
     }
 
-    public void removeAction(Action action) {
-        this.actions.remove(action);
+    public void removeAction(Connector connector) {
+        this.connectors.remove(connector);
     }
 
     @Override

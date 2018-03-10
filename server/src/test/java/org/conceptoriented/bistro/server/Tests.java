@@ -32,13 +32,13 @@ public class Tests {
         Server server = new Server(schema);
 
         //
-        // Create necessary actions
+        // Create necessary connectors
         //
 
         // Create a timer action which will add a constant message to the table
         String message = "Hello Server (from Timer)!";
-        Action timer = new ActionTimer(server,200);
-        timer.setLambda(
+        ConnectorTimer timer = new ConnectorTimer(server,200);
+        timer.setAction(
                 x -> {
                     long id = table.add();
                     c.setValue(id, message);
@@ -51,7 +51,7 @@ public class Tests {
         // Run the server
         //
 
-        // All actions have to be initialized
+        // All connectors have to be initialized
         try {
             server.start();
         } catch (BistroError bistroError) {
@@ -66,7 +66,7 @@ public class Tests {
             fail("Interrupted while waiting for the server to do its work.");
         }
 
-        // All actions have to be stopped.
+        // All connectors have to be stopped.
         try {
             server.stop();
         } catch (BistroError bistroError) {

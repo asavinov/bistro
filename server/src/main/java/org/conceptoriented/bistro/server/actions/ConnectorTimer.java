@@ -3,17 +3,24 @@ package org.conceptoriented.bistro.server.actions;
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
 
-import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
  * Regularly wake up and trigger this action.
  */
-public class ActionTimer extends ActionBase {
+public class ConnectorTimer extends Connector {
 
     Timer timer;
     long period;
+
+    protected Action action;
+    public void setAction(Action action) {
+        this.action = action;
+    }
+    public Action getAction() {
+        return this.action;
+    }
 
     @Override
     public void start() throws BistroError {
@@ -24,7 +31,7 @@ public class ActionTimer extends ActionBase {
                     @Override
                     public void run() {
                         // Submit itself
-                        ActionTimer.super.server.submit(ActionTimer.this);
+                        ConnectorTimer.super.server.submit(ConnectorTimer.this.action, null);
                     }
                 },
                 this.period // One time execution in this time
@@ -38,7 +45,7 @@ public class ActionTimer extends ActionBase {
         this.timer.cancel();
     }
 
-    public ActionTimer(Server server, long period) {
+    public ConnectorTimer(Server server, long period) {
         super(server);
 
         this.timer = new Timer();
@@ -47,12 +54,12 @@ public class ActionTimer extends ActionBase {
 }
 
 class TimerCallback extends TimerTask {
-    private ActionTimer actionTimer;
+    private ConnectorTimer actionTimer;
     @Override
     public void run() {
-        this.actionTimer.server.submit(this.actionTimer); // Submit the action to the server
+        this.actionTimer.server.submit(this.actionTimer.action, null); // Submit the action to the server
     }
-    public TimerCallback(ActionTimer actionTimer) {
+    public TimerCallback(ConnectorTimer actionTimer) {
         this.actionTimer = actionTimer;
     }
 }

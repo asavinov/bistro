@@ -6,18 +6,10 @@ import org.conceptoriented.bistro.server.*;
 /**
  * Remove record(s) from a table.
  */
-public class ActionRemove extends ActionBase {
+public class ActionRemove implements Action {
 
 	@Override
-	public void start() throws BistroError {
-	}
-
-	@Override
-	public void stop() throws BistroError {
-	}
-
-	@Override
-	public void run(Context context) throws BistroError {
+	public void eval(Context context) throws BistroError {
 
 		// Read record from the context
 
@@ -26,8 +18,6 @@ public class ActionRemove extends ActionBase {
 	}
 
 	public ActionRemove(Server server, Table table) {
-		super(server);
-
 	}
 
 }

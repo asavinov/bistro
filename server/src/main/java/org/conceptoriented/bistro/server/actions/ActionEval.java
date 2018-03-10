@@ -6,18 +6,10 @@ import org.conceptoriented.bistro.server.*;
 /**
  * Evalute schema.
  */
-public class ActionEval extends ActionBase {
+public class ActionEval implements Action {
 
 	@Override
-	public void start() throws BistroError {
-	}
-
-	@Override
-	public void stop() throws BistroError {
-	}
-
-	@Override
-	public void run(Context context) throws BistroError {
+	public void eval(Context context) throws BistroError {
 
 		// Read record from the context
 
@@ -26,8 +18,5 @@ public class ActionEval extends ActionBase {
 	}
 
 	public ActionEval(Server server) {
-		super(server);
-
 	}
-
 }

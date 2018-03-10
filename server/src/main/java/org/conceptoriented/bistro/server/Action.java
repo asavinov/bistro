@@ -3,20 +3,9 @@ package org.conceptoriented.bistro.server;
 import org.conceptoriented.bistro.core.*;
 
 /**
- * Elementary user-defined action executed against the current state of the data.
+ * It is user-defined function which implements custom data processing logic executed as one step using the parameters in the context.
  */
-public interface Action extends ExecuteAction {
-
-    public Server getServer();
-    public void setServer(Server server);
-
-    public Action getNext();
-    public void setNext(Action action);
-
-    public void start() throws BistroError;
-
-    public void stop() throws BistroError;
-
-    public void setLambda(ExecuteAction lambda);
+@FunctionalInterface
+public interface Action {
+    public void eval(Context context) throws BistroError;
 }
-
