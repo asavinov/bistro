@@ -12,5 +12,5 @@ public class Context {
     public Table table;
     public Column column;
     public Object[] values;
-    public Object[] parameters;
+    public Object parameters;
 }
