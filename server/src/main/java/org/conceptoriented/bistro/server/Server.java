@@ -39,14 +39,6 @@ public class Server {
         queue = new ArrayBlockingQueue<>(1000);
         this.executor = new ThreadPoolExecutor(n, n, 0L, TimeUnit.MILLISECONDS, queue);
         //this.executor = Executors.newSingleThreadExecutor();
-
-        //
-        // Start all registered connectors
-        //
-        for(Connector a : this.connectors) {
-            a.start();
-        }
-
     }
 
     public void stop() throws BistroError {
@@ -81,19 +73,6 @@ public class Server {
 
     public void submit(Action action, Context context) {
         this.submit(new Task(action, context));
-    }
-
-    //
-    // Registration
-    //
-
-    List<Connector> connectors = new ArrayList<>();
-    public void addAction(Connector connector) {
-        this.connectors.add(connector);
-    }
-
-    public void removeAction(Connector connector) {
-        this.connectors.remove(connector);
     }
 
     @Override

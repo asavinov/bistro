@@ -1,4 +1,4 @@
-package org.conceptoriented.bistro.server.actions;
+package org.conceptoriented.bistro.server.connectors;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
@@ -7,7 +7,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Regularly wake up and trigger this action.
+ * Regularly wake up and trigger the specified action.
+ * This connector is normally used to execute some regular actions, for example, evaluating the data, deleting unnecessary (old) data or persisting the current state.
  */
 public class ConnectorTimer extends Connector {
 
@@ -48,7 +49,7 @@ public class ConnectorTimer extends Connector {
     public ConnectorTimer(Server server, long period) {
         super(server);
 
-        this.timer = new Timer();
+        this.timer = new Timer("Bistro Server: ConnectorTimer Timer");
         this.period = period;
     }
 }
