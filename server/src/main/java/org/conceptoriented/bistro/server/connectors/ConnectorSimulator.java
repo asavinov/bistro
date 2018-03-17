@@ -5,14 +5,12 @@ import org.conceptoriented.bistro.server.*;
 import org.conceptoriented.bistro.server.actions.TaskAdd;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
- * Use it to simulate an asynchronous data source.
+ * Use it to simulate an asynchronous data source using data provided as an array in the constructor.
  */
 public class ConnectorSimulator extends Connector implements Runnable {
 
@@ -30,10 +28,13 @@ public class ConnectorSimulator extends Connector implements Runnable {
     protected Instant convert(String time) {
         return this.converter.apply(time);
     }
+
+    delay = Duration.between(this.delays.get(start), this.delays.get(end)).toMillis();
     */
 
     Table table;
-    List<Instant> timestamps;
+    Duration delay;
+    List<Duration> delays;
     List<Object[]> data;
 
     Thread thread;
@@ -41,7 +42,7 @@ public class ConnectorSimulator extends Connector implements Runnable {
     @Override
     public void run() {
 
-        long delay = 100;
+        long delay_millis = 100;
         int start = 0;
         int end = 0;
 
@@ -50,14 +51,18 @@ public class ConnectorSimulator extends Connector implements Runnable {
         while(start < this.data.size()) {
 
             // Find next data
-            while(end < this.data.size()) {
-                delay = Duration.between(this.timestamps.get(start), this.timestamps.get(end)).toMillis();
-                if(delay > 0) break;
-                end++;
+            for( ; end < this.data.size(); end++) {
+                if(this.delays == null) {
+                    delay_millis = this.delay.toMillis();
+                }
+                else {
+                    delay_millis = this.delays.get(end).toMillis();
+                }
+                if(delay_millis > 0) { end++; break; }
             }
 
             // Sleep some time (duration between this and next)
-            try { Thread.sleep(delay); }
+            try { Thread.sleep(delay_millis); }
             catch (InterruptedException e) {
                 if(Thread.currentThread().isInterrupted()) {
                     break;
@@ -68,20 +73,13 @@ public class ConnectorSimulator extends Connector implements Runnable {
             for( ; start < end; start++) {
 
                 Map<Column, Object> record = new HashMap<>();
+                Object[] rec = this.data.get(start);
 
                 for(int i=0; i<columns.size(); i++) {
-                    Column col = columns.get(i);
-                    Object val = null;
-                    if(i == 0) {
-                        val = this.timestamps.get(start);
-                    }
-                    else {
-                        Object[] rec = this.data.get(start);
-                        if(i-1 >= rec.length) break; // More columns than data fields
-                        val = rec[i-1];
-                    }
 
-                    record.put(col, val);
+                    if(i >= rec.length) break; // More columns than data fields
+
+                    record.put(columns.get(i), rec[i]);
                 }
 
                 this.server.submit(new TaskAdd(this.table, record));
@@ -105,11 +103,21 @@ public class ConnectorSimulator extends Connector implements Runnable {
         }
     }
 
-    public ConnectorSimulator(Server server, Table table, List<Instant> timestamps, List<Object[]> data) {
+    public ConnectorSimulator(Server server, Table table, Duration delay, List<Object[]> data) {
         super(server);
 
         this.table = table;
-        this.timestamps = timestamps;
+        this.delay = delay;
+        this.delays = null;
+        this.data = data;
+    }
+
+    public ConnectorSimulator(Server server, Table table, List<Duration> delays, List<Object[]> data) {
+        super(server);
+
+        this.table = table;
+        this.delay = null;
+        this.delays = delays;
         this.data = data;
     }
 }

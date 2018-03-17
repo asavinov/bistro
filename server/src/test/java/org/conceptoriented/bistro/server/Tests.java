@@ -12,6 +12,7 @@ import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.actions.*;
 import org.conceptoriented.bistro.server.connectors.*;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -86,7 +87,6 @@ public class Tests {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
-        Column tts = s.createColumn("TS", t);
         Column ta = s.createColumn("A", t);
         Column tb = s.createColumn("B", t);
 
@@ -103,11 +103,11 @@ public class Tests {
         // Prepare connectors
         //
 
-        List<Instant> timestamps = Arrays.asList(
-                Instant.parse("2018-01-01T00:00:00.000Z"),
-                Instant.parse("2018-01-01T00:00:00.100Z"),
-                Instant.parse("2018-01-01T00:00:00.100Z"),
-                Instant.parse("2018-01-01T00:00:00.300Z")
+        List<Duration> timestamps = Arrays.asList(
+                Duration.ofMillis(100),
+                Duration.ofMillis(0), // Merge it with the next record(s)
+                Duration.ofMillis(100),
+                Duration.ofMillis(200)
         );
         List<Object[]> data = Arrays.asList(
                 new Object[] { 1.0, 2.0 },
