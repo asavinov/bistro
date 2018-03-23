@@ -5,6 +5,7 @@ import org.conceptoriented.bistro.core.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -44,6 +45,7 @@ public class ExUtils {
         {
             String line = scanner.nextLine();
             String[] fields = line.split(",");
+            Arrays.parallelSetAll(fields, i -> fields[i].trim());
             lines.add(fields);
         }
         scanner.close();

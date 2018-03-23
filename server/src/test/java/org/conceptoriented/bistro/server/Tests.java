@@ -12,6 +12,7 @@ import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.actions.*;
 import org.conceptoriented.bistro.server.connectors.*;
 
+import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -155,6 +156,75 @@ public class Tests {
         assertEquals(3.0, tc.getValue(0));
         assertEquals(7.0, tc.getValue(1));
         assertEquals(11.0, tc.getValue(2));
+    }
+
+    @Test
+    public void simulatorFileTest() {
+        // Create schema
+        Schema s = new Schema("My Schema");
+        Table t = s.createTable("T");
+        Column ta = s.createColumn("A", t);
+        Column tb = s.createColumn("B", t);
+
+        // Calculate column
+        Column tc = s.createColumn("C", t);
+        tc.calc(
+                p ->  Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
+                ta, tb
+        );
+
+        Server server = new Server(s);
+
+        //
+        // Prepare connectors
+        //
+
+        ConnectorSimulatorFile connector = null;
+        try {
+            connector = new ConnectorSimulatorFile(server, t, "src/test/resources/.krakenEUR.csv", "Time", 1/3600.0);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        connector.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
+
+        //
+        // Run the server
+        //
+
+        try {
+            server.start();
+            connector.start();
+        } catch (BistroError bistroError) {
+            bistroError.printStackTrace();
+            fail("Error starting server.");
+        }
+
+        try {
+            Thread.sleep(1500);
+
+            server.submit(new TaskEval(s)); // Send evaluation task manually
+
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            fail("Interrupted while waiting for the server to do its work.");
+        }
+
+        // All connectors have to be stopped.
+        try {
+            connector.stop();
+            server.stop();
+        } catch (BistroError bistroError) {
+            bistroError.printStackTrace();
+            fail("Error stopping server.");
+        }
+
+        assertEquals(21L, t.getLength() );
+
+        assertEquals(9.9999991221206, tc.getValue(0));
+        assertEquals(3.9708022, tc.getValue(1));
+        assertEquals(197.61398, tc.getValue(19));
+        assertEquals(633.6320000000001, tc.getValue(20));
     }
 
     @Test

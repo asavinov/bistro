@@ -90,7 +90,7 @@ public class ConnectorSimulator extends Connector implements Runnable {
 
     @Override
     public void start() throws BistroError {
-        this.thread = new Thread(this, "Bistro Server: ConnectorSimulator Thread");
+        this.thread = new Thread(this, "Bistro ConnectorSimulator Thread");
         this.thread.start();
     }
 
