@@ -23,8 +23,6 @@ public class Example2 {
         // Create tables and columns by loading data from CSV files
         //
 
-        Table columnType = schema.getTable("Object");
-
         Table items = ExUtils.readFromCsv(schema, location, "OrderItems.csv");
 
         Table products = ExUtils.readFromCsv(schema, location, "Products.csv");
@@ -34,7 +32,7 @@ public class Example2 {
         //
 
         // [OrderItems].[Amount] = [Quantity] * [Unit Price]
-        Column itemsAmount = schema.createColumn("Amount", items, columnType);
+        Column itemsAmount = schema.createColumn("Amount", items);
         itemsAmount.calc(
                 p -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
                 items.getColumn("Quantity"), items.getColumn("Unit Price")
@@ -56,7 +54,7 @@ public class Example2 {
         //
 
         // [Products].[Total Amount] = SUM [OrderItems].[Amount]
-        Column productsAmount = schema.createColumn("Total Amount", products, columnType);
+        Column productsAmount = schema.createColumn("Total Amount", products);
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accu(
                 itemsProduct,

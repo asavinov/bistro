@@ -15,8 +15,6 @@ public class Example1 {
         //
         // Create tables
         //
-        Table table;
-
         Table things = schema.createTable("THINGS");
         Table events = schema.createTable("EVENTS");
 
@@ -26,7 +24,6 @@ public class Example1 {
         //
         // Create columns
         //
-        Column column;
 
         // Each thing has a name
         Column thingName = schema.createColumn("Name", things, objects);

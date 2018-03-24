@@ -6,7 +6,7 @@ import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.formula.*;
 import org.conceptoriented.bistro.examples.*;
 
-public class Example5
+public class Example1
 {
 
     public static String location = "src/main/resources/ds2";
@@ -19,7 +19,7 @@ public class Example5
         // Create schema
         //
 
-        schema = new Schema("Example 5");
+        schema = new Schema("Example 1");
 
         //
         // Create tables and columns by loading data from CSV files

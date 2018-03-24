@@ -35,7 +35,8 @@ public class ConnectorTimer extends Connector {
                         ConnectorTimer.super.server.submit(ConnectorTimer.this.action, null);
                     }
                 },
-                this.period // One time execution in this time
+                this.period,
+                this.period
         );
 
         //this.timer.schedule(new TimerCallback(this), this.period, this.period); // ALternatively, create a dedicated class

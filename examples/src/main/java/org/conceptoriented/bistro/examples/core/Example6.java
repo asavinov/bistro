@@ -23,8 +23,6 @@ public class Example6 {
         // Create tables and columns by loading data from CSV files
         //
 
-        Table columnType = schema.getTable("Object");
-
         Table quotes = ExUtils.readFromCsv(schema, location, "BTC-EUR.csv");
 
         // We need it for exponential moving average (it is a sum of all coefficients used as weights for computing average in a window)
@@ -37,7 +35,7 @@ public class Example6 {
         //
 
         // [Quotes].[Span] = ([High] - [Low]) / [Close]
-        Column spanDaily = schema.createColumn("Span", quotes, columnType);
+        Column spanDaily = schema.createColumn("Span", quotes);
         spanDaily.calc(
                 p -> 100.0 * (Double.valueOf((String)p[0]) - Double.valueOf((String)p[1])) / Double.valueOf((String)p[2]),
                 quotes.getColumn("High"), quotes.getColumn("Low"), quotes.getColumn("Close")
@@ -48,7 +46,7 @@ public class Example6 {
         //
 
         // [Quotes].[SpanWeekly] = ROLL_SUM_(7 days) [Quotes].[Span]
-        Column spanWeekly = schema.createColumn("SpanWeekly", quotes, columnType);
+        Column spanWeekly = schema.createColumn("SpanWeekly", quotes);
         spanWeekly.setDefaultValue(0.0); // It will be used as an initial value
         spanWeekly.roll(
                 7, 0,
@@ -57,7 +55,7 @@ public class Example6 {
         );
 
         // [Quotes].[spanWeeklyExp] = ROLL_SUM_(7 days exp) [Quotes].[Span]
-        Column spanWeeklyExp = schema.createColumn("SpanWeeklyExp", quotes, columnType);
+        Column spanWeeklyExp = schema.createColumn("SpanWeeklyExp", quotes);
         spanWeeklyExp.setDefaultValue(0.0); // It will be used as an initial value
         spanWeeklyExp.roll(
                 7, 0,

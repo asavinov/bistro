@@ -31,7 +31,7 @@ public class Tests {
     public void timerTest()
     {
         // Create schema
-        Schema schema = new Schema("My Scheam");
+        Schema schema = new Schema("My Schema");
         Table table = schema.createTable("T");
         Column c = schema.createColumn("C", table);
 
@@ -79,7 +79,7 @@ public class Tests {
             fail("Error stopping server.");
         }
 
-        assertEquals(1L, table.getLength() );
+        assertEquals(2L, table.getLength() );
         assertEquals(message, c.getValue(0));
     }
 

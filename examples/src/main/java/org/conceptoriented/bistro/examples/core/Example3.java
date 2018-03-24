@@ -23,14 +23,12 @@ public class Example3 {
         // Create tables and columns by loading data from CSV files
         //
 
-        Table columnType = schema.getTable("Object");
-
         Table items = ExUtils.readFromCsv(schema, location, "OrderItems.csv");
 
         Table orders = schema.createTable("Orders");
         orders.prod(); // This table will be populated by using data from other tables
 
-        Column ordersId = schema.createColumn("ID", orders, columnType);
+        Column ordersId = schema.createColumn("ID", orders);
         ordersId.noop(true); // Key columns specify where the data for this table comes from
 
         //
@@ -38,7 +36,7 @@ public class Example3 {
         //
 
         // [OrderItems].[Amount] = [Quantity] * [Unit Price]
-        Column itemsAmount = schema.createColumn("Amount", items, columnType);
+        Column itemsAmount = schema.createColumn("Amount", items);
         itemsAmount.calc(
                 p -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
                 items.getColumn("Quantity"), items.getColumn("Unit Price")
@@ -60,7 +58,7 @@ public class Example3 {
         //
 
         // [Order].[Total Amount] = SUM [OrderItems].[Amount]
-        Column ordersAmount = schema.createColumn("Total Amount", orders, columnType);
+        Column ordersAmount = schema.createColumn("Total Amount", orders);
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accu(
                 itemsOrder,

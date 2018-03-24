@@ -25,15 +25,13 @@ public class Example8 {
         // Create tables and columns by loading data from CSV files
         //
 
-        Table columnType = schema.getTable("Object");
-
         Table quotes = ExUtils.readFromCsv(schema, location, ".krakenEUR.csv");
 
         //
         // Convert time (in seconds) from string to long
         //
 
-        Column timestamp = schema.createColumn("Timestamp", quotes, columnType);
+        Column timestamp = schema.createColumn("Timestamp", quotes);
         timestamp.calc(
                 p -> Instant.ofEpochSecond(Long.valueOf((String)p[0]).longValue()),
                 quotes.getColumn("Time")

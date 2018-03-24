@@ -16,6 +16,7 @@
     <orderEntry type="module" module-name="examples_main" />
     <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-formula:0.7.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-server:0.7.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.7.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
     <orderEntry type="library" name="Gradle: net.objecthunter:exp4j:0.4.8" level="project" />
