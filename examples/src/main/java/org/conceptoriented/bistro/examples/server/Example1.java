@@ -8,6 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 
+/**
+ * Feed events to the engine by computing several moving averages and firing alerts when they have a certain relationship.
+ */
 public class Example1
 {
 
@@ -52,7 +55,7 @@ public class Example1
 
         // Periodically print current state
         ConnectorTimer outTimer = new ConnectorTimer(server,1000);
-        outTimer.setAction(
+        outTimer.addAction(
                 x -> System.out.print(".")
         );
 
@@ -93,27 +96,24 @@ public class Example1
         System.out.println("");
         System.out.println("Server stopped.");
 
-        // TODO: What we want is to feed data into the schema table.
-        // Then we want to periodically compute several moving averages of different lengths (roll columns)
-        // Ideally, we want to use time-based windows, and also use volume-weighted prices.
-        // Once several moving averages have been computed, we periodically apply an aleat rule which is a special column
-        // This column will have 1 if moving averages have special relations a1<a2<a3 or so
-        // Once it fires, the output connector detects it and prints a messages (alert)
-        // Important: we need to delete unnecessary events (which are older than the longest window)
-        // We need to immediately produce alert as it is detected (now) and keep track of alerts so that they are not repeated.
-        // Instead of printing an alert, we could write them to a file, or to a separate table (which could be written to a file at the end).
 
-        // 1. Evaluate immediately after adding next batch of events, and also immediately generate alerts
-        // 2. Evaluate on timer, e.g., every 100ms but note that several alerts can be produced and not the newest ones
-        // 3. Print on timer of after evaluation.
-        // Printing can be done from a special table with alerts and the printed row is immediately deleted or otherwise marked for deletion (retention policy based on property and not common time window).
+        // PROBLEM:
+        // A (standard) connector does some standard action, e.g., Simulator will add events
+        // Also, a connector might not have any (standard) action at all, and it is necessary to provide such an action, e.g., timer.
+        // The problem is that it is not possible to flexibly define actions for connectors.
+        // In particular, what we might need in connector configuration API:
+        // - Specify one action to perform (e.g., timer): setAction/setLambda
+        // - Specify a sequence of actions to perform: setTask or setActions/Lammbdas
+        // - Attach next actions to execute after whatever the connector will do
 
-        // Step 1. Feed events. Evaluate several averages (row-based) and alert column.
-        // !!! Step 2. How to do output? In an action, connector or evaluation? How to remember already processed rows, e.g., call output logic for each new row added, or remember processed rows in variables within connector?
 
-        // Another option: regular aggregation on ranges.
-        // Create range table. Compute averages for each range. What about empty intervals?
-        // Compute rolling aggregation on range table (row-based)
+        // DONE Feed events.
+        // Delete old events
+        // Evaluate derived columns: several averages (row-based) and alert column.
+
+        // Produce output.
+        // How: action, connector, during evaluation task?
+        // How to remember what has been printed already? call output logic for each new row added, or remember processed rows in variables within connector?
 
         // Maybe introduce periodic (timer-based) log with stats or simply print dot like: .....
         // Then if alert is found then print new line with alert:

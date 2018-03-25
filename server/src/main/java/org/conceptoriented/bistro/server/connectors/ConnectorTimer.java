@@ -10,31 +10,29 @@ import java.util.TimerTask;
  * Regularly wake up and trigger the specified action.
  * This connector is normally used to execute some regular actions, for example, evaluating the data, deleting unnecessary (old) data or persisting the current state.
  */
-public class ConnectorTimer extends Connector {
+public class ConnectorTimer extends ConnectorBase {
 
     Timer timer;
     long period;
 
-    protected Action action;
-    public void setAction(Action action) {
-        this.action = action;
-    }
-    public Action getAction() {
-        return this.action;
-    }
-
     @Override
     public void start() throws BistroError {
 
-        // Configure the timer to regularly wake up and submit this action for execution to the server
+        // This task will be submitted to the server for each timer event
+        Task task = new Task(ConnectorTimer.this.getActions(), null);
+
+        // This object will be called for each timer event
+        TimerTask timerTask =  new TimerTask() {
+            @Override
+            public void run() {
+                // For each timer event, we need to submit a task with all registered timer actions
+                ConnectorTimer.super.server.submit(task);
+            }
+        };
+
+        // Configure the timer to regularly wake up
         this.timer.schedule(
-                new TimerTask() {
-                    @Override
-                    public void run() {
-                        // Submit itself
-                        ConnectorTimer.super.server.submit(ConnectorTimer.this.action, null);
-                    }
-                },
+                timerTask,
                 this.period,
                 this.period
         );
@@ -52,16 +50,5 @@ public class ConnectorTimer extends Connector {
 
         this.timer = new Timer("Bistro Server: ConnectorTimer Timer");
         this.period = period;
-    }
-}
-
-class TimerCallback extends TimerTask {
-    private ConnectorTimer actionTimer;
-    @Override
-    public void run() {
-        this.actionTimer.server.submit(this.actionTimer.action, null); // Submit the action to the server
-    }
-    public TimerCallback(ConnectorTimer actionTimer) {
-        this.actionTimer = actionTimer;
     }
 }

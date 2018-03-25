@@ -2,7 +2,7 @@ package org.conceptoriented.bistro.server.connectors;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
-import org.conceptoriented.bistro.server.actions.TaskAdd;
+import org.conceptoriented.bistro.server.actions.ActionAdd;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -12,25 +12,7 @@ import java.util.Map;
 /**
  * Use it to simulate an asynchronous data source using data provided as an array in the constructor.
  */
-public class ConnectorSimulator extends Connector implements Runnable {
-
-    /* Move to file reader
-    protected int timeColumn;
-    public void setTimeColumn(int timeColumn) {
-        this.timeColumn = timeColumn;
-    }
-
-    protected Function<String,Instant> converter;
-    public void setTimeConverter(Function<String,Instant> converter) {
-        this.converter = converter;
-    }
-
-    protected Instant convert(String time) {
-        return this.converter.apply(time);
-    }
-
-    delay = Duration.between(this.delays.get(start), this.delays.get(end)).toMillis();
-    */
+public class ConnectorSimulator extends ConnectorBase implements Runnable {
 
     Table table;
     Duration delay;
@@ -82,7 +64,7 @@ public class ConnectorSimulator extends Connector implements Runnable {
                     record.put(columns.get(i), rec[i]);
                 }
 
-                this.server.submit(new TaskAdd(this.table, record));
+                this.server.submit(new ActionAdd(this.table, record));
             }
         }
 

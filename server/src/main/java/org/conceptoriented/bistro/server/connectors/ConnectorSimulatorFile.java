@@ -2,11 +2,8 @@ package org.conceptoriented.bistro.server.connectors;
 
 import org.conceptoriented.bistro.core.BistroError;
 import org.conceptoriented.bistro.core.BistroErrorCode;
-import org.conceptoriented.bistro.core.Column;
 import org.conceptoriented.bistro.core.Table;
-import org.conceptoriented.bistro.server.Connector;
 import org.conceptoriented.bistro.server.Server;
-import org.conceptoriented.bistro.server.actions.TaskAdd;
 
 import java.io.File;
 import java.io.FileNotFoundException;

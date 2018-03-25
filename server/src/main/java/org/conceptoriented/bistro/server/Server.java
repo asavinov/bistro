@@ -75,6 +75,10 @@ public class Server {
         this.submit(new Task(action, context));
     }
 
+    public void submit(Action action) {
+        this.submit(new Task(action, null));
+    }
+
     @Override
     public String toString() {
         return "Server";

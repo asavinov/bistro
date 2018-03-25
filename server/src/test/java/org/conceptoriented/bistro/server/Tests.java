@@ -8,14 +8,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.server.actions.*;
-import org.conceptoriented.bistro.server.connectors.*;
-
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.actions.*;
+import org.conceptoriented.bistro.server.connectors.*;
 
 public class Tests {
 
@@ -44,7 +47,7 @@ public class Tests {
         // Create a timer action which will add a constant message to the table
         String message = "Hello Server (from Timer)!";
         ConnectorTimer timer = new ConnectorTimer(server,200);
-        timer.setAction(
+        timer.addAction(
                 x -> {
                     long id = table.add();
                     c.setValue(id, message);
@@ -134,7 +137,7 @@ public class Tests {
         try {
             Thread.sleep(500);
 
-            server.submit(new TaskEval(s)); // Send evaluation task manually
+            server.submit(new ActionEval(s)); // Send evaluation task manually
 
             Thread.sleep(200);
         } catch (InterruptedException e) {
@@ -202,7 +205,7 @@ public class Tests {
         try {
             Thread.sleep(1500);
 
-            server.submit(new TaskEval(s)); // Send evaluation task manually
+            server.submit(new ActionEval(s)); // Send evaluation task manually
 
             Thread.sleep(200);
         } catch (InterruptedException e) {
@@ -287,7 +290,7 @@ public class Tests {
 }
 
 
-class ProducingConnector extends Connector implements Runnable {
+class ProducingConnector extends ConnectorBase implements Runnable {
 
     protected Table table; // We want to add records to this table
     Column ca;
@@ -302,9 +305,9 @@ class ProducingConnector extends Connector implements Runnable {
         // Add record 1
         thiz.record.put(ca, 1.0);
         thiz.record.put(cb, 2.0);
-        thiz.server.submit(new TaskAdd(thiz.table, thiz.record));
+        thiz.server.submit(new ActionAdd(thiz.table, thiz.record));
 
-        thiz.server.submit(new TaskEval(thiz.table.getSchema()));
+        thiz.server.submit(new ActionEval(thiz.table.getSchema()));
 
         try {
             Thread.sleep(delay);
@@ -316,9 +319,9 @@ class ProducingConnector extends Connector implements Runnable {
         // Add record 2
         thiz.record.put(ca, 3.0);
         thiz.record.put(cb, 4.0);
-        thiz.server.submit(new TaskAdd(thiz.table, thiz.record));
+        thiz.server.submit(new ActionAdd(thiz.table, thiz.record));
 
-        thiz.server.submit(new TaskEval(thiz.table.getSchema()));
+        thiz.server.submit(new ActionEval(thiz.table.getSchema()));
 
         try {
             Thread.sleep(delay);
@@ -330,11 +333,12 @@ class ProducingConnector extends Connector implements Runnable {
         // Add record 3
         thiz.record.put(ca, 5.0);
         thiz.record.put(cb, 6.0);
-        thiz.server.submit(new TaskAdd(thiz.table, thiz.record));
+        thiz.server.submit(new ActionAdd(thiz.table, thiz.record));
 
-        thiz.server.submit(new TaskEval(thiz.table.getSchema()));
+        thiz.server.submit(new ActionEval(thiz.table.getSchema()));
 
-        thiz.server.submit(new TaskRemove(thiz.table, 1));
+        // Leave only 2 records in the table
+        thiz.server.submit(new ActionRemove(thiz.table, 2));
     }
 
     @Override

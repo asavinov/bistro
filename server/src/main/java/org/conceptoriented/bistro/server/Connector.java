@@ -1,28 +1,23 @@
 package org.conceptoriented.bistro.server;
 
+import java.util.List;
+
 import org.conceptoriented.bistro.core.*;
 
 /**
- * Connectors are responsible for interaction with the environment by receiving events and sending events.
+ * Connectors are responsible for interaction with the environment, for example, by receiving events and sending events.
  * They also are supposed to produce actions and can be invoked from actions executed by the server.
  */
-public class Connector {
+public interface Connector {
 
-    public Server server;
-    public Server getServer() {
-        return this.server;
-    }
-    public void setServer(Server server) {
-        this.server = server;
-    }
+    public Server getServer();
+    public void setServer(Server server);
 
-    public void start() throws BistroError {
-    }
+    // These actions will be executed after the actions of the connector itself in the same task
+    public void addAction(Action action);
+    public void addActions(List<Action> actions);
+    public List<Action> getActions();
 
-    public void stop() throws BistroError {
-    }
-
-    public Connector(Server server) {
-        this.server = server;
-    }
+    public void start() throws BistroError;
+    public void stop() throws BistroError;
 }

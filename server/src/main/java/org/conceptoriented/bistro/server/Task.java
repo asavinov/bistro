@@ -2,35 +2,38 @@ package org.conceptoriented.bistro.server;
 
 import org.conceptoriented.bistro.core.*;
 
-/**
- * It is a combination of an action and context which can be submitted to a server for execution.
- */
-public class Task implements Action, Runnable {
+import java.util.ArrayList;
+import java.util.List;
 
-    protected Action action;
+/**
+ * It is a sequence of actions and one context which can be executed by the server within one thread.
+ */
+public class Task implements Runnable {
+
+    protected List<Action> actions = new ArrayList<>();
 
     protected Context context;
 
     @Override
-    public void eval(Context context) throws BistroError {
-        if(this.action != null) {
-            this.action.eval(this.context);
+    public void run() { // It will be used by the executor
+        for(Action a : this.actions) {
+            try {
+                a.eval(this.context);
+            } catch (BistroError bistroError) {
+                bistroError.printStackTrace();
+                this.context.server.addError(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Error executing action.", bistroError.message));
+                return;
+            }
         }
     }
 
-    @Override
-    public void run() { // It will be used by the executor
-        try {
-            this.action.eval(this.context);
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            this.context.server.addError(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Error executing action.", bistroError.message));
-            return;
-        }
+    public Task(List<Action> actions, Context context) {
+        this.actions.addAll(actions);
+        this.context = context;
     }
 
     public Task(Action action, Context context) {
-        this.action = action;
+        this.actions.add(action);
         this.context = context;
     }
 }
