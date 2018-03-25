@@ -3,6 +3,8 @@ package org.conceptoriented.bistro.server.connectors;
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,7 +21,12 @@ public class ConnectorTimer extends ConnectorBase {
     public void start() throws BistroError {
 
         // This task will be submitted to the server for each timer event
-        Task task = new Task(ConnectorTimer.this.getActions(), null);
+        List<Action> actions = new ArrayList<>();
+        actions.addAll(ConnectorTimer.this.getActions());
+        Context ctx = new Context();
+        ctx.server = super.server;
+        ctx.schema = super.server.getSchema();
+        Task task = new Task(actions, ctx);
 
         // This object will be called for each timer event
         TimerTask timerTask =  new TimerTask() {

@@ -2,6 +2,8 @@ package org.conceptoriented.bistro.examples.server;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
+import org.conceptoriented.bistro.server.actions.ActionEval;
+import org.conceptoriented.bistro.server.actions.ActionRemove;
 import org.conceptoriented.bistro.server.connectors.*;
 
 import java.io.FileNotFoundException;
@@ -38,6 +40,31 @@ public class Example1
         Column price = schema.createColumn("Price", quotes);
         Column amount = schema.createColumn("Amount", quotes);
 
+        // Weighted price: Price * Amount
+        Column weigtedPrice = schema.createColumn("WeightedPrice", quotes);
+        weigtedPrice.calc(
+                p -> Double.valueOf((String)p[0]),
+                price
+        );
+
+        // Moving average of the weighted price
+        Column avg10 = schema.createColumn("Avg10", quotes);
+        avg10.setDefaultValue(0.0); // It will be used as an initial value
+        avg10.roll(
+                10, 0,
+                (a,d,p) -> (double)a + ((double)p[0] / 10.0),
+                weigtedPrice
+        );
+
+        // Moving average of the weighted price
+        Column avg50 = schema.createColumn("Avg50", quotes);
+        avg50.setDefaultValue(0.0); // It will be used as an initial value
+        avg50.roll(
+                50, 0,
+                (a,d,p) -> (double)a + ((double)p[0] / 50.0),
+                weigtedPrice
+        );
+
         //
         // Create server and connectors
         //
@@ -53,18 +80,22 @@ public class Example1
         }
         inSimulator.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
 
+        inSimulator.addAction(new ActionRemove(quotes, 100));
+
+        inSimulator.addAction(new ActionEval(schema));
+
+        // Detect some condition and print
+        Action myAction = new MyAction(quotes, avg10, avg50);
+        inSimulator.addAction(myAction);
+
         // Periodically print current state
         ConnectorTimer outTimer = new ConnectorTimer(server,1000);
         outTimer.addAction(
-                x -> System.out.print(".")
+                x -> {
+                    long len = quotes.getIdRange().end;
+                    System.out.print("." + len);
+                }
         );
-
-
-        // TODO: Periodically (synchronously) delete OR (alternatively) delete after addition
-
-        // TODO: Periodically (synchronously) evaluate OR (alternatively) evaluate after addition
-
-        // TODO: Periodically (synchronously) output alerts OR (alternatively) alerts after evaluation
 
         //
         // Start the server
@@ -80,7 +111,7 @@ public class Example1
         System.out.println("Server started.");
 
         try {
-            Thread.sleep(65000);
+            Thread.sleep(20000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -95,32 +126,37 @@ public class Example1
         }
         System.out.println("");
         System.out.println("Server stopped.");
-
-
-        // PROBLEM:
-        // A (standard) connector does some standard action, e.g., Simulator will add events
-        // Also, a connector might not have any (standard) action at all, and it is necessary to provide such an action, e.g., timer.
-        // The problem is that it is not possible to flexibly define actions for connectors.
-        // In particular, what we might need in connector configuration API:
-        // - Specify one action to perform (e.g., timer): setAction/setLambda
-        // - Specify a sequence of actions to perform: setTask or setActions/Lammbdas
-        // - Attach next actions to execute after whatever the connector will do
-
-
-        // DONE Feed events.
-        // Delete old events
-        // Evaluate derived columns: several averages (row-based) and alert column.
-
-        // Produce output.
-        // How: action, connector, during evaluation task?
-        // How to remember what has been printed already? call output logic for each new row added, or remember processed rows in variables within connector?
-
-        // Maybe introduce periodic (timer-based) log with stats or simply print dot like: .....
-        // Then if alert is found then print new line with alert:
-        // ...
-        // Alert: 5.0 < 10.0 < 12.3
-        // ......
-
     }
 
+}
+
+// TODO: Alternative: in general, when should we use a custom action and when a custom connector (for outputs)?
+
+class MyAction implements Action {
+
+    long lastEnd = 0;
+
+    Table table;
+    Column column1;
+    Column column2;
+
+    @Override
+    public void eval(Context context) throws BistroError {
+
+        long last = table.getIdRange().end - 1;
+
+        for( ; lastEnd<=last; lastEnd++) {
+
+            if((double)this.column1.getValue(last) < 0.9965*(double)this.column2.getValue(last)) {
+                System.out.print("x");
+            }
+
+        }
+    }
+
+    public MyAction(Table table, Column column1, Column column2) {
+        this.table = table;
+        this.column1 = column1;
+        this.column2 = column2;
+    }
 }

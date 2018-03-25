@@ -10,6 +10,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
 
     Schema schema;
+    public Schema getSchema() {
+        return this.schema;
+    }
+    public void setSchema(Schema schema) {
+        this.schema = schema;
+    }
+
     ReentrantLock schemaLock = new ReentrantLock();
 
     protected List<BistroError> errors = new ArrayList<>();

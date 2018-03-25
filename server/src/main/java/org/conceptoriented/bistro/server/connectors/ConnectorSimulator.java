@@ -5,6 +5,7 @@ import org.conceptoriented.bistro.server.*;
 import org.conceptoriented.bistro.server.actions.ActionAdd;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,8 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                 }
             }
 
-            // Send records to the server
+            // Create records to be added and create one action for each of them
+            List<Action> actions = new ArrayList<>();
             for( ; start < end; start++) {
 
                 Map<Column, Object> record = new HashMap<>();
@@ -64,8 +66,13 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                     record.put(columns.get(i), rec[i]);
                 }
 
-                this.server.submit(new ActionAdd(this.table, record));
+                actions.add(new ActionAdd(this.table, record));
             }
+
+            // Add follow up actions at the end
+            actions.addAll(this.getActions());
+            Task task = new Task(actions, null);
+            this.server.submit(task);
         }
 
     }
