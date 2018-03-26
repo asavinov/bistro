@@ -2,16 +2,19 @@ package org.conceptoriented.bistro.server.connectors;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
-import org.conceptoriented.bistro.server.actions.ActionAdd;
+import org.conceptoriented.bistro.server.actions.*;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Use it to simulate an asynchronous data source using data provided as an array in the constructor.
+ * The class simulates an asynchronous data source by feeding the data into the specified table.
+ * The input data is provided as a list of records.
+ * The data is appended to the table using the specified list of delays.
  */
 public class ConnectorSimulator extends ConnectorBase implements Runnable {
 
@@ -52,18 +55,25 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                 }
             }
 
+            // Timestamp to be inserted
+            Instant now = Instant.now();
+
             // Create records to be added and create one action for each of them
             List<Action> actions = new ArrayList<>();
             for( ; start < end; start++) {
 
                 Map<Column, Object> record = new HashMap<>();
+
+                // First, insert timestamp
+                record.put(columns.get(0), now);
+
+                // Then, insert all data fields
                 Object[] rec = this.data.get(start);
+                for(int i=0; i<rec.length; i++) {
 
-                for(int i=0; i<columns.size(); i++) {
+                    if(i >= columns.size()) break; // More values than columns
 
-                    if(i >= rec.length) break; // More columns than data fields
-
-                    record.put(columns.get(i), rec[i]);
+                    record.put(columns.get(i+1), rec[i]);
                 }
 
                 actions.add(new ActionAdd(this.table, record));

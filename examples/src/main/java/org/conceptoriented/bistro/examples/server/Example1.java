@@ -1,17 +1,20 @@
 package org.conceptoriented.bistro.examples.server;
 
-import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.server.*;
-import org.conceptoriented.bistro.server.actions.ActionEval;
-import org.conceptoriented.bistro.server.actions.ActionRemove;
-import org.conceptoriented.bistro.server.connectors.*;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.*;
+import org.conceptoriented.bistro.server.actions.*;
+import org.conceptoriented.bistro.server.connectors.*;
 
 /**
- * Feed events to the engine by computing several moving averages and firing alerts when they have a certain relationship.
+ * Feed events to the engine into one table.
+ * Compute two moving averages and fire alerts when the fast one significantly deviates from the slow one.
  */
 public class Example1
 {
@@ -30,30 +33,24 @@ public class Example1
         //
         // Create tables
         //
-        Table quotes = schema.createTable("T");
+        Table quotes = schema.createTable("QUOTES");
 
         //
         // Create columns
         //
 
         //Column time = schema.createColumn("Time", quotes);
+        Column time = schema.createColumn("Time", quotes);
         Column price = schema.createColumn("Price", quotes);
         Column amount = schema.createColumn("Amount", quotes);
-
-        // Weighted price: Price * Amount
-        Column weigtedPrice = schema.createColumn("WeightedPrice", quotes);
-        weigtedPrice.calc(
-                p -> Double.valueOf((String)p[0]),
-                price
-        );
 
         // Moving average of the weighted price
         Column avg10 = schema.createColumn("Avg10", quotes);
         avg10.setDefaultValue(0.0); // It will be used as an initial value
         avg10.roll(
                 10, 0,
-                (a,d,p) -> (double)a + ((double)p[0] / 10.0),
-                weigtedPrice
+                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 10.0),
+                price
         );
 
         // Moving average of the weighted price
@@ -61,8 +58,8 @@ public class Example1
         avg50.setDefaultValue(0.0); // It will be used as an initial value
         avg50.roll(
                 50, 0,
-                (a,d,p) -> (double)a + ((double)p[0] / 50.0),
-                weigtedPrice
+                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 50.0),
+                price
         );
 
         //
@@ -80,20 +77,21 @@ public class Example1
         }
         inSimulator.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
 
-        inSimulator.addAction(new ActionRemove(quotes, 100));
-
         inSimulator.addAction(new ActionEval(schema));
 
         // Detect some condition and print
-        Action myAction = new MyAction(quotes, avg10, avg50);
+        MyAction myAction = new MyAction(quotes, avg10, avg50);
         inSimulator.addAction(myAction);
+
+        // Delete old records
+        inSimulator.addAction(new ActionRemove(quotes, 100));
 
         // Periodically print current state
         ConnectorTimer outTimer = new ConnectorTimer(server,1000);
         outTimer.addAction(
                 x -> {
                     long len = quotes.getIdRange().end;
-                    System.out.print("." + len);
+                    System.out.print("o " + len + "\n");
                 }
         );
 
@@ -126,31 +124,50 @@ public class Example1
         }
         System.out.println("");
         System.out.println("Server stopped.");
+
+
+        if(myAction.alerts.size() != 16) System.out.println(">>> UNEXPECTED RESULT.");
+
+        // First alert
+        if((long)myAction.alerts.get(0).get(0) != 46204) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(0).get(1) - 403.617576) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(0).get(2) - 406.0798512000001) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+
+        // Last alert
+        if((long)myAction.alerts.get(15).get(0) != 46219) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(15).get(1) - 402.78532400000006) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(15).get(2) - 405.2549588000002) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 
 }
 
-// TODO: Alternative: in general, when should we use a custom action and when a custom connector (for outputs)?
-
 class MyAction implements Action {
+
+    // Deviation of the fast line from the slow line
+    static double deviation = 0.006;
 
     long lastEnd = 0;
 
     Table table;
-    Column column1;
-    Column column2;
+    Column column1; // Fast
+    Column column2; // Slow
+
+    public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
-    public void eval(Context context) throws BistroError {
+    public void eval(Context ctx) throws BistroError {
 
-        long last = table.getIdRange().end - 1;
+        long end = table.getIdRange().end;
 
-        for( ; lastEnd<=last; lastEnd++) {
+        for( ; lastEnd < end; lastEnd++) {
 
-            if((double)this.column1.getValue(last) < 0.9965*(double)this.column2.getValue(last)) {
-                System.out.print("x");
+            double fast = (double)this.column1.getValue(lastEnd);
+            double slow = (double)this.column2.getValue(lastEnd);
+
+            if(fast < (1.0 - deviation)*slow) {
+                System.out.print(">>> " + lastEnd + ": " + fast + " - " + slow + "\n");
+                alerts.add(Arrays.asList(lastEnd, fast, slow));
             }
-
         }
     }
 

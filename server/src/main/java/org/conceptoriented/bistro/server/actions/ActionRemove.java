@@ -19,7 +19,7 @@ public class ActionRemove implements Action {
     protected long size;
 
     @Override
-    public void eval(Context context) throws BistroError {
+    public void eval(Context ctx) throws BistroError {
         if(this.table == null) return;
 
         if(this.column != null && this.age != null) {

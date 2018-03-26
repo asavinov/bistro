@@ -91,6 +91,7 @@ public class Tests {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
+        Column time = s.createColumn("Time", t);
         Column ta = s.createColumn("A", t);
         Column tb = s.createColumn("B", t);
 
@@ -166,6 +167,7 @@ public class Tests {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
+        Column time = s.createColumn("Time", t);
         Column ta = s.createColumn("A", t);
         Column tb = s.createColumn("B", t);
 
