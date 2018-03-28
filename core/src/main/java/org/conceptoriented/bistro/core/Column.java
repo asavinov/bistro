@@ -387,7 +387,7 @@ public class Column implements Element {
     }
 
     //
-    // Proj column
+    // Proj to values (using equality)
     //
 
     public void proj(ColumnPath[] valuePaths, Column... keyColumns) {
@@ -420,10 +420,24 @@ public class Column implements Element {
         }
     }
 
-    public void proj(ColumnPath valuePath) { // Project to range table (using inequality as a condition)
+    //
+    // Proj to ranges/intervals (using inequality)
+    //
+
+    public void proj(ColumnPath valuePath) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valuePath);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void proj(Column valueColumn) {
+        this.setDefinitionType(ColumnDefinitionType.PROJ);
+
+        this.definition = new ColumnDefinitionProj(this, new ColumnPath(valueColumn));
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

@@ -61,7 +61,7 @@ public class Example8 {
 
         Column timestamp2hour = schema.createColumn("Link To Hour", quotes, hourlyQuotes);
         timestamp2hour.proj(
-                new ColumnPath(timestamp) // Timestamp will be mapped to hourly intervals
+                timestamp // Timestamp will be mapped to hourly intervals
         );
 
         //

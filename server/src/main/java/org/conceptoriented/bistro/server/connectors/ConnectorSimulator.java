@@ -59,7 +59,7 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
             Instant now = Instant.now();
 
             // Create records to be added and create one action for each of them
-            List<Action> actions = new ArrayList<>();
+            List<Action> toSubmit = new ArrayList<>();
             for( ; start < end; start++) {
 
                 Map<Column, Object> record = new HashMap<>();
@@ -76,12 +76,12 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                     record.put(columns.get(i+1), rec[i]);
                 }
 
-                actions.add(new ActionAdd(this.table, record));
+                toSubmit.add(new ActionAdd(this.table, record));
             }
 
             // Add follow up actions at the end
-            actions.addAll(this.getActions());
-            Task task = new Task(actions, null);
+            toSubmit.addAll(this.getActions());
+            Task task = new Task(toSubmit, null);
             this.server.submit(task);
         }
 

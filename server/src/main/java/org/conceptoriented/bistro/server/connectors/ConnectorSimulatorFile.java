@@ -88,7 +88,7 @@ public class ConnectorSimulatorFile extends ConnectorSimulator {
         List<Duration> delays = new ArrayList<>();
         for(int i=1; i<timestamps.size(); i++) {
             Duration del = Duration.between(timestamps.get(i-1), timestamps.get(i));
-            long nanos = Math.round( (double)del.toNanos() * this.accelerate );
+            long nanos = Math.round( (double)del.toNanos() / (double)this.accelerate );
             delays.add(Duration.ofNanos(nanos));
         }
         delays.add(Duration.ofMillis(0));

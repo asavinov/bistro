@@ -186,7 +186,7 @@ public class Tests {
 
         ConnectorSimulatorFile connector = null;
         try {
-            connector = new ConnectorSimulatorFile(server, t, "src/test/resources/.krakenEUR.csv", "Time", 1/3600.0);
+            connector = new ConnectorSimulatorFile(server, t, "src/test/resources/.krakenEUR.csv", "Time", 3600.0);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

@@ -25,6 +25,15 @@ public class Example1
 
     public static void main(String[] args) throws IOException {
 
+        // 46549 for 1 month which we want to play for 1 minute, which is approximately 775 events per second
+        double acceleration = 1.0/(31*24*60);
+
+        // Time while the server will process events (after that it will stop so it has to be enough for all events).
+        long serverProcessingTime = 21000;
+
+        // This number of records will be kept in the source table
+        long windowSize = 100;
+
         //
         // Create schema
         //
@@ -65,11 +74,11 @@ public class Example1
         //
         // Create server and connectors
         //
+
         Server server = new Server(schema);
 
         // Feed data into the schema
         ConnectorSimulatorFile inSimulator = null;
-        double acceleration = 1.0/(31*24*60); // 46549 for 1 month which we want to play for 1 minute, whic is approximately 775 events per second
         try {
             inSimulator = new ConnectorSimulatorFile(server, quotes, location +"/.krakenEUR.csv", "Time", acceleration);
         } catch (FileNotFoundException e) {
@@ -80,11 +89,11 @@ public class Example1
         inSimulator.addAction(new ActionEval(schema));
 
         // Detect some condition and print
-        MyAction myAction = new MyAction(quotes, avg10, avg50);
+        MyAction1 myAction = new MyAction1(quotes, avg10, avg50);
         inSimulator.addAction(myAction);
 
         // Delete old records
-        inSimulator.addAction(new ActionRemove(quotes, 100));
+        inSimulator.addAction(new ActionRemove(quotes, windowSize));
 
         // Periodically print current state
         ConnectorTimer outTimer = new ConnectorTimer(server,1000);
@@ -109,7 +118,7 @@ public class Example1
         System.out.println("Server started.");
 
         try {
-            Thread.sleep(20000);
+            Thread.sleep(serverProcessingTime);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -141,7 +150,7 @@ public class Example1
 
 }
 
-class MyAction implements Action {
+class MyAction1 implements Action {
 
     // Deviation of the fast line from the slow line
     static double deviation = 0.006;
@@ -157,7 +166,7 @@ class MyAction implements Action {
     @Override
     public void eval(Context ctx) throws BistroError {
 
-        long end = table.getIdRange().end;
+        long end = this.table.getIdRange().end;
 
         for( ; lastEnd < end; lastEnd++) {
 
@@ -171,7 +180,7 @@ class MyAction implements Action {
         }
     }
 
-    public MyAction(Table table, Column column1, Column column2) {
+    public MyAction1(Table table, Column column1, Column column2) {
         this.table = table;
         this.column1 = column1;
         this.column2 = column2;
