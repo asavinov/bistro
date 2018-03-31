@@ -1,7 +1,11 @@
 # Change Log
 
 * v0.7.0-SNAPSHOT (under development)
-    * New evaluator interface for accumulate columns
+    * Two examples for the server
+    * Add, remove and evaluate actions
+    * Timer and simulator connectors
+    * New interfaces for connectorsm, tasks and actions
+    * Three separate evaluation interfaces for calculate, accumulate and rolling columns
 * v0.6.0 (2018-02-25)
     * Link and project columns to range tables
     * Range tables

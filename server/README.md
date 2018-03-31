@@ -1,29 +1,56 @@
-# Bistro Stream: a light-weight stream analytics engine
+```
+  ____  _     _
+ | __ )(_)___| |_ _ __ ___  ___________________________
+ |  _ \| / __| __| '__/ _ \ 
+ | |_) | \__ \ |_| | | (_) |  C O L U M N S  F I R S T
+ |____/|_|___/\__|_|  \___/ ___________________________
+```
 
-# What is Bistro Stream
+> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](../README.md)
 
-Bistro Stream is a light-weight stream analytics engine which changes the way stream data is processed.
-Different to other streaming engines, Bistro Stream defines its data processing logic using a column-oriented approach rather than a set-oriented approach.
-In particular, it does not use such difficult to comprehend and execute operations like join and group-by.
-As a light-weight engine, it is intended for IoT.
+* [Getting started with Bistro Streams](#getting-started-with-bistro-streams)
 
-For IoT (Internet of Things) applications and services, it is important to be able to analyze data as it is being created by producing results immediately.
-In edge analytics, it is important to produce results as close to the data source as possible - at the edge of the network (as opposed to cloud computing where data is transmitted to a centralized server for analysis).
 
-## How to use
+***TODO*** Mention examples. Either centrally (in more info or references) or in relevant places discussing the topic.
 
-### Artifacts
+# Getting started with Bistro Streams
 
-Group: `org.conceptoriented`
-Artifact: `bistro-server`
-Version: `0.6.0`
+## Createing server
 
-### Maven configuration
 
-### Gradle configuration
+Principles. Bistro Engine <- Bistro Server <- (Actions) <- Bistro Connectors
+
+
+
+## Createing connectors
+
+
+## Createing actions
+
+
+## Running a server
+
 
 # How to build
 
-Command line: 
-* Build the project: gradlew build
-* Publish the artifact: gradlew publish
+From the project folder (`git/bistro/server`) execute the following to clean, build and publish the artifact:
+
+```console
+$ gradlew clean
+$ gradlew build
+$ gradlew publish
+```
+
+The artifact will be placed in your local repository from where it will be available in other projects.
+
+In order to include this artifact into your project add the following lines to dependencies of your `build.gradle`:
+
+```groovy
+dependencies {
+    compile("org.conceptoriented:bistro-core:0.7.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-formula:0.7.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-server:0.7.0-SNAPSHOT")
+
+    // Other dependencies
+}
+```
