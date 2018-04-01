@@ -26,10 +26,10 @@ public class Example1
     public static void main(String[] args) throws IOException {
 
         // 46549 for 1 month which we want to play for 1 minute, which is approximately 775 events per second
-        double acceleration = 1.0/(31*24*60);
+        double acceleration = 31*24*60;
 
         // Time while the server will process events (after that it will stop so it has to be enough for all events).
-        long serverProcessingTime = 21000;
+        long serverProcessingTime = 30000;
 
         // This number of records will be kept in the source table
         long windowSize = 100;

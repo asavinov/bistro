@@ -6,9 +6,13 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](https://github.com/asavinov/bistro)
+> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the [root project](https://github.com/asavinov/bistro)
 
 * [Getting started with Bistro Streams](#getting-started-with-bistro-streams)
+  * [Creating a server](#creating-a-server)
+  * [Actions](#actions)
+  * [Connectors](#connectors)
+* [How to build](#how-to-build)
 
 # Getting started with Bistro Streams
 
@@ -70,7 +74,9 @@ server.submit(
 );
 ```
 
-The server will execute this action and printe the current number of records in the table.
+The server will execute this action and printe the current number of records in the table. 
+
+Connectors also are supposed to sink data to external event hubs or data stores. For example, in the case some unusual behavior has been detected by the system (during evaluation) such a connector can append a record to a database or sent an event to an event hub with an alert.
 
 ## Connectors
 
@@ -124,9 +130,9 @@ In order to include this artifact into your project add the following lines to d
 
 ```groovy
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.7.0-SNAPSHOT")
-    compile("org.conceptoriented:bistro-formula:0.7.0-SNAPSHOT")
-    compile("org.conceptoriented:bistro-server:0.7.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.7.0")
+    compile("org.conceptoriented:bistro-formula:0.7.0")
+    compile("org.conceptoriented:bistro-server:0.7.0")
 
     // Other dependencies
 }

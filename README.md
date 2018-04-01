@@ -16,7 +16,6 @@
   * [How it works: a novel approach to stream processing](#how-it-works-a-novel-approach-to-stream-processing)
   * [Why Bistro Streams: benefits](#why-bistro-streams-benefits)
 * [Formal basis: Concept-Oriented Model](#formal-basis-concept-oriented-model)
-* [History of Bistro](#history-of-bistro)
 * [More information](#more-information)
 
 # Introduction
@@ -85,9 +84,9 @@ Formally, Bistro relies on the *concept-oriented model* (COM) [2] where the main
 # More information
 
 * Sub-projects:
-  * Bisro Engine: [core/README.md](core/README.md)
-  * Bisro Streams: [server/README.md](server/README.md)
-  * Examples: [examples/README.md](examples/README.md)
+  * [Bistro Engine](./core) - a general-purpose data processing engine
+  * [Bistro Streams](./server) - a stream analytics server
+  * [Examples](./examples) - examples of how to use Bistro Engine and Bistro Streams
 
 * A web application based on the same principles as Bistro can be evaluated here:
   * http://dc.conceptoriented.com - DataCommandr

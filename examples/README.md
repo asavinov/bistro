@@ -6,8 +6,8 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](https://github.com/asavinov/bistro)
+> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the [root project](https://github.com/asavinov/bistro)
 
 # Bistro examples
 
-This project provides basic examples of using Bistro with sample data.
+This sub-project provides basic examples of using Bistro with sample data. All examples are broken into 3 categories: core - principles of Bistro Engine, formula - how formulas are used in Bistro Engine, server - principles of Bistro Streams.

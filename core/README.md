@@ -6,7 +6,7 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](https://github.com/asavinov/bistro)
+> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the [root project](https://github.com/asavinov/bistro)
 
 * [Getting started with Bistro Engine](#getting-started-with-bistro-engine)
   * [Schema elements](#schema-elements)
@@ -351,7 +351,7 @@ In order to include this artifact into your project add the following lines to d
 
 ```groovy
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.7.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.7.0")
 
     // Other dependencies
 }
