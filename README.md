@@ -23,9 +23,9 @@
 
 The goal of this project is to implement a novel general-purpose data modeling and data processing technology which radically differs from most of the existing approaches. Shortly, it can be viewed as a major alternative to SQL, MapReduce and other set-oriented approaches. This project currently includes the following sub-projects:
 
-* [Bistro Engine](core/README.md) - a general-purpose data processing engine
-* [Bistro Stream](server/README.md) - a stream analytics server
-* [Examples](examples/README.md) Examples of how to use Bistro Engine and Bistro Streams
+* [Bistro Engine](https://github.com/asavinov/bistro/core) - a general-purpose data processing engine
+* [Bistro Stream](https://github.com/asavinov/bistro/server) - a stream analytics server
+* [Examples](https://github.com/asavinov/bistro/examples) - examples of how to use Bistro Engine and Bistro Streams
 
 Below we provide a general description of these projects and more detailed information can be found in the corresponding project sub-folders.
 

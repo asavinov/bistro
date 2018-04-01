@@ -6,7 +6,7 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](../README.md)
+> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the description of the root project: [../README.md](https://github.com/asavinov/bistro)
 
 * [Getting started with Bistro Engine](#getting-started-with-bistro-engine)
   * [Schema elements](#schema-elements)
