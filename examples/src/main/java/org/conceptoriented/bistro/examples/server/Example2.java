@@ -1,28 +1,20 @@
 package org.conceptoriented.bistro.examples.server;
 
-import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.server.Action;
-import org.conceptoriented.bistro.server.Context;
-import org.conceptoriented.bistro.server.Server;
-import org.conceptoriented.bistro.server.actions.ActionEval;
-import org.conceptoriented.bistro.server.actions.ActionRemove;
-import org.conceptoriented.bistro.server.connectors.ConnectorSimulatorFile;
-import org.conceptoriented.bistro.server.connectors.ConnectorTimer;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.server.*;
+import org.conceptoriented.bistro.server.actions.*;
+import org.conceptoriented.bistro.server.connectors.*;
+
 /**
  * Feed events to the engine into one table.
- * Project the events to the range table with regular intervals and aggregate the quotes over these intervals.
- * Compute several moving averages for the aggregated (projected) time series data.
- * Fire alerts when the fast curve deviates from the slow curve.
+ * Compute two moving averages and fire alerts when the fast one significantly deviates from the slow one.
  */
 public class Example2
 {
@@ -39,83 +31,44 @@ public class Example2
         // Time while the server will process events (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 30000;
 
-        // Size of regular intervals for aggregation and analysis
-        Duration intervalSize = Duration.ofMillis(1000);
+        // This number of records will be kept in the source table
+        long windowSize = 100;
 
         //
         // Create schema
         //
-        schema = new Schema("Example 2");
+        schema = new Schema("Example 1");
 
         //
-        // Table with (asynchronous) source quotes
+        // Create tables
         //
-
         Table quotes = schema.createTable("QUOTES");
 
+        //
+        // Create columns
+        //
+
+        //Column time = schema.createColumn("Time", quotes);
         Column time = schema.createColumn("Time", quotes);
         Column price = schema.createColumn("Price", quotes);
         Column amount = schema.createColumn("Amount", quotes);
 
-        //
-        // Table with (synchronous) time intervals
-        //
-
-        Table intervals = schema.createTable("INTERVALS");
-        Column intervalTime = schema.createColumn("Time", intervals);
-        intervalTime.noop(true);
-        Column intervalNo = schema.createColumn("Interval", intervals);
-        intervalNo.noop(true);
-
-        // Definition
-        Instant startInterval = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-        intervals.range(
-                startInterval,
-                intervalSize,
-                10000L // Maximum number of intervals
+        // Moving average of the weighted price
+        Column avg10 = schema.createColumn("Avg10", quotes);
+        avg10.setDefaultValue(0.0); // It will be used as an initial value
+        avg10.roll(
+                10, 0,
+                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 10.0),
+                price
         );
 
-        // Project column pointing to the range table
-        Column interval = schema.createColumn("Interval", quotes, intervals);
-        interval.proj(
-                time // Timestamp of the event will be mapped to time ranges
-        );
-
-        //
-        // Aggregated and rolling columns
-        //
-
-        Column volumeSum = schema.createColumn("Volume Sum", intervals);
-        volumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        volumeSum.accu(
-                interval, // Link: Even time stamp -> Interval
-                (a,p) -> (double)a + Double.valueOf((String)p[0]),
-                amount
-        );
-
-        Column quoteCount = schema.createColumn("Quote Count", intervals);
-        quoteCount.setDefaultValue(0.0); // It will be used as an initial value
-        quoteCount.accu(
-                interval, // Link: Even time stamp -> Interval
-                (a,p) -> (double)a + 1.0
-        );
-
-        Column avgVolume = schema.createColumn("Average Volume", intervals);
-        avgVolume.calc(
-                (p) -> (double)p[0] / (double)p[1],
-                volumeSum, quoteCount
-        );
-
-        Column avgVolumeIncrease = schema.createColumn("Average Volume Increase", intervals);
-        avgVolumeIncrease.setDefaultValue(0.0); // It will be used as an initial value
-        avgVolumeIncrease.roll(
-                2, 0,
-                (a,d,p) -> {
-                    if(d == 0) return (double)a + (double)p[0]; // Current interval
-                    else if(d == 1) return (double)a - (double)p[0]; // Previous interval
-                    else return a; // Should never happen with window size 2
-                },
-                avgVolume
+        // Moving average of the weighted price
+        Column avg50 = schema.createColumn("Avg50", quotes);
+        avg50.setDefaultValue(0.0); // It will be used as an initial value
+        avg50.roll(
+                50, 0,
+                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 50.0),
+                price
         );
 
         //
@@ -133,29 +86,23 @@ public class Example2
         }
         inSimulator.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
 
-        //
-        // Periodically check the state, detect anomalies and print them
-        //
+        inSimulator.addAction(new ActionEval(schema));
 
-        // Periodically check the status
-        ConnectorTimer outTimer = new ConnectorTimer(server,500);
+        // Detect some condition and print
+        MyAction2 myAction = new MyAction2(quotes, avg10, avg50);
+        inSimulator.addAction(myAction);
 
-        outTimer.addAction(new ActionEval(schema)); // Evaluate
+        // Delete old records
+        inSimulator.addAction(new ActionRemove(quotes, windowSize));
 
-        outTimer.addAction( // Print some status info
+        // Periodically print current state
+        ConnectorTimer outTimer = new ConnectorTimer(server,1000);
+        outTimer.addAction(
                 x -> {
                     long len = quotes.getIdRange().end;
                     System.out.print("o " + len + "\n");
                 }
         );
-
-        // Detect anomalies and print if found
-        MyAction2 myAction = new MyAction2(intervals, avgVolumeIncrease);
-        inSimulator.addAction(myAction);
-
-        // Delete old source events and intervals
-        outTimer.addAction(new ActionRemove(quotes, 2000));
-        outTimer.addAction(new ActionRemove(intervals, 20)); // Note that old intervals will be re-created by projecting old events if they still exist
 
         //
         // Start the server
@@ -163,16 +110,6 @@ public class Example2
 
         try {
             server.start();
-
-            // Synchronize simulator start with second borders (start with the next second)
-            try {
-                Instant nextSecond = Instant.now().truncatedTo(ChronoUnit.SECONDS).plusMillis(1100);
-                long toNextSecond = Duration.between(Instant.now(), nextSecond).toMillis();
-                Thread.sleep(toNextSecond);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             inSimulator.start();
             outTimer.start();
         } catch (BistroError bistroError) {
@@ -198,43 +135,54 @@ public class Example2
         System.out.println("Server stopped.");
 
 
-        // Note that currently the simulated data feed is not synchronized and not deterministically
-        // mapped (projected) to time intervals of fixed length. Therefore, we cannot produce
-        // deterministic tests
+        if(myAction.alerts.size() != 16) System.out.println(">>> UNEXPECTED RESULT.");
+
+        // First alert
+        if((long)myAction.alerts.get(0).get(0) != 46204) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(0).get(1) - 403.617576) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(0).get(2) - 406.0798512000001) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+
+        // Last alert
+        if((long)myAction.alerts.get(15).get(0) != 46219) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(15).get(1) - 402.78532400000006) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        if(Math.abs((double)myAction.alerts.get(15).get(2) - 405.2549588000002) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 
 }
 
 class MyAction2 implements Action {
 
-    // Threshold for the volume change
-    static double deviation = 0.35;
+    // Deviation of the fast line from the slow line
+    static double deviation = 0.006;
 
     long lastEnd = 0;
 
     Table table;
-    Column column; // Volume increase
+    Column column1; // Fast
+    Column column2; // Slow
 
     public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
     public void eval(Context ctx) throws BistroError {
 
-        long end = this.table.getIdRange().end - 1; // Note that we skip the last interval because it is not complete yet
+        long end = this.table.getIdRange().end;
 
         for( ; lastEnd < end; lastEnd++) {
 
-            double value = (double)this.column.getValue(lastEnd);
+            double fast = (double)this.column1.getValue(lastEnd);
+            double slow = (double)this.column2.getValue(lastEnd);
 
-            if(Math.abs(value) > deviation) {
-                System.out.print(">>> " + lastEnd + ": " + value + "\n");
-                alerts.add(Arrays.asList(lastEnd, value));
+            if(fast < (1.0 - deviation)*slow) {
+                System.out.print(">>> " + lastEnd + ": " + fast + " - " + slow + "\n");
+                alerts.add(Arrays.asList(lastEnd, fast, slow));
             }
         }
     }
 
-    public MyAction2(Table table, Column column) {
+    public MyAction2(Table table, Column column1, Column column2) {
         this.table = table;
-        this.column = column;
+        this.column1 = column1;
+        this.column2 = column2;
     }
 }

@@ -21,7 +21,7 @@ configurations.all {
 
 jar {
     baseName = 'bistro-server'
-    version =  '0.7.0'
+    version =  '0.8.0-SNAPSHOT'
 }
 
 repositories {
@@ -35,10 +35,10 @@ targetCompatibility = 1.8
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-server'
-version = '0.7.0'
+version = '0.8.0-SNAPSHOT'
 
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.7.0")
+    compile("org.conceptoriented:bistro-core:0.8.0-SNAPSHOT")
     testCompile("junit:junit:4.12")
 }
 
@@ -55,7 +55,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-server'
-            //version '0.7.0'
+            //version '0.8.0-SNAPSHOT'
 
             //artifact jar
             artifact sourcesJar

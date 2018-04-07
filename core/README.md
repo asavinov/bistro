@@ -212,7 +212,7 @@ We can find the sum of the measure for each element in "THINGS" using this colum
 
 ```java
 Column sums = schema.createColumn("Sum Measure", things, objects);
-sums.setDefaultValue(0.0); // Start accumulatoin from this value
+sums.setDefaultValue(0.0); // Start accumulation from this value
 sums.accu(
         link, // Grouping column
         (a,p) -> (Double)a + (Double)p[0], // Add measure to the current aggregate
@@ -303,7 +303,7 @@ myTable.range(
 
 It is also possible to define ranges of time durations and date periods.
 
-A typical use of range tables is aggregation over (numeric or date) intervals usig inequality conditions as opposed to aggregation over discrete values using equality of values as a condition belonging to a group.
+A typical use of range tables is aggregation over (numeric or date) intervals using inequality conditions as opposed to aggregation over discrete values using equality of values as a condition belonging to a group.
 
 ## Schema evaluation
 

@@ -18,7 +18,7 @@
 
 ## Creating a server
 
-A *server* is responsible for *executing* operations on the data state managed by the Bistro Engine. In particular, it is resonsible for making all operations safe including thread-safity. Thus it is necessary first to create a schema which will be managed by the server. For example, we could create one table which has one column:
+A *server* is responsible for *executing* operations on the data state managed by the Bistro Engine. In particular, it is resonsible for making all operations safe including thread-safety. Thus it is necessary first to create a schema which will be managed by the server. For example, we could create one table which has one column:
 
 ```java
 Schema schema = new Schema("My Schema");
@@ -40,13 +40,13 @@ server.start();
 
 ## Actions
 
-An *action* reresents one user-defined operation with data. Actions are submitted to the server and one action will be executed within one thread. There are a number of standard actions which implement conventional operations like adding or removing data elements. 
+An *action* represents one user-defined operation with data. Actions are submitted to the server and one action will be executed within one thread. There are a number of standard actions which implement conventional operations like adding or removing data elements. 
 
 For example, we could create a record, and then add it to the table via such an action object:
 
 ```java
 Map<Column, Object> record = new HashMap<>();
-record.put(columns, 36.6);
+record.put(column, 36.6);
 Action action = new ActionAdd(table, record);
 server.submit(action);
 ```
@@ -64,7 +64,7 @@ Task task = new Task(Arrays.asList(action1, action2), null);
 server.submit(task);
 ```
 
-This will guarantee that the table will have maximum 10 records and older records will be deleted.
+This will guarantee that the table will have maximum 10 records and older records will be deleted by the second action.
 
 More complex actions can be defined via user-defined functions:
 
@@ -74,18 +74,16 @@ server.submit(
 );
 ```
 
-The server will execute this action and printe the current number of records in the table. 
-
-Connectors also are supposed to sink data to external event hubs or data stores. For example, in the case some unusual behavior has been detected by the system (during evaluation) such a connector can append a record to a database or sent an event to an event hub with an alert.
+The server will execute this action and print the current number of records in the table.
 
 ## Connectors
 
-Submitting actions can be used for batch processing scenarios. In the case of stream analytics, the server receives and processes data continuously. However, the server itself knows only how to execute the actions and receiving and sending data is performed by *connectors*.
+Submitting actions can be used for batch processing scenarios. In the case of stream analytics, the server receives and processes data continuously. However, the server itself knows only how to execute the actions, and receiving or sending data is performed by *connectors*.
 
-For example, a standard timer connector can be used to perform some actions regularly. In our example, we could regularly add random data to the table by customizing the time connector:
+For example, a standard timer connector can be used to perform some actions regularly. In our example, we could regularly add random data to the table by using the standard time connector:
 
 ```java
-ConnectorTimer timer = new ConnectorTimer(server,500);
+ConnectorTimer timer = new ConnectorTimer(server,500); // Do something every 500 milliseconds
 timer.addAction(
         x -> {
             long id = table.add();
@@ -101,10 +99,12 @@ After adding each new record, we can evaluate the schema by deriving new data:
 timer.addAction(new ActionEval(schema));
 ```
 
+(In our example it will do nothing because we do not have derived columns with their own definitions.)
+
 Once a connector has been configured it has to be started.
 
 ```java
-connector.start();
+timer.start();
 ```
 
 There are different types of connectors but they can be divided into two big classes:
@@ -112,7 +112,7 @@ There are different types of connectors but they can be divided into two big cla
 * asynchronous connectors which are triggered by events coming from outside like event hubs or incoming http requests
 * synchronous connectors which regularly request new data from some data source like database or a remote service
 
-In any case, a connector will receive events and then add them to the server.
+In any case, a connector will receive events and then add them to the server. Connectors also are supposed to sink data to external event hubs or data stores. For example, in the case some unusual behavior has been detected by the system (during evaluation) such a connector can append a record to a database or sent an alert to an event hub. A connector can also implement a protocol for accessing the data in the server like JDBC. External clients can then connect to the server via JDBC and visually explore its current data state.
 
 # How to build
 
