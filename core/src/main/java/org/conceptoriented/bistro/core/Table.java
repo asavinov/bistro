@@ -21,11 +21,9 @@ public class Table implements Element {
         this.name = name;
     }
 
+    private static List<String> primitiveNames = Arrays.asList("Object", "Double", "Integer", "String");
     public boolean isPrimitive() {
-        if(name.equalsIgnoreCase("Object") || name.equalsIgnoreCase("Double") || name.equalsIgnoreCase("Integer") || name.equalsIgnoreCase("String")) {
-            return true;
-        }
-        return false;
+        return this.primitiveNames.stream().anyMatch(x -> x.equalsIgnoreCase(this.name));
     }
 
     public List<Column> getColumns() {
@@ -39,60 +37,61 @@ public class Table implements Element {
     // Table as a set of ids. Iteration through this collection (table readers and writers).
     //
 
-    protected Range idRange = new Range(); // Full id range of records from start to end
+    protected Range addedRange = new Range(); // Newly added ids
+    public Range getAddedRange() {
+        return this.addedRange;
+    }
+
+    protected Range deletedRange = new Range(); // Deleted ids
+    public Range getDeletedRange() {
+        return this.deletedRange;
+    }
+
+    //protected Range idRange = new Range(); // Valid ids
     public Range getIdRange() {
-        return this.idRange;
+        return new Range(this.deletedRange.end, this.addedRange.end);
     }
 
     public long getLength() {
-        return this.idRange.getLength();
+        return this.addedRange.end - this.deletedRange.end;
     }
 
     //
-    // Operations with ids (table population)
+    // Operations with table population
     //
 
     public long add() { // Add new elements with the next largest id. The created id is returned
         this.getColumns().forEach( x -> x.add() );
-        this.idRange.end++;
-        return this.idRange.end - 1;
+        this.addedRange.end++; // Grows along with valid ids
+        return this.addedRange.end - 1; // Return id of the added element
     }
 
     public Range add(long count) {
         this.getColumns().forEach( x -> x.add(count) );
-        this.idRange.end += count;
-        return new Range(this.idRange.end - count, this.idRange.end);
+        this.addedRange.end += count; // Grows along with valid ids
+        return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
     }
 
     public long remove() { // Remove oldest elements with smallest ids. The deleted id is returned.
         this.getColumns().forEach( x -> x.remove() );
-        this.idRange.start++;
-        return this.idRange.start - 1;
+        if(this.getLength() > 0) this.deletedRange.end++;
+        return this.deletedRange.end - 1; // Id of the deleted record (not valid id anymore)
     }
 
     public Range remove(long count) {
         this.getColumns().forEach( x -> x.remove(count) );
-        if(count > 0) { // Remove oldest
-            this.idRange.start += count;
-            return new Range(this.idRange.start - count, this.idRange.start);
-        }
-        else if(count < 0) { // Remove newest
-            this.idRange.end += count; // End is decreased because count is negative
-            return new Range(this.idRange.end, this.idRange.end - count);
-        }
-        else {
-            return new Range(this.idRange.start, this.idRange.start);
-        }
+        long toRemove = Math.min(count, this.getLength());
+        this.deletedRange.end += toRemove;
+        return new Range(this.deletedRange.end - toRemove, this.deletedRange.end);
     }
 
     protected void removeAll() {
         this.getColumns().forEach( x -> x.removeAll() );
-        this.idRange.start = 0;
-        this.idRange.end = 0;
+        this.deletedRange.end = this.addedRange.end;
     }
 
     //
-    // Operations with multiple column valuePaths
+    // Operations with column values (convenience methods)
     //
 
     public void getValues(long id, Map<String,Object> record) {

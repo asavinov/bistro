@@ -151,14 +151,15 @@ public class ProdTests {
 
         // Result size
         assertEquals(2, t3.getLength());
+        Range t3range = t3.getIdRange();
 
         // c31 = {11}
-        assertEquals(1L, c31.getValue(0));
-        assertEquals(1L, c31.getValue(1));
+        assertEquals(1L, c31.getValue(t3range.start));
+        assertEquals(1L, c31.getValue(t3range.start+1));
 
         // c32 = {12}
-        assertEquals(1L, c32.getValue(0));
-        assertEquals(2L, c32.getValue(1));
+        assertEquals(1L, c32.getValue(t3range.start));
+        assertEquals(2L, c32.getValue(t3range.start+1));
     }
 
     Schema createSchema2() {
@@ -168,7 +169,7 @@ public class ProdTests {
         Column c32 = t3.getColumn("C32");
 
         //
-        // Table 3 (fact table referencing and populating T3)
+        // Table 4 (fact table referencing and populating T3)
         //
         Table t4 = s.createTable("T4");
         Column c41 = s.createColumn("C41", t4, s.getTable("T1"));
