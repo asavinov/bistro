@@ -34,7 +34,7 @@ public class Table implements Element {
     }
 
     //
-    // Table as a set of ids. Iteration through this collection (table readers and writers).
+    // Change status is delta between previous state and current state (as a number of added and removed records)
     //
 
     protected Range addedRange = new Range(); // Newly added ids
@@ -47,13 +47,50 @@ public class Table implements Element {
         return this.deletedRange;
     }
 
-    //protected Range idRange = new Range(); // Valid ids
     public Range getIdRange() {
-        return new Range(this.deletedRange.end, this.addedRange.end);
+        return new Range(this.deletedRange.end, this.addedRange.end); // Derived from added and removed
     }
 
     public long getLength() {
-        return this.addedRange.end - this.deletedRange.end;
+        return this.addedRange.end - this.deletedRange.end; // All non-removed records
+    }
+
+    private boolean isChanged = false;
+    @Override
+    public boolean isChanged() {
+        return this.isChanged;
+    }
+    public boolean isChanged_NEW() { // Changes in a table are made by adding and removing records
+        if(this.addedRange.getLength() != 0) return true;
+        if(this.deletedRange.getLength() != 0) return true;
+        return false;
+    }
+
+    @Override
+    public void setChanged() {
+        this.isChanged = true;
+        if(definitionType == TableDefinitionType.PROD) {
+            this.getProjColumns().forEach(x -> x.setChanged()); // All proj-columns have to be marked dirty too because they will populate this table
+        }
+    }
+
+    @Override
+    public void resetChanged() { // Forget about the change status/scope (reset change delta)
+        this.addedRange.start = this.addedRange.end;
+        this.getColumns().forEach( x -> x.remove(this.deletedRange.getLength()) );
+        this.deletedRange.start = this.deletedRange.end;
+    }
+
+    @Override
+    public boolean isChangedDependencies() {
+        if(this.isChanged) return true;
+
+        // Otherwise check if there is a dirty dependency (recursively)
+        for(Element dep : this.getDependencies()) {
+            if(dep.isChangedDependencies()) return true;
+        }
+
+        return false;
     }
 
     //
@@ -79,19 +116,17 @@ public class Table implements Element {
     }
 
     public Range remove(long count) {
-        this.getColumns().forEach( x -> x.remove(count) );
         long toRemove = Math.min(count, this.getLength());
         this.deletedRange.end += toRemove;
         return new Range(this.deletedRange.end - toRemove, this.deletedRange.end);
     }
 
     protected void removeAll() {
-        this.getColumns().forEach( x -> x.removeAll() );
         this.deletedRange.end = this.addedRange.end;
     }
 
     //
-    // Operations with column values (convenience methods)
+    // Operations with data stored in columns (convenience methods)
     //
 
     public void getValues(long id, Map<String,Object> record) {
@@ -173,14 +208,14 @@ public class Table implements Element {
     }
 
     @Override
-    public List<Element> getDependants() {
+    public List<Element> getDependents() {
         return new ArrayList<>();
     }
     @Override
-    public boolean hasDependant(Element element) {
-        for(Element dep : this.getDependants()) {
+    public boolean hasDependents(Element element) {
+        for(Element dep : this.getDependents()) {
             if(dep == this) return true;
-            if(dep.hasDependant(element)) return true;// Recursion
+            if(dep.hasDependents(element)) return true;// Recursion
         }
         return false;
     }
@@ -228,31 +263,6 @@ public class Table implements Element {
         return false;
     }
 
-    private boolean isDirty = false;
-    @Override
-    public boolean isDirty() {
-        return this.isDirty;
-    }
-    @Override
-    public void setDirty() {
-        this.isDirty = true;
-        if(definitionType == TableDefinitionType.PROD) {
-            this.getProjColumns().forEach(x -> x.setDirty()); // All proj-columns have to be marked dirty too because they will populate this table
-        }
-    }
-
-    @Override
-    public boolean isDirtyDeep() {
-        if(this.isDirty) return true;
-
-        // Otherwise check if there is a dirty dependency (recursively)
-        for(Element dep : this.getDependencies()) {
-            if(dep.isDirtyDeep()) return true;
-        }
-
-        return false;
-    }
-
     @Override
     public void run() {
         this.populate();
@@ -268,11 +278,11 @@ public class Table implements Element {
         if(!this.isDerived()) {
 
             // Propagate dirty status to all dependants before resting it
-            if(this.isDirty()) {
-                this.getDependants().forEach(x -> x.setDirty());
+            if(this.isChanged()) {
+                this.getDependents().forEach(x -> x.setChanged());
             }
 
-            this.isDirty = false;
+            this.isChanged = false;
 
             return;
         }
@@ -288,7 +298,7 @@ public class Table implements Element {
         // No definition errors - canEvaluate true
 
         // If everything is up-to-date then there is no need to eval
-        if(!this.isDirtyDeep()) { // this.needEvaluate false
+        if(!this.isChangedDependencies()) { // this.needEvaluate false
             // TODO: Add error: cannot evaluate because of dirty dependency
             return;
         }
@@ -320,10 +330,10 @@ public class Table implements Element {
         }
 
         if(this.executionErrors.size() == 0) {
-            this.isDirty = false; // Clean the state (remove dirty flag)
+            this.isChanged = false; // Clean the state (remove dirty flag)
         }
         else {
-            this.isDirty = true; // Evaluation failed
+            this.isChanged = true; // Evaluation failed
         }
     }
 
@@ -347,7 +357,7 @@ public class Table implements Element {
             this.expressionWhere = null;
         }
 
-        this.setDirty();
+        this.setChanged();
 
         this.removeAll();
     }

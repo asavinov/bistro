@@ -125,23 +125,14 @@ public class Schema {
         this.eval_graph(layers);
     }
 
-    /**
-     * Evaluate one specific column. Dependencies will be also evaluated if necessary
-     */
     public void eval(Column column) {
         List<List<Element>> layers = buildLayers(column);
         this.eval_graph(layers);
     }
 
-    /**
-     * Evaluate one column and dependencies if necessary
-     */
     public void eval(Column[] columns) {
     }
 
-    /**
-     * Evaluate all columns of one table
-     */
     public void eval(Table table) {
         List<List<Element>> layers = buildLayers(table);
         this.eval_graph(layers);
@@ -160,8 +151,8 @@ public class Schema {
                 elem.getExecutionErrors().clear();
 
                 // This status will be cleared after evaluation so we explicitly propagate it to the direct dependents (not all of them are in this graph)
-                if(elem.isDirty()) {
-                    elem.getDependants().forEach(x -> x.setDirty());
+                if(elem.isChanged()) {
+                    elem.getDependents().forEach(x -> x.setChanged());
                 }
 
                 if(elem.hasDefinitionErrorsDeep()) { // Columns with definition errors cannot evaluated (including cycles)
@@ -175,7 +166,7 @@ public class Schema {
                 // Check that all dependencies are clean (if at one is dirty then we cannot evaluate this)
                 boolean dirtyDepFound = false;
                 for(Element dep : elem.getDependencies()) {
-                    if(dep.isDirtyDeep()) { dirtyDepFound = true; break; }
+                    if(dep.isChangedDependencies()) { dirtyDepFound = true; break; }
                 }
                 if(dirtyDepFound) continue;
 

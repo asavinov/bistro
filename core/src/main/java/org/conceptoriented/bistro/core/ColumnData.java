@@ -73,12 +73,16 @@ public class ColumnData {
 
     protected void remove() { this.remove(1); }
     protected void remove(long count) { // Remove the oldest records with lowest ids
-
-        // Delete
-        this.idRange.start += count;
         this.startIdOffset += count;
+        this.idRange.start += count;
 
-        // Garbage collection. Free some space if there is enough in the beginning of the array
+        this.gc();
+    }
+    protected void removeAll() {
+        this.remove(this.idRange.getLength());
+    }
+
+    protected void gc() { // Garbage collection. Free some space if there is enough in the beginning of the array
         if(this.startIdOffset > INCREMENT_SIZE) {
             // Shift values to the beginning
             System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
@@ -91,9 +95,6 @@ public class ColumnData {
                 this.values = Arrays.copyOf(this.values, this.values.length - additionalSize);
             }
         }
-    }
-    protected void removeAll() {
-        this.idRange.start = this.idRange.end;
     }
 
     // Return insert index

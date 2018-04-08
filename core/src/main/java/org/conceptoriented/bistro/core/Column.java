@@ -40,6 +40,36 @@ public class Column implements Element {
     public void setOutput(Table table) { this.output = table; this.setValue(null); }
 
     //
+    // Change status
+    //
+
+    private boolean isChanged = false;
+    @Override
+    public boolean isChanged() {
+        return this.isChanged;
+    }
+    @Override
+    public void setChanged() {
+        this.isChanged = true;
+    }
+    @Override
+    public void resetChanged() { // Forget about the change status/scope (reset change delta)
+        this.isChanged = false;
+    }
+
+    @Override
+    public boolean isChangedDependencies() {
+        if(this.isChanged) return true;
+
+        // Otherwise check if there is a dirty dependency (recursively)
+        for(Element dep : this.getDependencies()) {
+            if(dep.isChangedDependencies()) return true;
+        }
+
+        return false;
+    }
+
+    //
     // Data (public)
     //
 
@@ -47,26 +77,26 @@ public class Column implements Element {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isDirty = true; }
+    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
 
-    public void setValue(Object value) { this.data.setValue(value); this.isDirty = true; }
+    public void setValue(Object value) { this.data.setValue(value); this.isChanged = true; }
 
-    public void setValue() { this.data.setValue(); this.isDirty = true; }
+    public void setValue() { this.data.setValue(); this.isChanged = true; }
 
     public Object getDefaultValue() { return this.data.getDefaultValue(); }
-    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isDirty = true; }
+    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isChanged = true; }
 
     //
-    // Data (protected). These are used from Table only (all columns change their ranges simultaneously) and from users - users add/remove elements via tables.
+    // Data (protected). They are used from Table only and determine physically existing mapping from a range of ids to output values.
     //
 
-    protected void add() { this.data.add(); this.isDirty = true; }
-    protected void add(long count) { this.data.add(count); this.isDirty = true; }
+    protected void add() { this.data.add(); this.isChanged = true; }
+    protected void add(long count) { this.data.add(count); this.isChanged = true; }
 
-    protected void remove() { this.data.remove(1); this.isDirty = true; }
-    protected void remove(long count) { this.data.remove(count); this.isDirty = true; }
+    protected void remove() { this.data.remove(1); this.isChanged = true; }
+    protected void remove(long count) { this.data.remove(count); this.isChanged = true; }
 
-    protected void removeAll() { this.data.removeAll(); this.isDirty = true; }
+    protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
 
     protected long findSorted(Object value) { return this.data.findSorted(value); }
 
@@ -110,7 +140,7 @@ public class Column implements Element {
     }
 
     @Override
-    public List<Element> getDependants() {
+    public List<Element> getDependents() {
         List<Element> cols = schema.getColumns().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Element>toList());
         List<Element> tabs = schema.getTables().stream().filter(x -> x.getDependencies().contains(this)).collect(Collectors.<Element>toList());
 
@@ -123,10 +153,10 @@ public class Column implements Element {
         return ret;
     }
     @Override
-    public boolean hasDependant(Element element) {
-        for(Element dep : this.getDependants()) {
+    public boolean hasDependents(Element element) {
+        for(Element dep : this.getDependents()) {
             if(dep == element) return true;
-            if(dep.hasDependant(element)) return true;// Recursion
+            if(dep.hasDependents(element)) return true;// Recursion
         }
         return false;
     }
@@ -174,28 +204,6 @@ public class Column implements Element {
         return false;
     }
 
-    private boolean isDirty = false;
-    @Override
-    public boolean isDirty() {
-        return this.isDirty;
-    }
-    @Override
-    public void setDirty() {
-        this.isDirty = true;
-    }
-
-    @Override
-    public boolean isDirtyDeep() {
-        if(this.isDirty) return true;
-
-        // Otherwise check if there is a dirty dependency (recursively)
-        for(Element dep : this.getDependencies()) {
-            if(dep.isDirtyDeep()) return true;
-        }
-
-        return false;
-    }
-
     @Override
     public void run() {
         this.eval();
@@ -211,12 +219,12 @@ public class Column implements Element {
         // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
 
-            // Propagate dirty status to all dependants before resting it
-            if(this.isDirty()) {
-                this.getDependants().forEach(x -> x.setDirty());
+            // Propagate dirty status to all dependents before resting it
+            if(this.isChanged()) {
+                this.getDependents().forEach(x -> x.setChanged());
             }
 
-            this.isDirty = false;
+            this.isChanged = false;
 
             return;
         }
@@ -232,7 +240,7 @@ public class Column implements Element {
         // No definition errors - canEvaluate true
 
         // If everything is up-to-date then there is no need to eval
-        if(!this.isDirtyDeep()) { // this.needEvaluate false
+        if(!this.isChangedDependencies()) { // this.needEvaluate false
             // TODO: Add error: cannot evaluate because of dirty dependency
             return;
         }
@@ -254,10 +262,10 @@ public class Column implements Element {
         }
 
         if(this.executionErrors.size() == 0) {
-            this.isDirty = false; // Clean the state (remove dirty flag)
+            this.isChanged = false; // Clean the state (remove dirty flag)
         }
         else {
-            this.isDirty = true; // Evaluation failed
+            this.isChanged = true; // Evaluation failed
         }
     }
 
@@ -279,7 +287,7 @@ public class Column implements Element {
         this.definition = null;
         this.key = false;
 
-        this.setDirty();
+        this.setChanged();
     }
     public boolean isDerived() {
         if(this.definitionType == ColumnDefinitionType.NOOP) {
