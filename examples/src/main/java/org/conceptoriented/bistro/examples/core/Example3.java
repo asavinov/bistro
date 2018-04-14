@@ -66,13 +66,13 @@ public class Example3 {
                 items.getColumn("Amount")
         );
 
-        schema.eval();
+        schema.evaluate();
 
         //
         // Evaluate and read values
         //
 
-        schema.eval();
+        schema.evaluate();
 
         Object value;
 

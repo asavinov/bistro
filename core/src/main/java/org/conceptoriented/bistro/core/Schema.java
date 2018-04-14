@@ -121,30 +121,36 @@ public class Schema {
      * Evaluate all columns of the schema. The order of evaluation is determined by dependencies. Only dirty columns are evaluated. Columns with errors are not evaluated.
      */
     public void evaluate() {
-        List<List<Element>> layers = buildLayers();
-        this.eval_graph(layers);
+        Topology topology = new Topology(this);
+        topology.create();
+
+        this.evaluateToplogy(topology);
     }
 
     public void evaluate(Column column) {
-        List<List<Element>> layers = buildLayers(column);
-        this.eval_graph(layers);
+        Topology topology = new Topology(column);
+        topology.create();
+
+        this.evaluateToplogy(topology);
     }
 
     public void evaluate(Column[] columns) {
     }
 
     public void evaluate(Table table) {
-        List<List<Element>> layers = buildLayers(table);
-        this.eval_graph(layers);
+        Topology topology = new Topology(table);
+        topology.create();
+
+        this.evaluateToplogy(topology);
     }
 
     //
     // Dependency graph
     //
 
-    protected void eval_graph(List<List<Element>> layers) {
+    protected void evaluateToplogy(Topology topology) {
 
-        for(List<Element> layer : layers) {
+        for(List<Element> layer : topology.layers) {
 
             for(Element elem : layer) {
 
@@ -174,21 +180,55 @@ public class Schema {
         }
 
         // After evaluating, clear the changes in all elements of the graph
-        for(List<Element> layer : layers) {
+        for(List<Element> layer : topology.layers) {
             for(Element elem : layer) {
                 elem.resetChanged();
             }
         }
-
     }
 
-    protected List<List<Element>> buildLayers() { // Build a list of layers of the graph
+    //
+    // Serialization and construction
+    //
 
-        List<List<Element>> layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
+    @Override
+    public String toString() {
+        return "[" + name + "]";
+    }
+
+    public Schema(String name) {
+        this.id = UUID.randomUUID();
+        this.name = name;
+
+        // Create primitive tables
+        Table objectType = createTable("Object");
+    }
+
+}
+
+class Topology {
+
+    Schema schema;
+
+    Element element;
+
+    // Each layer is a list of elements which depend on elements of previous layers
+    List<List<Element>> layers = new ArrayList<>();
+
+    public void create() {
+        if(this.schema == null) return;
+
+        if(this.element == null) this.create_for_schema();
+        else this.create_for_element();
+    }
+
+    protected void create_for_schema() { // Build a list of layers of the graph
+
+        this.layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
 
         List<Element> all = new ArrayList<>();
-        all.addAll(this.getColumns());
-        all.addAll(this.getTables());
+        all.addAll(this.schema.getColumns());
+        all.addAll(this.schema.getTables());
 
         List<Element> done = new ArrayList<>();
 
@@ -213,24 +253,23 @@ public class Schema {
 
             if(layer.isEmpty()) break;
 
-            layers.add(layer);
+            this.layers.add(layer);
             done.addAll(layer);
         }
-
-        return layers;
     }
 
-    protected List<List<Element>> buildLayers(Element element) { // Build graph with one element as the last element
-        List<List<Element>> layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
+    protected void create_for_element() { // Build graph with one element as the last element
+
+        this.layers = new ArrayList<>(); // Each layer is a list of elements which depend on elements of previous layers
 
         // Start from the last layer and then each previous layer will contain all dependencies of the previous layer elements
 
         List<Element> layer = new ArrayList<>();
-        layer.add(element);
+        layer.add(this.element);
 
         while(true) {
 
-            layers.add(0, new ArrayList<>(layer));
+            this.layers.add(0, new ArrayList<>(layer));
             layer.clear();
 
             for(Element elem : layers.get(0)) { // All elements of the previous layer
@@ -246,25 +285,17 @@ public class Schema {
 
             if(layer.isEmpty()) break;
         }
-
-        return layers;
     }
 
-    //
-    // Serialization and construction
-    //
-
-    @Override
-    public String toString() {
-        return "[" + name + "]";
+    public Topology(Column column) {
+        this.element = column;
+        this.schema = column.getSchema();
     }
-
-    public Schema(String name) {
-        this.id = UUID.randomUUID();
-        this.name = name;
-
-        // Create primitive tables
-        Table objectType = createTable("Object");
+    public Topology(Table table) {
+        this.element = table;
+        this.schema = table.getSchema();
     }
-
+    public Topology(Schema schema) {
+        this.schema = schema;
+    }
 }

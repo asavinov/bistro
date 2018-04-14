@@ -85,7 +85,7 @@ public class Example1
                 itemsAmount
         );
 
-        schema.eval();
+        schema.evaluate();
     }
 
 }

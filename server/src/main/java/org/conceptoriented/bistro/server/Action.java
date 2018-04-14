@@ -7,5 +7,5 @@ import org.conceptoriented.bistro.core.*;
  */
 @FunctionalInterface
 public interface Action {
-    public void eval(Context ctx) throws BistroError;
+    public void evaluate(Context ctx) throws BistroError;
 }

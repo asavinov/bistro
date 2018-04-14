@@ -18,7 +18,7 @@ public class Task implements Runnable {
     public void run() { // It will be used by the executor
         for(Action a : this.actions) {
             try {
-                a.eval(this.context);
+                a.evaluate(this.context);
             } catch (BistroError bistroError) {
                 bistroError.printStackTrace();
                 this.context.server.addError(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Error executing action.", bistroError.message));

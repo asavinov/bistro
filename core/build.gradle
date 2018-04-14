@@ -79,5 +79,10 @@ artifacts {
     archives javadocJar
 }
 
+// To see print output from unit tests
+test {
+    testLogging.showStandardStreams = true
+}
+
 // http://blog.omega-prime.co.uk/2015/11/30/easy-publishing-to-maven-central-with-gradle/
 // http://mike-neck.github.io/blog/2013/06/21/how-to-publish-artifacts-with-gradle-maven-publish-plugin-version-1-dot-6/

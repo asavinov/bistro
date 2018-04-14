@@ -11,8 +11,8 @@ public class ActionEval implements Action {
     protected Schema schema;
 
     @Override
-    public void eval(Context ctx) throws BistroError {
-        this.schema.eval();
+    public void evaluate(Context ctx) throws BistroError {
+        this.schema.evaluate();
     }
 
     public ActionEval(Schema schema) {

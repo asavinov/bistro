@@ -67,7 +67,7 @@ public class Example7 {
         // Evaluate and read values
         //
 
-        schema.eval();
+        schema.evaluate();
 
         Object value;
 

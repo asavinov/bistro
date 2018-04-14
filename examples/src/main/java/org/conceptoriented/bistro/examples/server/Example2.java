@@ -164,7 +164,7 @@ class MyAction2 implements Action {
     public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
-    public void eval(Context ctx) throws BistroError {
+    public void evaluate(Context ctx) throws BistroError {
 
         long end = this.table.getIdRange().end;
 

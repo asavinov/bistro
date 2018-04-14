@@ -98,3 +98,8 @@ artifacts {
     archives sourcesJar
     archives javadocJar
 }
+
+// To see print output from unit tests
+test {
+    testLogging.showStandardStreams = true
+}

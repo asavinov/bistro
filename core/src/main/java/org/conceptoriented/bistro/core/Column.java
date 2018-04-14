@@ -93,14 +93,14 @@ public class Column implements Element {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-    public void setValue(long id, Object value) { this.data.setValue(id, value); this.isChanged = true; }
+    public void setValue(long id, Object value) { this.data.setValue(id, value); this.setChanged(); }
 
-    public void setValue(Object value) { this.data.setValue(value); this.isChanged = true; }
+    public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
 
-    public void setValue() { this.data.setValue(); this.isChanged = true; }
+    public void setValue() { this.data.setValue(); this.setChanged(); }
 
     public Object getDefaultValue() { return this.data.getDefaultValue(); }
-    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.isChanged = true; }
+    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.setChanged(); }
 
     //
     // Data (protected). They are used from Table only and determine physically existing mapping from a range of ids to output values.

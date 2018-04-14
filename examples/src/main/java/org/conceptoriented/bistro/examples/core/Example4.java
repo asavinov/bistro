@@ -90,7 +90,7 @@ public class Example4 {
         // Evaluate and read values
         //
 
-        schema.eval();
+        schema.evaluate();
 
         Object value;
 

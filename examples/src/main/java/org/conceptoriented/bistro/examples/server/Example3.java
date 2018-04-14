@@ -218,7 +218,7 @@ class MyAction3 implements Action {
     public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
-    public void eval(Context ctx) throws BistroError {
+    public void evaluate(Context ctx) throws BistroError {
 
         long end = this.table.getIdRange().end - 1; // Note that we skip the last interval because it is not complete yet
 

@@ -31,7 +31,7 @@ public class Tests {
 
         // Define and evaluate
         tb.calc(expr);
-        tb.eval();
+        tb.evaluate();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
@@ -75,7 +75,7 @@ public class Tests {
                 exprs,
                 t.getColumn("A"), t.getColumn("B")
         );
-        t2c.eval();
+        t2c.evaluate();
 
         // Check correctness of dependencies
         List<Element> t2c_deps = t2c.getDependencies();
@@ -134,7 +134,7 @@ public class Tests {
         Column ta = s.getColumn("T", "A");
         Column t2g = s.getColumn("T2", "G");
 
-        t2g.eval();
+        t2g.evaluate();
 
         ta.setDefaultValue(0.0);
 
@@ -146,7 +146,7 @@ public class Tests {
                 (a,p) -> (Double)a + 2.0 * (Double)p[0],
                 t2.getColumn("Id")
         );
-        ta.eval();
+        ta.evaluate();
 
         // Check correctness of dependencies
         List<Element> ta_deps = ta.getDependencies();
@@ -159,7 +159,7 @@ public class Tests {
 
         // Test how dirty status is propagated through dependencies
         t2.getColumn("Id").setValue(2, 5.0); // Change (make dirty) non-derived column
-        s.eval(); // Both t2g and ta have to be evaluated
+        s.evaluate(); // Both t2g and ta have to be evaluated
 
         assertEquals(30.0, ta.getValue(0));
     }

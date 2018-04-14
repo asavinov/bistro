@@ -8,7 +8,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -29,6 +33,39 @@ public class Tests {
     @Before
     public void setUp() {
     }
+
+    protected String resource2path(String resource, String resource2) throws URISyntaxException {
+
+        /*
+        Path currentRelativePath = Paths.get("");
+        String ss = currentRelativePath.toAbsolutePath().toString();
+        System.out.println("Current relative path is: " + ss);
+
+        System.out.println("Current relative path is: " + Paths.get(".").toAbsolutePath().normalize().toString());
+
+        //java.io.InputStream is = this.getClass().getResourceAsStream("../../.krakenEUR.csv");
+
+        //java.io.InputStream is = classLoader.getResourceAsStream("../../test/resources/.krakenEUR.csv");
+        */
+
+        ClassLoader classLoader = getClass().getClassLoader();
+
+        java.net.URL url = classLoader.getResource(resource);
+        File file;
+        if(url != null) {
+            java.net.URI uri = url.toURI();
+            file = new File(uri);
+        }
+        else {
+            file = new File(resource2);
+        }
+
+        String path = file.getAbsolutePath();
+
+        return path;
+    }
+
+
 
     @Test
     public void timerTest()
@@ -186,8 +223,13 @@ public class Tests {
 
         ConnectorSimulatorFile connector = null;
         try {
-            connector = new ConnectorSimulatorFile(server, t, "src/test/resources/.krakenEUR.csv", "Time", 3600.0);
+            // Relative to root package in src: "../../test/resources/.krakenEUR.csv"
+            // Relative to project: "src/test/resources/.krakenEUR.csv"
+            String path = resource2path("../../test/resources/.krakenEUR.csv", "src/test/resources/.krakenEUR.csv");
+            connector = new ConnectorSimulatorFile(server, t, path, "Time", 3600.0);
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
             e.printStackTrace();
         }
         connector.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
@@ -233,7 +275,7 @@ public class Tests {
     }
 
     @Test
-    public void customProducerTest() {
+    public void customProducerTest() throws BistroError {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -248,24 +290,10 @@ public class Tests {
         );
 
         Server server = new Server(s);
-
-        //
-        // Create necessary connectors
-        //
+        server.start();
 
         ProducingConnector producer = new ProducingConnector(server, t);
-
-        //
-        // Run the server
-        //
-
-        try {
-            server.start();
-            producer.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error starting server.");
-        }
+        producer.start();
 
         try {
             Thread.sleep(500);
@@ -275,13 +303,8 @@ public class Tests {
         }
 
         // All connectors have to be stopped.
-        try {
-            producer.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error stopping server.");
-        }
+        producer.stop();
+        server.stop();
 
         assertEquals(2L, t.getLength() );
 

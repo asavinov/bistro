@@ -93,7 +93,7 @@ public class Example1 {
         // Evaluate and read values
         //
 
-        schema.eval(); // All 3 derived columns will be evaluated
+        schema.evaluate(); // All 3 derived columns will be evaluated
 
         // Calculate column
         value = calc.getValue(0); // value = 6
