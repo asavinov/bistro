@@ -82,6 +82,20 @@ public class ColumnData {
         this.remove(this.idRange.getLength());
     }
 
+    protected void reset(long start, long end) {
+        // Allocate memory
+        this.values = new Object[INITIAL_SIZE];
+
+        // Initially no data but the ids start from what is specified in parameters
+        this.idRange.start = start;
+        this.idRange.end = start;
+
+        // Now the end will move and space will be added if necessary
+        this.add(end - start);
+
+        this.setValue(); // Set default values
+    }
+
     protected void gc() { // Garbage collection. Free some space if there is enough in the beginning of the array
         if(this.startIdOffset > INCREMENT_SIZE) {
             // Shift values to the beginning
@@ -111,14 +125,6 @@ public class ColumnData {
     public ColumnData(long start, long end) {
         this.id = UUID.randomUUID();
 
-        // Initialize storage
-        this.values = new Object[INITIAL_SIZE];
-
-        // Initially no data but the ids start from what is specified in parameters
-        this.idRange.start = start;
-        this.idRange.end = start;
-
-        // Now the end will move and space will be added if necessary
-        this.add(end - start);
+        this.reset(start, end);
     }
 }

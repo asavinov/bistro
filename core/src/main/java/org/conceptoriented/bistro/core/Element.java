@@ -19,10 +19,11 @@ public interface Element {
     public List<BistroError> getDefinitionErrors();
     public boolean hasDefinitionErrorsDeep();
 
+    public long getChangedAt();
     public boolean isChanged();
     public void setChanged(); // Normally is not used directly - only from data manipulation methods
     public void resetChanged(); // Normally after evaluation (when the delta has been propagated and not needed anymore)
-    public boolean isChangedDependencies(); // Based on dependencies
+    public boolean isDirty(); // Based on dependencies
 
-    public void run(); // Evaluate
+    public void evaluate(); // Evaluate
 }

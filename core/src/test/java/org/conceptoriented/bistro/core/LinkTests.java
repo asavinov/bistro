@@ -36,7 +36,7 @@ public class LinkTests {
                 valueColumns, // A and B from T2
                 keyColumns // A and B from T
         );
-        t2c.eval();
+        t2c.evaluate();
 
         // Check correctness of dependencies
         List<Element> t2c_deps = t2c.getDependencies();
@@ -55,7 +55,7 @@ public class LinkTests {
                 valueExprs
                 // keyColumns - by default, if no key columns are specified then existing key columns will be used
         );
-        t2c.eval();
+        t2c.evaluate();
 
         // Check correctness of dependencies
         t2c_deps = t2c.getDependencies();
@@ -63,7 +63,7 @@ public class LinkTests {
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
         assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // New record append by proj-column
+        assertEquals(1L, t2c.getValue(1)); // New record append by project column
     }
 
     Schema createSchema() {
@@ -126,7 +126,7 @@ public class LinkTests {
                 new ColumnPath(f_a) // This column values will be mapped to intervals
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
@@ -175,17 +175,17 @@ public class LinkTests {
                 new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
         assertTrue(f_c_deps.contains(f.getColumn("A")));
-        assertTrue(!f_c_deps.contains(t)); // Proj column does not depend on the range table
+        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table definition
 
-        // Range table depends on the incoming proj-column and its input table
+        // Range table does not depend on the incoming project columns and their input table
         List<Element> t_deps = t.getDependencies();
-        assertTrue(t_deps.contains(f_b));
-        assertTrue(t_deps.contains(f));
+        assertTrue(!t_deps.contains(f_b));
+        assertTrue(!t_deps.contains(f));
 
         // Population size
         assertEquals(8L, t.getLength());
@@ -258,7 +258,7 @@ public class LinkTests {
                 new ColumnPath(f_a) // This column values will be mapped to intervals
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
@@ -307,17 +307,17 @@ public class LinkTests {
                 new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
         assertTrue(f_c_deps.contains(f.getColumn("A")));
-        assertTrue(!f_c_deps.contains(t)); // Proj column does not depend on the range table
+        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table definition
 
-        // Range table depends on the incoming proj-column and its input table
+        // Range table does not depend on the incoming project columns and their input table
         List<Element> t_deps = t.getDependencies();
-        assertTrue(t_deps.contains(f_b));
-        assertTrue(t_deps.contains(f));
+        assertTrue(!t_deps.contains(f_b));
+        assertTrue(!t_deps.contains(f));
 
         // Population size
         assertEquals(5L, t.getLength());

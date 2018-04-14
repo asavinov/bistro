@@ -35,7 +35,7 @@ public class RollTests {
                 (a,d,p) -> (Double)a + ((Double)p[0] / (d + 1)),
                 t_m
         );
-        t_r.eval();
+        t_r.evaluate();
 
         assertEquals(1.0, t_r.getValue(0));
         assertEquals(2.5, t_r.getValue(1));
@@ -66,7 +66,7 @@ public class RollTests {
                 (a,d,p) -> (Double)a + (Double)p[0],
                 t_m
         );
-        t_r.eval();
+        t_r.evaluate();
 
         assertEquals(1.0, t_r.getValue(0));
         assertEquals(2.0, t_r.getValue(1));

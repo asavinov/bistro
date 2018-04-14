@@ -27,17 +27,17 @@ public class TableDefinitionProd implements TableDefinition {
 
         // All incoming (populating) proj-columns (if any)
         List<Column> projCols = this.table.getProjColumns();
+        //ret.addAll(projCols);
+
         // And their input tables which have to be populated before
         List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());
-
-        ret.addAll(projCols);
-        ret.addAll(projTabs);
+        //ret.addAll(projTabs);
 
         return ret;
     }
 
     @Override
-    public void populate() {
+    public void evaluate() {
 
         // Find all local greater dimensions to be varied (including the super-dim)
         List<Column> keyColumns = this.table.getKeyColumns();

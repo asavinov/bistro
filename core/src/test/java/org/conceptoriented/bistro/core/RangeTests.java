@@ -5,7 +5,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +37,7 @@ public class RangeTests {
                 5L
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> t_deps = t.getDependencies();
@@ -73,7 +72,7 @@ public class RangeTests {
                 5L
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> t_deps = t.getDependencies();
@@ -108,7 +107,7 @@ public class RangeTests {
                 5L
         );
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> t_deps = t.getDependencies();

@@ -43,27 +43,43 @@ public class Column implements Element {
     // Change status
     //
 
+    protected long changedAt; // Time of latest change
+    @Override
+    public long getChangedAt() {
+        return this.changedAt;
+    }
+
     private boolean isChanged = false;
     @Override
     public boolean isChanged() {
         return this.isChanged;
     }
+
     @Override
     public void setChanged() {
         this.isChanged = true;
+        this.changedAt = System.currentTimeMillis();
     }
+
     @Override
     public void resetChanged() { // Forget about the change status/scope (reset change delta)
         this.isChanged = false;
+        this.changedAt = System.currentTimeMillis();
     }
 
     @Override
-    public boolean isChangedDependencies() {
-        if(this.isChanged) return true;
+    public boolean isDirty() {
 
-        // Otherwise check if there is a dirty dependency (recursively)
+        // This element is dirty (update is needed) if one of its dependencies has changes
         for(Element dep : this.getDependencies()) {
-            if(dep.isChangedDependencies()) return true;
+            if(dep.getChangedAt() > this.getChangedAt()) return true;
+            if(dep.isDirty()) return true;
+        }
+
+        // Derived elements depend on their definition
+        if(this.definition != null) {
+            if(!this.getDefinitionErrors().isEmpty()) return true;
+            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
         }
 
         return false;
@@ -97,6 +113,17 @@ public class Column implements Element {
     protected void remove(long count) { this.data.remove(count); this.isChanged = true; }
 
     protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
+
+    protected void reset() {
+        Table table = this.getInput();
+        if(table != null) {
+            this.data.reset(table.getIdRange().start, table.getIdRange().end);
+        }
+        else {
+            this.data.reset(0, 0);
+        }
+        this.isChanged = true;
+    }
 
     protected long findSorted(Object value) { return this.data.findSorted(value); }
 
@@ -205,64 +232,57 @@ public class Column implements Element {
     }
 
     @Override
-    public void run() {
-        this.eval();
-    }
-
-    //
-    // Evaluate
-    //
-
-    // Evaluate only this individual column if possible
-    public void eval() {
+    public void evaluate() { // Evaluate only this individual column if possible
 
         // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
-
-            // Propagate dirty status to all dependents before resting it
-            if(this.isChanged()) {
-                this.getDependents().forEach(x -> x.setChanged());
-            }
-
-            this.isChanged = false;
-
+            this.setChanged();
             return;
         }
 
-        // Clear all evaluation errors before any new evaluation
+        //
+        // Check can evaluate
+        //
+
         this.executionErrors.clear();
 
-        // If there are some definition errors then no possibility to eval (including cycles)
-        if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
-            // TODO: Add error: cannot evaluate because of definition error in a dependency
-            return;
-        }
-        // No definition errors - canEvaluate true
-
-        // If everything is up-to-date then there is no need to eval
-        if(!this.isChangedDependencies()) { // this.needEvaluate false
-            // TODO: Add error: cannot evaluate because of dirty dependency
-            return;
-        }
-        // There exists dirty status - needEvaluate true
-
-        // If there were evaluation errors
-        if(this.hasExecutionErrorsDeep()) { // this.canEvaluate false
+        if(this.hasExecutionErrorsDeep()) {
             // TODO: Add error: cannot evaluate because of execution error in a dependency
             return;
         }
-        // No errors while evaluating dependencies
 
-        //
-        // Really evaluate using definition
-        //
-        if(this.definition != null) {
-            this.definition.eval();
-            this.executionErrors.addAll(this.definition.getErrors());
+        if(this.hasDefinitionErrorsDeep()) {
+            // TODO: Add error: cannot evaluate because of definition error in a dependency
+            return;
         }
 
+        if(this.definition == null) {
+            return;
+        }
+
+        //
+        // Check need to evaluate
+        //
+
+        if(!this.isDirty()) {
+            // TODO: Add error: cannot evaluate because of dirty dependency
+            return;
+        }
+
+
+        //
+        // Really evaluate
+        //
+
+        this.definition.evaluate();
+        this.executionErrors.addAll(this.definition.getErrors());
+
+        //
+        // Result of evaluation
+        //
+
         if(this.executionErrors.size() == 0) {
-            this.isChanged = false; // Clean the state (remove dirty flag)
+            this.setChanged();
         }
         else {
             this.isChanged = true; // Evaluation failed
@@ -287,13 +307,20 @@ public class Column implements Element {
         this.definition = null;
         this.key = false;
 
-        this.setChanged();
+        this.definitionChangedAt = System.currentTimeMillis();
+        if(this.definitionChangedAt <= this.changedAt) this.definitionChangedAt = this.changedAt + 1; // To avoid getting the same timestamp because of low time resolution
     }
+
     public boolean isDerived() {
         if(this.definitionType == ColumnDefinitionType.NOOP) {
             return false;
         }
         return true;
+    }
+
+    protected long definitionChangedAt; // Time of latest change
+    public long getDefinitionChangedAt() {
+        return this.definitionChangedAt;
     }
 
     //
@@ -555,5 +582,7 @@ public class Column implements Element {
 
         // Where its output values are stored
         this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
+
+        this.changedAt = 0; // Very old - need to be evaluated
     }
 }

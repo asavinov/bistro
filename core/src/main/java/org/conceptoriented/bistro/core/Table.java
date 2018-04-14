@@ -55,12 +55,14 @@ public class Table implements Element {
         return this.addedRange.end - this.deletedRange.end; // All non-removed records
     }
 
-    private boolean isChanged = false;
+    protected long changedAt; // Time of latest change
     @Override
-    public boolean isChanged() {
-        return this.isChanged;
+    public long getChangedAt() {
+        return this.changedAt;
     }
-    public boolean isChanged_NEW() { // Changes in a table are made by adding and removing records
+
+    @Override
+    public boolean isChanged() { // Changes in a table are made by adding and removing records
         if(this.addedRange.getLength() != 0) return true;
         if(this.deletedRange.getLength() != 0) return true;
         return false;
@@ -68,26 +70,28 @@ public class Table implements Element {
 
     @Override
     public void setChanged() {
-        this.isChanged = true;
-        if(definitionType == TableDefinitionType.PROD) {
-            this.getProjColumns().forEach(x -> x.setChanged()); // All proj-columns have to be marked dirty too because they will populate this table
-        }
+        this.changedAt = System.currentTimeMillis();
     }
 
     @Override
-    public void resetChanged() { // Forget about the change status/scope (reset change delta)
+    public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
         this.addedRange.start = this.addedRange.end;
-        this.getColumns().forEach( x -> x.remove(this.deletedRange.getLength()) );
         this.deletedRange.start = this.deletedRange.end;
+        this.changedAt = System.currentTimeMillis();
     }
 
     @Override
-    public boolean isChangedDependencies() {
-        if(this.isChanged) return true;
-
-        // Otherwise check if there is a dirty dependency (recursively)
+    public boolean isDirty() {
+        // If there are newer changes (which have to be propagated) in at least one dependency
         for(Element dep : this.getDependencies()) {
-            if(dep.isChangedDependencies()) return true;
+            if(dep.getChangedAt() > this.getChangedAt()) return true;
+            if(dep.isDirty()) return true; // Recursion
+        }
+
+        // Derived elements depend on their definition
+        if(this.definition != null) {
+            if(!this.getDefinitionErrors().isEmpty()) return true;
+            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
         }
 
         return false;
@@ -100,29 +104,44 @@ public class Table implements Element {
     public long add() { // Add new elements with the next largest id. The created id is returned
         this.getColumns().forEach( x -> x.add() );
         this.addedRange.end++; // Grows along with valid ids
+        this.changedAt = System.currentTimeMillis();
         return this.addedRange.end - 1; // Return id of the added element
     }
 
     public Range add(long count) {
         this.getColumns().forEach( x -> x.add(count) );
         this.addedRange.end += count; // Grows along with valid ids
+        this.changedAt = System.currentTimeMillis();
         return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
     }
 
     public long remove() { // Remove oldest elements with smallest ids. The deleted id is returned.
         this.getColumns().forEach( x -> x.remove() );
-        if(this.getLength() > 0) this.deletedRange.end++;
+        if(this.getLength() > 0) { this.deletedRange.end++; this.changedAt = System.currentTimeMillis(); }
         return this.deletedRange.end - 1; // Id of the deleted record (not valid id anymore)
     }
 
     public Range remove(long count) {
         long toRemove = Math.min(count, this.getLength());
-        this.deletedRange.end += toRemove;
+        if(toRemove > 0) { this.deletedRange.end += toRemove; this.changedAt = System.currentTimeMillis(); }
         return new Range(this.deletedRange.end - toRemove, this.deletedRange.end);
     }
 
     protected void removeAll() {
-        this.deletedRange.end = this.addedRange.end;
+        if(this.getLength() > 0) { this.deletedRange.end = this.addedRange.end; this.changedAt = System.currentTimeMillis(); }
+    }
+
+    // Initialize to default state (e.g., empty set) by also forgetting change history
+    // It is important to propagate this operation to all dependents as reset (not simply emptying) because some of them (like accumulation) have to forget/reset history and ids/references might become invalid
+    // TODO: This propagation can be done manually or we can introduce a special method or it a special reset flag can be introduced which is then inherited and executed by all dependents during evaluation.
+    protected void reset() {
+        long initialId = 0;
+        this.addedRange.end = initialId;
+        this.addedRange.start = initialId;
+        this.deletedRange.end = initialId;
+        this.deletedRange.start = initialId;
+
+        this.changedAt = System.currentTimeMillis();
     }
 
     //
@@ -263,77 +282,77 @@ public class Table implements Element {
         return false;
     }
 
+    //
+    // Evaluate
+    //
+
     @Override
-    public void run() {
-        this.populate();
-    }
-
-    //
-    // Populate
-    //
-
-    public void populate() {
+    public void evaluate() {
 
         // Skip non-derived columns - they do not participate in evaluation
         if(!this.isDerived()) {
-
-            // Propagate dirty status to all dependants before resting it
-            if(this.isChanged()) {
-                this.getDependents().forEach(x -> x.setChanged());
-            }
-
-            this.isChanged = false;
-
+            this.setChanged();
             return;
         }
 
-        // Clear all evaluation errors before any new evaluation
+        //
+        // Check can evaluate
+        //
+
         this.executionErrors.clear();
 
-        // If there are some definition errors then no possibility to eval (including cycles)
-        if(this.hasDefinitionErrorsDeep()) { // this.canEvalute false
-            // TODO: Add error: cannot evaluate because of definition error in a dependency
-            return;
-        }
-        // No definition errors - canEvaluate true
-
-        // If everything is up-to-date then there is no need to eval
-        if(!this.isChangedDependencies()) { // this.needEvaluate false
-            // TODO: Add error: cannot evaluate because of dirty dependency
-            return;
-        }
-        // There exists dirty status - needEvaluate true
-
-        // If there were evaluation errors
-        if(this.hasExecutionErrorsDeep()) { // this.canEvaluate false
+        if(this.hasExecutionErrorsDeep()) {
             // TODO: Add error: cannot evaluate because of execution error in a dependency
             return;
         }
-        // No errors while evaluating dependencies
 
-        //
-        // Really evaluate using definition
-        //
-        if(this.definition != null) {
-
-            // If there exist proj-columns then its is a proj-table - skip full population
-            boolean isProj = false;
-            for(Column col : this.schema.getColumns()) {
-                if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue;
-                isProj = true;
-                break;
-            }
-            if(!isProj) {
-                this.definition.populate();
-                this.executionErrors.addAll(this.definition.getErrors());
-            }
+        if(this.hasDefinitionErrorsDeep()) {
+            // TODO: Add error: cannot evaluate because of definition error in a dependency
+            return;
         }
 
-        if(this.executionErrors.size() == 0) {
-            this.isChanged = false; // Clean the state (remove dirty flag)
+        if(this.definition == null) {
+            return;
+        }
+
+        //
+        // Check need to evaluate
+        //
+
+        if(!this.isDirty()) {
+            // TODO: Add error: cannot evaluate because of dirty dependency
+            return;
+        }
+
+        //
+        // Really evaluate
+        //
+
+        // If there exist proj-columns then its is a proj-table - skip full population
+        boolean isProj = false;
+        for(Column col : this.schema.getColumns()) {
+            if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue;
+            isProj = true;
+            break;
+        }
+        if(isProj) {
+            // Only reset to initial state (empty). Population will be performed by project columns
+            this.reset();
         }
         else {
-            this.isChanged = true; // Evaluation failed
+            this.definition.evaluate();
+            this.executionErrors.addAll(this.definition.getErrors());
+        }
+
+        //
+        // Result of evaluation
+        //
+
+        if(this.executionErrors.size() == 0) {
+            this.setChanged();
+        }
+        else {
+            ; // Evaluation failed. Leave the old change date
         }
     }
 
@@ -357,15 +376,20 @@ public class Table implements Element {
             this.expressionWhere = null;
         }
 
-        this.setChanged();
-
-        this.removeAll();
+        this.definitionChangedAt = System.currentTimeMillis();
+        if(this.definitionChangedAt <= this.changedAt) this.definitionChangedAt = this.changedAt + 1; // To avoid getting the same timestamp because of low time resolution
     }
+
     public boolean isDerived() {
         if(this.definitionType == TableDefinitionType.NOOP) {
             return false;
         }
         return true;
+    }
+
+    protected long definitionChangedAt; // Time of latest change
+    public long getDefinitionChangedAt() {
+        return this.definitionChangedAt;
     }
 
     //
@@ -588,5 +612,9 @@ public class Table implements Element {
 
         // Where its instances come from
         this.definitionType = TableDefinitionType.NOOP;
+
+        this.reset();
+
+        this.changedAt = 0; // Very old - need to be evaluated
     }
 }

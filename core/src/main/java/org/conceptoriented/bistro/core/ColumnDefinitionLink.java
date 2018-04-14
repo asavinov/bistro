@@ -47,8 +47,13 @@ public class ColumnDefinitionLink implements ColumnDefinition {
             return null;
         }
 
-        if(!this.isProj) {
-            // Link columns depend on the output table (in contrast to proj columns which do not)
+        if(this.isProj) {
+            // Project column will itself populate the output table and hence does not depend on it
+            // Project column however depends on the output table definition (e.g., where predicate could change)
+            ret.add(this.column.getOutput());
+        }
+        else {
+            // Link columns depend on the output table which must be populated before the link
             ret.add(this.column.getOutput());
         }
 
@@ -56,7 +61,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
     }
 
     @Override
-    public void eval() {
+    public void evaluate() {
         if(this.column.getOutput().getDefinitionType() == TableDefinitionType.RANGE) {
             this.evalRange();
         }

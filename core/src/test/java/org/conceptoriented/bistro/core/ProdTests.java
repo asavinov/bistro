@@ -26,7 +26,7 @@ public class ProdTests {
         Column c31 = t3.getColumn("C31");
         Column c32 = t3.getColumn("C32");
 
-        s.eval();
+        s.evaluate();
 
         // Check correctness of dependencies
         List<Element> t3_deps = t3.getDependencies();
@@ -57,7 +57,7 @@ public class ProdTests {
                 new ColumnPath(c31, s.getTable("T1").getColumn("C11")), new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
         );
 
-        s.eval();
+        s.evaluate();
 
         // Result size
         assertEquals(4, t3.getLength());
@@ -127,7 +127,7 @@ public class ProdTests {
         Table t4 = s.getTable("T4");
 
         // Projection without where
-        s.eval();
+        s.evaluate();
 
         // Result size
         assertEquals(3, t3.getLength());
@@ -147,7 +147,7 @@ public class ProdTests {
                 new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
         );
 
-        s.eval();
+        s.evaluate();
 
         // Result size
         assertEquals(2, t3.getLength());

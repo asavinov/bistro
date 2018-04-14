@@ -33,7 +33,7 @@ public class CalcTests {
                 p -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1,
                 ta
         );
-        tb.eval();
+        tb.evaluate();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
@@ -45,7 +45,7 @@ public class CalcTests {
         Expression expr = new CustomCalcExpr(new ColumnPath(ta));
 
         tb.calc(expr);
-        tb.eval();
+        tb.evaluate();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 

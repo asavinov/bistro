@@ -65,7 +65,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
     }
 
     @Override
-    public void eval() {
+    public void evaluate() {
 
         errors.clear(); // Clear state
 

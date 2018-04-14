@@ -120,20 +120,20 @@ public class Schema {
     /**
      * Evaluate all columns of the schema. The order of evaluation is determined by dependencies. Only dirty columns are evaluated. Columns with errors are not evaluated.
      */
-    public void eval() {
+    public void evaluate() {
         List<List<Element>> layers = buildLayers();
         this.eval_graph(layers);
     }
 
-    public void eval(Column column) {
+    public void evaluate(Column column) {
         List<List<Element>> layers = buildLayers(column);
         this.eval_graph(layers);
     }
 
-    public void eval(Column[] columns) {
+    public void evaluate(Column[] columns) {
     }
 
-    public void eval(Table table) {
+    public void evaluate(Table table) {
         List<List<Element>> layers = buildLayers(table);
         this.eval_graph(layers);
     }
@@ -148,34 +148,36 @@ public class Schema {
 
             for(Element elem : layer) {
 
+                //
+                // Check possibility to evaluate
+                //
                 elem.getExecutionErrors().clear();
-
-                // This status will be cleared after evaluation so we explicitly propagate it to the direct dependents (not all of them are in this graph)
-                if(elem.isChanged()) {
-                    elem.getDependents().forEach(x -> x.setChanged());
+                if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
+                    continue;
                 }
-
                 if(elem.hasDefinitionErrorsDeep()) { // Columns with definition errors cannot evaluated (including cycles)
                     continue;
                 }
 
-                if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
+                //
+                // Check need to evaluate
+                //
+                if(!elem.isDirty()) {
                     continue;
                 }
 
-                // Check that all dependencies are clean (if at one is dirty then we cannot evaluate this)
-                boolean dirtyDepFound = false;
-                for(Element dep : elem.getDependencies()) {
-                    if(dep.isChangedDependencies()) { dirtyDepFound = true; break; }
-                }
-                if(dirtyDepFound) continue;
-
                 //
-                // Really evaluate (and make up-to-date)
+                // Really evaluate
                 //
-                elem.run();
+                elem.evaluate();
             }
+        }
 
+        // After evaluating, clear the changes in all elements of the graph
+        for(List<Element> layer : layers) {
+            for(Element elem : layer) {
+                elem.resetChanged();
+            }
         }
 
     }
@@ -198,7 +200,7 @@ public class Schema {
 
                 if(done.contains(elem)) continue;
 
-                // Do not add to done so dependants are also excluded from the graph.
+                // Do not add to done so dependents are also excluded from the graph.
                 // It is important for avoiding cycles (same element in different layers) because elements in cycles are supposed to have definition error.
                 if(!elem.getDefinitionErrors().isEmpty()) continue;
 

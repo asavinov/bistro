@@ -15,7 +15,7 @@
   * [What is Bistro Streams: a stream analytics server](#what-is-bistro-streams-a-stream-analytics-server)
   * [How it works: a novel approach to stream processing](#how-it-works-a-novel-approach-to-stream-processing)
   * [Why Bistro Streams: benefits](#why-bistro-streams-benefits)
-* [Formal basis: Concept-Oriented Model](#formal-basis-concept-oriented-model)
+* [FAQ](#faq)
 * [More information](#more-information)
 
 # Introduction
@@ -72,10 +72,10 @@ The role of Bistro Streams is to organize interaction of this internal database 
 Bistro Streams consists of the following components:
 
 * A *schema* instance is a database (Bistro Engine) storing the current data state. Yet, it does not have any threads and is not able to do any operations itself.
-* A *server* instance provides one or more threads and ability to change the data state. The server knows how to work with the data and its threads are intended for working exclusively with the data state.
-* *Actions* describe operations with data which are submitted to the server by external threads and are then executed by the server. Actions are written in terms of the Bistro Engine API.
-* A *task* is simply a sequence of actions. Tasks are used if we want to execute several actions.
-* A *connector* is essentially an arbitrary process which runs in the same process as Bistro Streams. Its task is to connect the server with the outside world. On one hand, it knows something about the outside world (e.g., how to receive notifications from an event hub) and on the other hand it knows how to work with the server by submitting actions.
+* A *server* instance provides one or more threads and ability to change the data state. The server knows how to work with the data and its threads are intended for working exclusively with the data state. Yet, the server does not know what to do, that is, it does not have any sources of data and any source of commands to be executed.
+* *Actions* describe operations with data which are submitted to the server by external threads (in the same virtual machine) and are then executed by the server. Actions are written in terms of the Bistro Engine API.
+* A *task* is simply a sequence of actions. Tasks are used if we want to execute several actions sequentially.
+* A *connector* is essentially an arbitrary process which runs in the same virtual machine. Its task is to connect the server with the outside world. On one hand, it knows something about the outside world (e.g., how to receive notifications from an event hub using a certain protocol). On the other hand, it knows how to work with the server by submitting actions. Thus connectors are intended for streaming data between Bistro Streams and other systems or for moving data into and out of Bistro Streams.
 
 ## Why Bistro Streams: benefits
 
@@ -87,7 +87,25 @@ Here are some benefits and unique features of Bistro Streams:
 * Bistro Streams is based on a novel data processing paradigm which is conceptually simpler and easier to use than conventional approaches to data processing based on SQL-like languages or MapReduce. In order to define how data has to be processed it is enough to define new columns as opposed to writing complex queries which can be difficult to understand, execute and maintain.
 * Bistro Streams is very efficient in deriving new data (query execution in classical systems) from small incremental updates (typically when new events are received). It maintains dirty state for each column and data, and knows how to propagate it to other elements of the database by updating their state incrementally via inference.
 
-## Formal basis: Concept-Oriented Model
+# FAQ
+
+### What is Bistro intended for?
+
+The main general goal of Bistro is data processing where by data processing we mean producing new data from existing data.
+
+### What kind of data Bistro can process?
+
+Bistro assumes that data is represented as a number of *sets* of elements. Each *element* is a tuple which a combination of *column* values. A *value* can be any (Java) object.
+
+### How Bistro processes data?
+
+Tables and columns in Bistro may have definitions. A table definition specifies how the elements of this set are produced from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables).
+
+## Does Bistro have queries?
+
+No, Bistro does provide any query language. Instead of submitting and executing queries against the data, Bistro uses definitions which are *evaluated* against the data. These definitions (in contrast to queries) are integral part of the database. A table with a definition (derived table) and a table without a definition are normal tables which are treated equally as sets of elements. A column with or without a definition are also normal columns which define a mapping from one set to another set.
+
+## What is the formal basis of Bistro?
 
 Formally, Bistro relies on the *concept-oriented model* (COM) [2] where the main unit of representation and processing is a *function* as opposed to using only sets in the relational and other set-oriented models. Data in this model is stored in functions (mappings between sets) and it provides operations for computing new functions from existing functions. COM also supports set operations but they have much weaker role than in set-oriented models.
 

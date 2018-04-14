@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +29,7 @@ public class AccuTests {
         Column ta = t.getColumn("A");
         Column t2g = t2.getColumn("G");
 
-        t2g.eval();
+        t2g.evaluate();
 
         // Lambda for accumulation " [out] + 2.0 * [Id] "
         ta.setDefaultValue(0.0);
@@ -40,7 +38,7 @@ public class AccuTests {
                 (a,p) -> 2.0 * (Double)p[0] + (Double)a,
                 t2.getColumn("Id")
         );
-        ta.eval();
+        ta.evaluate();
 
         // Check correctness of dependencies
         List<Element> ta_deps = ta.getDependencies();

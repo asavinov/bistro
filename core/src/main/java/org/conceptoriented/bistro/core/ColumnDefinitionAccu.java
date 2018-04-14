@@ -54,13 +54,13 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
     }
 
     @Override
-    public void eval() {
+    public void evaluate() {
 
         //
         // Initialization
         //
         if(this.initDefinition != null) { // Default
-            this.initDefinition.eval();
+            this.initDefinition.evaluate();
         }
         else {
             this.column.setValue(); // Initialize to default value
@@ -75,7 +75,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         // Finalization
         //
         if(this.finDefinition != null) { // Default
-            this.finDefinition.eval();
+            this.finDefinition.evaluate();
         }
         else {
             ; // Skip finalization if not specified

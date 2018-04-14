@@ -29,7 +29,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
     }
 
     @Override
-    public void eval() {
+    public void evaluate() {
         if(this.expr == null) { // Default
             this.column.setValue(); // Reset
             return;

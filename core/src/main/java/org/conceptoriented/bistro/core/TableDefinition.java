@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class knows how to populate a table by instantiate its set elements given elements in other tables.
+ * This class knows how to evaluate a table by instantiate its set elements given elements in other tables.
  */
 public interface TableDefinition {
-	public void populate();
 	public List<BistroError> getErrors();
 	public List<Element> getDependencies();
+	public void evaluate();
 }

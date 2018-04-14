@@ -172,17 +172,17 @@ public class TableDefinitionRange implements TableDefinition {
 
         // All incoming (populating) proj-columns (if any)
         List<Column> projCols = this.table.getProjColumns();
+        //ret.addAll(projCols);
+
         // And their input tables which have to be populated before
         List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());
-
-        ret.addAll(projCols);
-        ret.addAll(projTabs);
+        //ret.addAll(projTabs);
 
         return ret;
     }
 
     @Override
-    public void populate() {
+    public void evaluate() {
 
         // Start from 0 and continue iterating till the end is detected
         Object intervalValue = this.origin;
