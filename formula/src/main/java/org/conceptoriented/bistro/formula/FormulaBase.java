@@ -46,8 +46,12 @@ public class FormulaBase implements Formula {
 		}
 		return paths;
 	}
+
 	@Override
-	public Object eval(Object[] params) throws BistroError {
+	public EvaluatorCalc getEvaluator() { return this; }
+
+	@Override
+	public Object evaluate(Object[] params) throws BistroError {
 
 		// Set all parameters in native expressions
 		for(int p=0; p<this.exprDependencies.size(); p++) {

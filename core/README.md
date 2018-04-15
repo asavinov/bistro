@@ -219,7 +219,7 @@ sums.accu(
         measure // Measure
 );
 
-sums.eval();
+sums.evaluate();
 value = sums.getValue(1); // 3 (1+2)
 value = sums.getValue(2); // 3
 ```
@@ -310,13 +310,13 @@ A typical use of range tables is aggregation over (numeric or date) intervals us
 All columns in the schema are evaluated using the following method call:
 
 ```java
-schema.eval();
+schema.evaluate();
 ```
 
 A column can be evaluated individually, for example, if its definition has been changed:
 
 ```java
-calc.eval();
+calc.evaluate();
 ```
 
 Bistro manages all dependencies and it will automatically (recursively) evaluate all columns this column depends on (if necessary). If a column data has been modified or its definition has changed then it will also influence all columns that depend on it directly or indirectly. 

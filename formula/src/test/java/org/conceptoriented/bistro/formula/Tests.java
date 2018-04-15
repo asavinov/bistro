@@ -30,7 +30,7 @@ public class Tests {
         Formula expr = new FormulaExp4j("2 * [A] + 1", s.getTable("T"));
 
         // Define and evaluate
-        tb.calc(expr);
+        tb.calc( expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{}) );
         tb.evaluate();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -71,6 +71,8 @@ public class Tests {
         };
 
         // Define and evaluate
+
+        /* Deprecated. Now it is necessary to compute columns using expressions and then use them in links - direct use of expressions in links is not possible.
         t2c.link(
                 exprs,
                 t.getColumn("A"), t.getColumn("B")
@@ -84,6 +86,7 @@ public class Tests {
 
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(-1L, t2c.getValue(1)); // Not found
+        */
     }
 
     Schema createLinkSchema() {
@@ -195,8 +198,9 @@ public class Tests {
 
         // Define group column
         Column t2g = schema.createColumn("G", t2, t1);
+        Expression expr = new FormulaExp4j("[Id]", t2); // Deprecated. Expressions cannot be directly used in link column definitions - the columns have to be created explicitly
         t2g.link(
-                new Expression[] { new FormulaExp4j("[Id]", t2) },
+                new Column[] { t2id },
                 t1.getColumn("Id")
         );
 

@@ -117,7 +117,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
             // Evaluate
             try {
-                result = this.lambda.eval(aggregate, paramValues);
+                result = this.lambda.evaluate(aggregate, paramValues);
             }
             catch(BistroError e) {
                 this.errors.add(e);

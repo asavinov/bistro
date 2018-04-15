@@ -49,6 +49,7 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         this.validate();
     }
 
+    @Deprecated
     public ColumnDefinitionProj(Column column, Expression[] valueExprs, Column[] keyColumns) {
         super(column, valueExprs, keyColumns);
 

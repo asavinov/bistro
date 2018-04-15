@@ -70,14 +70,14 @@ public class Table implements Element {
 
     @Override
     public void setChanged() {
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
     }
 
     @Override
     public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
         this.addedRange.start = this.addedRange.end;
         this.deletedRange.start = this.deletedRange.end;
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
     }
 
     @Override
@@ -104,31 +104,31 @@ public class Table implements Element {
     public long add() { // Add new elements with the next largest id. The created id is returned
         this.getColumns().forEach( x -> x.add() );
         this.addedRange.end++; // Grows along with valid ids
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
         return this.addedRange.end - 1; // Return id of the added element
     }
 
     public Range add(long count) {
         this.getColumns().forEach( x -> x.add(count) );
         this.addedRange.end += count; // Grows along with valid ids
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
         return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
     }
 
     public long remove() { // Remove oldest elements with smallest ids. The deleted id is returned.
         this.getColumns().forEach( x -> x.remove() );
-        if(this.getLength() > 0) { this.deletedRange.end++; this.changedAt = System.currentTimeMillis(); }
+        if(this.getLength() > 0) { this.deletedRange.end++; this.changedAt = System.nanoTime(); }
         return this.deletedRange.end - 1; // Id of the deleted record (not valid id anymore)
     }
 
     public Range remove(long count) {
         long toRemove = Math.min(count, this.getLength());
-        if(toRemove > 0) { this.deletedRange.end += toRemove; this.changedAt = System.currentTimeMillis(); }
+        if(toRemove > 0) { this.deletedRange.end += toRemove; this.changedAt = System.nanoTime(); }
         return new Range(this.deletedRange.end - toRemove, this.deletedRange.end);
     }
 
     protected void removeAll() {
-        if(this.getLength() > 0) { this.deletedRange.end = this.addedRange.end; this.changedAt = System.currentTimeMillis(); }
+        if(this.getLength() > 0) { this.deletedRange.end = this.addedRange.end; this.changedAt = System.nanoTime(); }
     }
 
     // Initialize to default state (e.g., empty set) by also forgetting change history
@@ -141,7 +141,7 @@ public class Table implements Element {
         this.deletedRange.end = initialId;
         this.deletedRange.start = initialId;
 
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
     }
 
     //
@@ -374,10 +374,12 @@ public class Table implements Element {
         if(this.definitionType == TableDefinitionType.NOOP) {
             this.definition = null;
             this.expressionWhere = null;
+
+            this.whereLambda = null;
+            this.whereParameterPaths.clear();
         }
 
-        this.definitionChangedAt = System.currentTimeMillis();
-        if(this.definitionChangedAt <= this.changedAt) this.definitionChangedAt = this.changedAt + 1; // To avoid getting the same timestamp because of low time resolution
+        this.definitionChangedAt = System.nanoTime();
     }
 
     public boolean isDerived() {
@@ -419,12 +421,17 @@ public class Table implements Element {
     // Where
     //
 
-    Expression expressionWhere;
+    EvaluatorCalc whereLambda;
+    List<ColumnPath> whereParameterPaths = new ArrayList<>();
+
+    @Deprecated
+    protected Expression expressionWhere;
 
     public void where(EvaluatorCalc lambda, ColumnPath... paths) {
         this.setDefinitionType(TableDefinitionType.PROD);
 
-        this.expressionWhere = new Expr(lambda, paths);
+        this.whereLambda = lambda;
+        this.whereParameterPaths = Arrays.asList(paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -435,7 +442,10 @@ public class Table implements Element {
     public void where(EvaluatorCalc lambda, Column... columns) {
         this.setDefinitionType(TableDefinitionType.PROD);
 
-        this.expressionWhere = new Expr(lambda, columns);
+        this.whereLambda = lambda;
+        for(int i=0; i<columns.length; i++) {
+            this.whereParameterPaths.add(new ColumnPath(columns[i]));
+        }
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -443,22 +453,12 @@ public class Table implements Element {
         }
     }
 
-    public void where(Expression expr) {
-        this.setDefinitionType(TableDefinitionType.PROD);
-
-        this.expressionWhere = expr;
-
-        if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
     // Check whether the specified record (which is not in the table yet) satisfies the where condition
     // The record provides output values for the specified columns of this table
     protected boolean isWhereTrue(List<Object> record, List<Column> columns) {
-        if(this.expressionWhere == null) return true;
+        if(this.whereLambda == null || this.whereParameterPaths == null) return true;
 
-        List<ColumnPath> paramPaths =  this.expressionWhere.getParameterPaths();
+        List<ColumnPath> paramPaths =  this.whereParameterPaths;
         Object[] paramValues = new Object[paramPaths.size() + 1];
 
         //
@@ -472,7 +472,7 @@ public class Table implements Element {
         }
 
         //
-        // Prepare expression parameters
+        // Prepare parameters
         //
         for(int p=0; p < paramPaths.size(); p++) {
             int keyNo = paramColumnIndex[p];
@@ -481,11 +481,11 @@ public class Table implements Element {
         }
 
         //
-        // Evaluate expression
+        // Evaluate lambda
         //
         boolean result;
         try {
-            result = (boolean) this.expressionWhere.eval(paramValues);
+            result = (boolean) this.whereLambda.evaluate(paramValues);
         }
         catch(BistroError e) {
             this.executionErrors.add(e);

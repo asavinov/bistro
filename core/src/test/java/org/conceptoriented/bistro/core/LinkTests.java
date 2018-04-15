@@ -45,25 +45,6 @@ public class LinkTests {
 
         assertEquals(0L, t2c.getValue(0)); // Existing
         assertEquals(-1L, t2c.getValue(1)); // Not found
-
-        Expression[] valueExprs = new Expression[] {
-                new Expr( p -> p[0], t2.getColumn("A") ), // This expression computers values for "A"
-                new Expr( p -> p[0], t2.getColumn("B") ) // This expression computers values for "B"
-        };
-
-        t2c.proj(
-                valueExprs
-                // keyColumns - by default, if no key columns are specified then existing key columns will be used
-        );
-        t2c.evaluate();
-
-        // Check correctness of dependencies
-        t2c_deps = t2c.getDependencies();
-        assertTrue(t2c_deps.contains(t2.getColumn("A")));
-        assertTrue(t2c_deps.contains(t2.getColumn("B")));
-
-        assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(1L, t2c.getValue(1)); // New record append by project column
     }
 
     Schema createSchema() {

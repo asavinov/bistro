@@ -91,7 +91,7 @@ Here are some benefits and unique features of Bistro Streams:
 
 ### What is Bistro intended for?
 
-The main general goal of Bistro is data processing where by data processing we mean producing new data from existing data.
+The main general goal of Bistro is *data processing* where by data processing we mean producing new data from existing data.
 
 ### What kind of data Bistro can process?
 
@@ -99,15 +99,15 @@ Bistro assumes that data is represented as a number of *sets* of elements. Each 
 
 ### How Bistro processes data?
 
-Tables and columns in Bistro may have definitions. A table definition specifies how the elements of this set are produced from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables).
+Tables and columns in Bistro may have *definitions*. A table definition specifies how the elements of this set are produced (inferred or derived) from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables). Table and column definitions in Bistro are analogous to queries in conventional DBMS.
 
 ## Does Bistro have queries?
 
-No, Bistro does provide any query language. Instead of submitting and executing queries against the data, Bistro uses definitions which are *evaluated* against the data. These definitions (in contrast to queries) are integral part of the database. A table with a definition (derived table) and a table without a definition are normal tables which are treated equally as sets of elements. A column with or without a definition are also normal columns which define a mapping from one set to another set.
+No, Bistro does not provide any query language. Instead of submitting and executing queries against the data, Bistro uses definitions which are *evaluated* against the data. These definitions (in contrast to queries) are integral part of the database. A table with a definition (derived table) is a normal table which is treated equally to all other tables. A column with or without definition is also a normal column which defines a mapping from one set to another set.
 
 ## What is the formal basis of Bistro?
 
-Formally, Bistro relies on the *concept-oriented model* (COM) [2] where the main unit of representation and processing is a *function* as opposed to using only sets in the relational and other set-oriented models. Data in this model is stored in functions (mappings between sets) and it provides operations for computing new functions from existing functions. COM also supports set operations but they have much weaker role than in set-oriented models.
+Formally, Bistro relies on the *concept-oriented model* (COM) [2] where the main unit of representation and processing is a *function* as opposed to using only sets in the relational and other set-oriented models. Data in this model is stored in functions (mappings between sets) and it provides operations for computing new functions from existing functions. COM supports set operations but they have weaker role in comparision to set-oriented models.
 
 # More information
 

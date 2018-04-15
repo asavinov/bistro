@@ -40,18 +40,6 @@ public class CalcTests {
         assertEquals(11.0, (Double) tb.getValue(0), Double.MIN_VALUE);
         assertEquals(Double.NaN, tb.getValue(1));
         assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
-
-        // Expression
-        Expression expr = new CustomCalcExpr(new ColumnPath(ta));
-
-        tb.calc(expr);
-        tb.evaluate();
-
-        assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
-
-        assertEquals(11.0, (Double) tb.getValue(0), Double.MIN_VALUE);
-        assertEquals(Double.NaN, tb.getValue(1));
-        assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
     }
 
     Schema createSchema() {
@@ -70,22 +58,4 @@ public class CalcTests {
         return s;
     }
 
-}
-
-class CustomCalcExpr implements Expression {
-
-    List<ColumnPath> parameterPaths = new ArrayList<>(); // The expression parameters are bound to these input column valuePaths
-    @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
-    @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
-
-    @Override public Object eval(Object[] params) {
-        double param = params[0] == null ? Double.NaN : ((Number)params[0]).doubleValue();
-        return 2.0 * param + 1.0; // "2 * [A] + 1"
-    }
-
-    public CustomCalcExpr() {
-    }
-    public CustomCalcExpr(ColumnPath... params) {
-        this.setParameterPaths(Arrays.asList(params));
-    }
 }

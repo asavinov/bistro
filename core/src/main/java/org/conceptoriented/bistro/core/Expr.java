@@ -8,15 +8,19 @@ import java.util.List;
  * This class is a basic implementation of the Expression interface.
  * It can be extended to implement custom expressions.
  */
+@Deprecated
 public class Expr implements Expression {
+
+    @Override
+    public EvaluatorCalc getEvaluator() { return this.evaluateLambda; };
 
     List<ColumnPath> parameterPaths = new ArrayList<>();
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
     EvaluatorCalc evaluateLambda;
-    @Override public Object eval(Object[] params) throws BistroError {
-        return evaluateLambda.eval(params);
+    @Override public Object evaluate(Object[] params) throws BistroError {
+        return evaluateLambda.evaluate(params);
     }
 
     public Expr(EvaluatorCalc eval, ColumnPath... params) {

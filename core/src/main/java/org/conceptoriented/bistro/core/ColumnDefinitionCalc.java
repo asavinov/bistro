@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -10,6 +11,10 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     Column column;
 
+    EvaluatorCalc lambda;
+    List<ColumnPath> parameterPaths = new ArrayList<>();
+
+    @Deprecated
     Expression expr;
 
     List<BistroError> errors = new ArrayList<>();
@@ -21,8 +26,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     @Override
     public List<Element> getDependencies() {
-        List<ColumnPath> paths = this.expr.getParameterPaths();
-        List<Column> cols = ColumnPath.getColumns(paths);
+        List<Column> cols = ColumnPath.getColumns(this.parameterPaths);
         List<Element> deps = new ArrayList<>();
         for(Column col : cols) deps.add(col);
         return deps;
@@ -30,7 +34,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     @Override
     public void evaluate() {
-        if(this.expr == null) { // Default
+        if(this.lambda == null) { // Default
             this.column.setValue(); // Reset
             return;
         }
@@ -42,7 +46,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
         Range mainRange = mainTable.getIdRange();
 
         // Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading valuePaths
-        List<ColumnPath> paramPaths = this.expr.getParameterPaths();
+        List<ColumnPath> paramPaths = this.parameterPaths;
         Object[] paramValues = new Object[paramPaths.size() + 1]; // Will store valuePaths for all params and current output at the end
         Object result; // Will be written to output for each input
 
@@ -55,7 +59,7 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
             // Evaluate
             try {
-                result = this.expr.eval(paramValues);
+                result = this.lambda.evaluate(paramValues);
             }
             catch(BistroError e) {
                 this.errors.add(e);
@@ -74,19 +78,19 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, ColumnPath[] paths) {
         this.column = column;
-        this.expr = new Expr(lambda, paths);
+        this.lambda = lambda;
+        this.parameterPaths = Arrays.asList(paths);
     }
 
     public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, Column[] columns) {
         this.column = column;
-        ColumnPath[] paths = new ColumnPath[columns.length];
+        this.lambda = lambda;
         for (int i = 0; i < columns.length; i++) {
-            paths[i] = new ColumnPath(columns[i]);
+            this.parameterPaths.add(new ColumnPath(columns[i]));
         }
-
-        this.expr = new Expr(lambda, paths);
     }
 
+    @Deprecated
     public ColumnDefinitionCalc(Column column, Expression expr) {
         this.column = column;
         this.expr = expr;

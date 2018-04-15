@@ -10,9 +10,10 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     public boolean isProj = false; // Either link-column or proj-columns. Used in sub-classes and methods as a switch
 
-    // Two types of definition. Used in methods as a switch
     List<ColumnPath> valuePaths;
-    List<Expression> valueExprs;
+
+    @Deprecated
+    List<Expression> valueExprs; // It is the second alternative way of definition
 
     List<Column> keyColumns = new ArrayList<>();
 
@@ -167,6 +168,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     }
 
+    @Deprecated
     protected void evalExprs() {
 
         errors.clear(); // Clear state
@@ -212,7 +214,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
                 Expression expr = this.valueExprs.get(keyNo);
                 Object result;
                 try {
-                    result = expr.eval(paramValues);
+                    result = expr.evaluate(paramValues);
                 } catch (BistroError e) {
                     errors.add(e);
                     return;
@@ -267,6 +269,8 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         this.keyColumns = Arrays.asList(keyColumns);
     }
 
+
+    @Deprecated
     public ColumnDefinitionLink(Column column, Expression[] valueExprs, Column[] keyColumns) {
         this.column = column;
 

@@ -58,13 +58,14 @@ public class Column implements Element {
     @Override
     public void setChanged() {
         this.isChanged = true;
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
+        System.nanoTime();
     }
 
     @Override
     public void resetChanged() { // Forget about the change status/scope (reset change delta)
         this.isChanged = false;
-        this.changedAt = System.currentTimeMillis();
+        this.changedAt = System.nanoTime();
     }
 
     @Override
@@ -269,7 +270,6 @@ public class Column implements Element {
             return;
         }
 
-
         //
         // Really evaluate
         //
@@ -307,8 +307,7 @@ public class Column implements Element {
         this.definition = null;
         this.key = false;
 
-        this.definitionChangedAt = System.currentTimeMillis();
-        if(this.definitionChangedAt <= this.changedAt) this.definitionChangedAt = this.changedAt + 1; // To avoid getting the same timestamp because of low time resolution
+        this.definitionChangedAt = System.nanoTime();
     }
 
     public boolean isDerived() {
@@ -367,16 +366,6 @@ public class Column implements Element {
         }
     }
 
-    public void calc(Expression expr) {
-        this.setDefinitionType(ColumnDefinitionType.CALC);
-
-        this.definition = new ColumnDefinitionCalc(this, (Expression) expr);
-
-        if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
     //
     // Link column
     //
@@ -395,16 +384,6 @@ public class Column implements Element {
         this.setDefinitionType(ColumnDefinitionType.LINK);
 
         this.definition = new ColumnDefinitionLink(this, valueColumns, keyColumns);
-
-        if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
-    public void link(Expression[] valueExprs, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.LINK);
-
-        this.definition = new ColumnDefinitionLink(this, valueExprs, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -445,16 +424,6 @@ public class Column implements Element {
         }
     }
 
-    public void proj(Expression[] valueExprs, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.PROJ);
-
-        this.definition = new ColumnDefinitionProj(this, valueExprs, keyColumns);
-
-        if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
     //
     // Proj to ranges/intervals (using inequality)
     //
@@ -483,7 +452,6 @@ public class Column implements Element {
     // Accumulate column
     //
 
-    // EvaluatorCalc + parameters OR Expression + no params
     public void accu(ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
@@ -494,7 +462,6 @@ public class Column implements Element {
         }
     }
 
-    // EvaluatorCalc + parameters OR Expression + no params
     public void accu(Column groupColumn, EvaluatorAccu lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 

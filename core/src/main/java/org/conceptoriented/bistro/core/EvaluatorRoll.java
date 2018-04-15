@@ -5,5 +5,5 @@ package org.conceptoriented.bistro.core;
  */
 @FunctionalInterface
 public interface EvaluatorRoll {
-    public Object eval(Object aggregate, double distance, Object[] params) throws BistroError;
+    public Object evaluate(Object aggregate, double distance, Object[] params) throws BistroError;
 }

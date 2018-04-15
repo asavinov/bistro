@@ -1,9 +1,6 @@
 package org.conceptoriented.bistro.core;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -125,7 +122,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
                 // Evaluate
                 //
                 try {
-                    aggregate = this.lambda.eval(aggregate, distance, paramValues);
+                    aggregate = this.lambda.evaluate(aggregate, distance, paramValues);
                 }
                 catch(BistroError e) {
                     this.errors.add(e);
