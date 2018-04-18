@@ -36,7 +36,7 @@ public class Example6 {
 
         // [Quotes].[Span] = ([High] - [Low]) / [Close]
         Column spanDaily = schema.createColumn("Span", quotes);
-        spanDaily.calc(
+        spanDaily.calculate(
                 p -> 100.0 * (Double.valueOf((String)p[0]) - Double.valueOf((String)p[1])) / Double.valueOf((String)p[2]),
                 quotes.getColumn("High"), quotes.getColumn("Low"), quotes.getColumn("Close")
         );

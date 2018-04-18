@@ -30,7 +30,7 @@ public class Example7 {
         //
 
         Column time_seconds = schema.createColumn("Time Seconds", quotes);
-        time_seconds.calc(
+        time_seconds.calculate(
                 p -> Long.valueOf((String)p[0]).longValue(),
                 quotes.getColumn("Time")
         );
@@ -58,7 +58,7 @@ public class Example7 {
         );
 
         Column VWAP = schema.createColumn("VWAP", quotes);
-        VWAP.calc(
+        VWAP.calculate(
                 p -> (double)p[0] / (double)p[1],
                 priceVolumeSum, volumeSum
         );

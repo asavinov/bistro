@@ -1,31 +1,31 @@
 package org.conceptoriented.bistro.core;
 
 public enum BistroErrorCode {
-	NONE(0),
+    NONE(0),
 
-	NAME_RESOLUTION_ERROR(10),
+    NAME_RESOLUTION_ERROR(10),
 
-	ELEMENT_CREATION_ERROR(20),
-	ELEMENT_UPDATE_ERROR(30),
-	ELEMENT_DELETE_ERROR(40),
+    ELEMENT_CREATION_ERROR(20),
+    ELEMENT_UPDATE_ERROR(30),
+    ELEMENT_DELETE_ERROR(40),
 
-	DEFINITION_ERROR(50),
-	EVALUATION_ERROR(70),
+    DEFINITION_ERROR(50),
+    EVALUATION_ERROR(70),
 
-	SERVER_ERROR(100),
-	CONNECTOR_ERROR(110),
-	ACTION_ERROR(120),
+    SERVER_ERROR(100),
+    CONNECTOR_ERROR(110),
+    ACTION_ERROR(120),
 
-	GENERAL(1000),
-	;
+    GENERAL(1000),
+    ;
 
-	private int value;
+    private int value;
 
-	public int getValue() {
-		return value;
-	}
+    public int getValue() {
+        return value;
+    }
 
-	private BistroErrorCode(int value) {
-		this.value = value;
-	}
+    private BistroErrorCode(int value) {
+        this.value = value;
+    }
 }

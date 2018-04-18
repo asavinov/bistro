@@ -4,10 +4,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +25,7 @@ public class CalcTests {
         Column tb = t.getColumn("B");
 
         // Lambda
-        tb.calc(
+        tb.calculate(
                 p -> 2.0 * (Double) (p[0] == null ? Double.NaN : p[0]) + 1,
                 ta
         );

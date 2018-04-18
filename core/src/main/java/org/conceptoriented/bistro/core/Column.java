@@ -71,16 +71,15 @@ public class Column implements Element {
     @Override
     public boolean isDirty() {
 
-        // This element is dirty (update is needed) if one of its dependencies has changes
-        for(Element dep : this.getDependencies()) {
-            if(dep.getChangedAt() > this.getChangedAt()) return true;
-            if(dep.isDirty()) return true;
+        // Definition has changed
+        if(this.definition != null) {
+            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
         }
 
-        // Derived elements depend on their definition
-        if(this.definition != null) {
-            if(!this.getDefinitionErrors().isEmpty()) return true;
-            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
+        // One of its dependencies has changes or is dirty
+        for(Element dep : this.getDependencies()) {
+            if(dep.getChangedAt() > this.getChangedAt()) return true;
+            if(dep.isDirty()) return true; // Recursion
         }
 
         return false;
@@ -148,7 +147,7 @@ public class Column implements Element {
 
         if(this.getDefinitionType() == ColumnDefinitionType.NOOP) {
             if(this.isKey() && this.getInput().getDefinitionType() == TableDefinitionType.PROD) {
-                deps.add(this.getInput()); // Key-columns depend on the prod-table (if any) because they are filled by their population procedure
+                deps.add(this.getInput()); // Key-columns depend on the product-table (if any) because they are filled by their population procedure
             }
         }
         else if(this.definition != null) {
@@ -293,7 +292,7 @@ public class Column implements Element {
     // Column (definition) kind
     //
 
-    ColumnDefinition definition; // It is instantiated by calc-link-accu methods (or definition errors are added)
+    ColumnDefinition definition; // It is instantiated by calculate-link-accumulate methods (or definition errors are added)
 
     protected ColumnDefinitionType definitionType;
     public ColumnDefinitionType getDefinitionType() {
@@ -344,7 +343,7 @@ public class Column implements Element {
     // Calcuate column
     //
 
-    public void calc(EvaluatorCalc lambda, ColumnPath... paths) {
+    public void calculate(EvaluatorCalc lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, paths);
@@ -355,7 +354,7 @@ public class Column implements Element {
         }
     }
 
-    public void calc(EvaluatorCalc lambda, Column... columns) {
+    public void calculate(EvaluatorCalc lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.CALC);
 
         this.definition = new ColumnDefinitionCalc(this, lambda, columns);
@@ -404,7 +403,7 @@ public class Column implements Element {
     // Proj to values (using equality)
     //
 
-    public void proj(ColumnPath[] valuePaths, Column... keyColumns) {
+    public void project(ColumnPath[] valuePaths, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valuePaths, keyColumns);
@@ -414,7 +413,7 @@ public class Column implements Element {
         }
     }
 
-    public void proj(Column[] valueColumns, Column... keyColumns) {
+    public void project(Column[] valueColumns, Column... keyColumns) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valueColumns, keyColumns);
@@ -428,7 +427,7 @@ public class Column implements Element {
     // Proj to ranges/intervals (using inequality)
     //
 
-    public void proj(ColumnPath valuePath) {
+    public void project(ColumnPath valuePath) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, valuePath);
@@ -438,7 +437,7 @@ public class Column implements Element {
         }
     }
 
-    public void proj(Column valueColumn) {
+    public void project(Column valueColumn) {
         this.setDefinitionType(ColumnDefinitionType.PROJ);
 
         this.definition = new ColumnDefinitionProj(this, new ColumnPath(valueColumn));
@@ -452,7 +451,7 @@ public class Column implements Element {
     // Accumulate column
     //
 
-    public void accu(ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath... paths) {
+    public void accumulate(ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         this.definition = new ColumnDefinitionAccu(this, groupPath, lambda, paths);
@@ -462,7 +461,7 @@ public class Column implements Element {
         }
     }
 
-    public void accu(Column groupColumn, EvaluatorAccu lambda, Column... columns) {
+    public void accumulate(Column groupColumn, EvaluatorAccu lambda, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
         this.definition = new ColumnDefinitionAccu(this, groupColumn, lambda, columns);

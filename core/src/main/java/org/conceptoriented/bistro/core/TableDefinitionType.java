@@ -1,27 +1,28 @@
 package org.conceptoriented.bistro.core;
 
 public enum TableDefinitionType {
-	NOOP(0), // No definition
-	PROD(10), // Product table
-	RANGE(20), // Range table
-	;
+    NOOP(0), // No definition
+    PROD(10), // Product table
+    RANGE(20), // Range table
+    ;
 
-	private int value;
 
-	public int getValue() {
-		return value;
-	}
+    private int value;
 
-	public static TableDefinitionType fromInt(int value) {
-		for (TableDefinitionType kind : TableDefinitionType.values()) {
-			if (kind.getValue() == value) {
-				return kind;
-			}
-		}
-		return TableDefinitionType.NOOP;
-	}
+    public int getValue() {
+        return value;
+    }
 
-	private TableDefinitionType(int value) {
-		this.value = value;
-	}
+    public static TableDefinitionType fromInt(int value) {
+        for (TableDefinitionType kind : TableDefinitionType.values()) {
+            if (kind.getValue() == value) {
+                return kind;
+            }
+        }
+        return TableDefinitionType.NOOP;
+    }
+
+    private TableDefinitionType(int value) {
+        this.value = value;
+    }
 }

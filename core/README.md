@@ -121,7 +121,7 @@ For example, we could define a calculate column which increments the value store
 
 ```java
 Column calc = schema.createColumn("Name Length", things, objects);
-calc.calc(
+calc.calculate(
         p -> ((String)p[0]).length(), // How to compute
         thingName // One parameter to compute the column
 );
@@ -188,7 +188,7 @@ If we want to count the number of events for each device then such a column can 
 ```java
 Column counts = schema.createColumn("Event Count", things, objects);
 counts.setDefaultValue(0.0); // It will be used as an initial value
-counts.accu(
+counts.accumulate(
         link, // How to group facts
         (a,p) -> (Double)p[0] + 1.0 // How to accumulate/update
         // No additional parameters because we only count
@@ -213,7 +213,7 @@ We can find the sum of the measure for each element in "THINGS" using this colum
 ```java
 Column sums = schema.createColumn("Sum Measure", things, objects);
 sums.setDefaultValue(0.0); // Start accumulation from this value
-sums.accu(
+sums.accumulate(
         link, // Grouping column
         (a,p) -> (Double)a + (Double)p[0], // Add measure to the current aggregate
         measure // Measure
@@ -228,8 +228,9 @@ value = sums.getValue(2); // 3
 
 *Rolling* columns are intended for rolling aggregation. Similar to accumulate columns, rolling columns also incrementally update the aggregate for each record belonging to the group. The difference is how groups are defined:
 
-* Groups in rolling aggregation can overlap, that is, one element can belong to many groups and hence will contribute to many aggregates.
-* Group members can be characterized by their individual degree of membership in the group which determines the strength or weight of their contribution to the group aggregate. For instance, it is how exponential smoothing is computed.
+* Facts and groups are stored in one table while conventional aggregation uses two tables with facts and groups (and hence a link column is needed).
+* Groups in rolling aggregation can overlap, that is, one (fact) element can belong to many groups and hence it will contribute to many aggregates.
+* Group members (facts) can be characterized by their individual numerci degree of membership in the group which determines the strength or weight of their contribution to the aggregate. For instance, it is how exponential smoothing is computed.
 
 > For each group element, a rolling column computes its output by *updating* its current value for each member of the group by taking into account its distance from the group center.
 
@@ -237,7 +238,7 @@ In the following example, a rolling column will aggregate the sum of this and ha
 
 ```java
 rollingColumn.roll(
-        2, 0, // (2,0] - two records including this one
+        2, 0, // (2,0] - two previous records including this one
         (a,d,p) -> (Double)a + ((Double)p[0] / (d + 1)),
         measureColumn
 );
@@ -252,7 +253,7 @@ The second parameter of the accumulate function is distance from this record. It
 When a new table is created, it by default has no definition and hence it will not participate in inference. The only way to populate such tables is to add or remove its elements using API. If we want to populate a table using data in other columns and tables then it has to be defined as a *product table*:
 
 ```java
-myTable.prod();
+myTable.product();
 ```
 
 In addition, product tables must have one or more *key columns* of non-primitive type. They are defined as columns with no definition with an additional parameter specifying that it is a key column:

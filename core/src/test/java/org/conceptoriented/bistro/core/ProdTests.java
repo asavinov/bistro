@@ -106,7 +106,7 @@ public class ProdTests {
         // Table 3 (product of the two domain tables)
         //
         Table t3 = s.createTable("T3");
-        t3.prod();
+        t3.product();
 
         Column c31 = s.createColumn("C31", t3, t1);
         c31.noop(true); // First key (2 records)
@@ -182,7 +182,7 @@ public class ProdTests {
         c41.setValue(3, 2L); c42.setValue(3, 2L); // v2, v2
 
         Column c43 = s.createColumn("C43", t4, t3); // Project column
-        c43.proj(
+        c43.project(
                 new Column[] {c41, c42},
                 c31, c32
         );

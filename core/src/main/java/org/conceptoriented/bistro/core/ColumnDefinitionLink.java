@@ -8,7 +8,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     Column column;
 
-    public boolean isProj = false; // Either link-column or proj-columns. Used in sub-classes and methods as a switch
+    public boolean isProj = false; // Either link-column or project-columns. Used in sub-classes and methods as a switch
 
     List<ColumnPath> valuePaths;
 
@@ -25,22 +25,34 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     @Override
     public List<Element> getDependencies() {
-        List<Element> ret = new ArrayList<>();
+        List<Element> deps = new ArrayList<>();
+
+        deps.add(this.column.getInput()); // Columns depend on their input table
+
+        if(this.isProj) {
+            // Project column will itself populate the output table and hence does not depend on it
+            // Project column however depends on the output table definition (e.g., where predicate could change) - therefore we add it as a workaround
+            deps.add(this.column.getOutput());
+        }
+        else {
+            // Link columns depend on the output table which must be populated before the link
+            deps.add(this.column.getOutput());
+        }
 
         if(this.valuePaths != null) {
             // Dependencies are in paths
             for (ColumnPath path : this.valuePaths) {
                 for (Column col : path.columns) {
-                    if (!ret.contains(col)) ret.add(col);
+                    if (!deps.contains(col)) deps.add(col);
                 }
             }
         }
         else if(this.valueExprs != null) {
             // Dependencies are in expressions
             for (Expression expr : this.valueExprs) {
-                List<Column> deps = ColumnPath.getColumns(expr.getParameterPaths());
-                for (Column col : deps) {
-                    if (!ret.contains(col)) ret.add(col);
+                List<Column> exprDeps = ColumnPath.getColumns(expr.getParameterPaths());
+                for (Column col : exprDeps) {
+                    if (!deps.contains(col)) deps.add(col);
                 }
             }
         }
@@ -48,17 +60,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
             return null;
         }
 
-        if(this.isProj) {
-            // Project column will itself populate the output table and hence does not depend on it
-            // Project column however depends on the output table definition (e.g., where predicate could change)
-            ret.add(this.column.getOutput());
-        }
-        else {
-            // Link columns depend on the output table which must be populated before the link
-            ret.add(this.column.getOutput());
-        }
-
-        return ret;
+        return deps;
     }
 
     @Override
@@ -116,12 +118,50 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
         Table mainTable = this.column.getInput();
 
-        // Currently we make full scan by re-evaluating all existing input ids
-        Range mainRange = this.column.getInput().getIdRange();
+        //
+        // Determine the scope of dirtiness
+        //
+
+        Range mainRange = mainTable.getIdRange();
+
+        boolean fullScope = false;
+
+        if(isProj) { // Currently project columns require full re-evaluation (because they actually popoulate a table)
+            fullScope = true;
+        }
+
+        if(!fullScope) {
+            if(this.column.getDefinitionChangedAt() > this.column.getChangedAt()) { // Definition has changes
+                fullScope = true;
+            }
+        }
+
+        if(!fullScope) { // Some column dependency has changes
+            List<Element> deps = this.getDependencies();
+            for(Element e : deps) {
+                if(!(e instanceof Column)) continue;
+                if(((Column)e).isChanged()) { // There is a column with some changes
+                    fullScope = true;
+                    break;
+                }
+            }
+        }
+
+        if(!fullScope) {
+            if(typeTable.getDefinitionChangedAt() > this.column.getChangedAt()) { // Type table definition has changed
+                fullScope = true;
+            }
+        }
+
+        if(!fullScope) {
+            mainRange = mainTable.getAddedRange();
+        }
 
         //
-        // Prepare value paths/exprs for search/find
+        // Update dirty elements
         //
+
+        // Prepare value paths/exprs for search/find
         //List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
         //List<Object[]> rhsParamValues = new ArrayList<>();
         List<Object> rhsResults = new ArrayList<>(); // Record of value paths used for search (produced by expressions and having same length as column list)

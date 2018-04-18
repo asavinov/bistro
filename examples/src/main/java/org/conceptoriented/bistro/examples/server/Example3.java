@@ -77,7 +77,7 @@ public class Example3
 
         // Project column pointing to the range table
         Column interval = schema.createColumn("Interval", quotes, intervals);
-        interval.proj(
+        interval.project(
                 time // Timestamp of the event will be mapped to time ranges
         );
 
@@ -87,7 +87,7 @@ public class Example3
 
         Column volumeSum = schema.createColumn("Volume Sum", intervals);
         volumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        volumeSum.accu(
+        volumeSum.accumulate(
                 interval, // Link: Even time stamp -> Interval
                 (a,p) -> (double)a + Double.valueOf((String)p[0]),
                 amount
@@ -95,13 +95,13 @@ public class Example3
 
         Column quoteCount = schema.createColumn("Quote Count", intervals);
         quoteCount.setDefaultValue(0.0); // It will be used as an initial value
-        quoteCount.accu(
+        quoteCount.accumulate(
                 interval, // Link: Even time stamp -> Interval
                 (a,p) -> (double)a + 1.0
         );
 
         Column avgVolume = schema.createColumn("Average Volume", intervals);
-        avgVolume.calc(
+        avgVolume.calculate(
                 (p) -> (double)p[0] / (double)p[1],
                 volumeSum, quoteCount
         );

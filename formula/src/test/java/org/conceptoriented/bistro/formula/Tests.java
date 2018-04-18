@@ -30,7 +30,7 @@ public class Tests {
         Formula expr = new FormulaExp4j("2 * [A] + 1", s.getTable("T"));
 
         // Define and evaluate
-        tb.calc( expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{}) );
+        tb.calculate( expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{}) );
         tb.evaluate();
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
@@ -144,7 +144,7 @@ public class Tests {
         // Accu expression translated from a formula
         Expression expr = new FormulaExp4j(" [out] + 2.0 * [Id] ", s.getTable("T2"));
 
-        ta.accu(
+        ta.accumulate(
                 t2g,
                 (a,p) -> (Double)a + 2.0 * (Double)p[0],
                 t2.getColumn("Id")

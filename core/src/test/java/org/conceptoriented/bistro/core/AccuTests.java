@@ -33,7 +33,7 @@ public class AccuTests {
 
         // Lambda for accumulation " [out] + 2.0 * [Id] "
         ta.setDefaultValue(0.0);
-        ta.accu(
+        ta.accumulate(
                 t2g,
                 (a,p) -> 2.0 * (Double)p[0] + (Double)a,
                 t2.getColumn("Id")
@@ -62,7 +62,7 @@ public class AccuTests {
         Column tid = schema.createColumn("Id", t);
         tid.noop(true);
 
-        // Define accu column
+        // Define accumulate column
         Column ta = schema.createColumn("A", t);
         ta.setDefinitionType(ColumnDefinitionType.ACCU);
 

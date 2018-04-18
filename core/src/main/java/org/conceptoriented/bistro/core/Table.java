@@ -82,16 +82,16 @@ public class Table implements Element {
 
     @Override
     public boolean isDirty() {
-        // If there are newer changes (which have to be propagated) in at least one dependency
+
+        // Definition has changed
+        if(this.definition != null) {
+            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
+        }
+
+        // One of its dependencies has changes or is dirty
         for(Element dep : this.getDependencies()) {
             if(dep.getChangedAt() > this.getChangedAt()) return true;
             if(dep.isDirty()) return true; // Recursion
-        }
-
-        // Derived elements depend on their definition
-        if(this.definition != null) {
-            if(!this.getDefinitionErrors().isEmpty()) return true;
-            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
         }
 
         return false;
@@ -328,7 +328,7 @@ public class Table implements Element {
         // Really evaluate
         //
 
-        // If there exist proj-columns then its is a proj-table - skip full population
+        // If there exist project-columns then its is a project-table - skip full population
         boolean isProj = false;
         for(Column col : this.schema.getColumns()) {
             if(col.getDefinitionType() != ColumnDefinitionType.PROJ) continue;
@@ -360,7 +360,7 @@ public class Table implements Element {
     // Table (definition) kind
     //
 
-    TableDefinition definition; // It is instantiated by prod-prod methods (or definition errors are added)
+    TableDefinition definition; // It is instantiated by product-product methods (or definition errors are added)
 
     protected TableDefinitionType definitionType;
     public TableDefinitionType getDefinitionType() {
@@ -407,7 +407,7 @@ public class Table implements Element {
     // Product table
     //
 
-    public void prod() {
+    public void product() {
         this.setDefinitionType(TableDefinitionType.PROD); // Reset definition
 
         this.definition = new TableDefinitionProd(this); // Create definition
@@ -574,7 +574,7 @@ public class Table implements Element {
         return ret;
     }
 
-    protected List<Column> getProjColumns() { // Get all incoming proj-columns
+    protected List<Column> getProjColumns() { // Get all incoming project-columns
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getSchema().getColumns()) {
             if(col.getOutput() != this) continue;

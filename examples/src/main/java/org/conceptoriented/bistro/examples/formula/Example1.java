@@ -42,7 +42,7 @@ public class Example1
         // [OrderDetails].[Amount] = [Quantity] * [UnitPrice]
         Column itemsAmount = schema.createColumn("Amount", items, columnType);
         Expression expr = new FormulaExp4j("[Quantity] * [UnitPrice]", items);
-        itemsAmount.calc(
+        itemsAmount.calculate(
                 expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{})
         );
 
@@ -75,7 +75,7 @@ public class Example1
         // [Products].[Total Amount] = SUM [OrderDetails].[Amount]
         Column productsAmount = schema.createColumn("Total Amount", products, columnType);
         productsAmount.setDefaultValue(0.0); // It will be used as an initial value
-        productsAmount.accu(
+        productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items)
                 itemsAmount
@@ -84,7 +84,7 @@ public class Example1
         // [Order].[Total Amount] = SUM [OrderDetails].[Amount]
         Column ordersAmount = schema.createColumn("Total Amount", orders, columnType);
         ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
-        ordersAmount.accu(
+        ordersAmount.accumulate(
                 itemsOrder,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items),
                 itemsAmount

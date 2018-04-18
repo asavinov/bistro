@@ -10,7 +10,7 @@ import java.util.List;
  * - Writing output: how to find the output and write it to this column data
  */
 public interface ColumnDefinition {
-	public List<BistroError> getErrors();
-	public List<Element> getDependencies();
-	public void evaluate();
+    public List<BistroError> getErrors();
+    public List<Element> getDependencies();
+    public void evaluate();
 }

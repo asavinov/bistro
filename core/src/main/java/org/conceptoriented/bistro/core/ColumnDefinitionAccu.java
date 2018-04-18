@@ -26,31 +26,35 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
     @Override
     public List<Element> getDependencies() {
-        List<Element> ret = new ArrayList<>();
+        List<Element> deps = new ArrayList<>();
+
+        deps.add(this.column.getInput()); // Columns depend on their input table
+
+        deps.add(this.groupPath.getInput()); // Accumulate column depends on the fact table
+
+        for(Column col : this.groupPath.columns) {
+            if(!deps.contains(col)) deps.add(col);
+        }
 
         if(this.initDefinition != null) {
             for(Element dep : this.initDefinition.getDependencies()) {
-                if(!ret.contains(dep)) ret.add(dep);
+                if(!deps.contains(dep)) deps.add(dep);
             }
         }
         if(this.paths != null && this.lambda != null) {
             for(ColumnPath path : this.paths) {
                 for(Column col : path.columns) {
-                    if(!ret.contains(col)) ret.add(col);
+                    if(!deps.contains(col)) deps.add(col);
                 }
             }
         }
         if(this.finDefinition != null) {
-            for(Element dep : this.finDefinition.getDependencies()) {
-                if(!ret.contains(dep)) ret.add(dep);
+            for(Element d : this.finDefinition.getDependencies()) {
+                if(!deps.contains(d)) deps.add(d);
             }
         }
 
-        for(Column col : this.groupPath.columns) {
-            if(!ret.contains(col)) ret.add(col);
-        }
-
-        return ret;
+        return deps;
     }
 
     @Override

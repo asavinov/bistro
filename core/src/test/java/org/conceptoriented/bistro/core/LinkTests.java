@@ -54,7 +54,7 @@ public class LinkTests {
         // Table 1 (type table to link to)
         //
         Table t1 = s.createTable("T");
-        t1.prod();
+        t1.product();
 
         Column t1a = s.createColumn("A", t1);
         t1a.noop(true);
@@ -149,10 +149,10 @@ public class LinkTests {
         f_a.setValue(8, 260.0); // No intervals have to be added because exceeds the maximum count
 
         //
-        // Define proj column
+        // Define project column
         //
         Column f_b = f.getColumn("B");
-        f_b.proj(
+        f_b.project(
                 new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
         );
 
@@ -281,10 +281,10 @@ public class LinkTests {
         f_a.setValue(8, Instant.parse("2018-01-01T12:45:00.00Z")); // No intervals have to be added because exceeds the maximum count
 
         //
-        // Define proj column
+        // Define project column
         //
         Column f_b = f.getColumn("B");
-        f_b.proj(
+        f_b.project(
                 new ColumnPath(f.getColumn("A")) // This column values will be mapped to intervals
         );
 

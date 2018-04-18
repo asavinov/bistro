@@ -55,7 +55,7 @@ public class Example1 {
 
         // This column will compute the thing name length in characters
         Column calc = schema.createColumn("Name Length", things, objects);
-        calc.calc(
+        calc.calculate(
                 p -> ((String)p[0]).length(), // How to compute
                 thingName // One parameter to compute the column
         );
@@ -82,7 +82,7 @@ public class Example1 {
         //
 
         Column counts = schema.createColumn("Event Count", things, objects);
-        counts.accu(
+        counts.accumulate(
                 link, // How to group/map facts to this table
                 (a,p) -> (Double)a + 1.0 // How to accumulate/update
                 // Nothing to aggregate except for counting

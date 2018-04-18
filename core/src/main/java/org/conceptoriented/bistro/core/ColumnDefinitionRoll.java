@@ -42,23 +42,25 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
     @Override
     public List<Element> getDependencies() {
-        List<Element> ret = new ArrayList<>();
+        List<Element> deps = new ArrayList<>();
+
+        deps.add(this.column.getInput()); // Columns depend on their input table
 
         if(this.distancePath != null) {
             for(Column col : this.distancePath.columns) {
-                if(!ret.contains(col)) ret.add(col);
+                if(!deps.contains(col)) deps.add(col);
             }
         }
 
         if(this.paths != null) {
             for(ColumnPath path : this.paths) {
                 for(Column col : path.columns) {
-                    if(!ret.contains(col)) ret.add(col);
+                    if(!deps.contains(col)) deps.add(col);
                 }
             }
         }
 
-        return ret;
+        return deps;
     }
 
     @Override

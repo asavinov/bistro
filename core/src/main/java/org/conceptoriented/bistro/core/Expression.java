@@ -11,6 +11,6 @@ public interface Expression extends EvaluatorCalc {
 
     public EvaluatorCalc getEvaluator();
 
-	public void setParameterPaths(List<ColumnPath> paths);
-	public List<ColumnPath> getParameterPaths();
+    public void setParameterPaths(List<ColumnPath> paths);
+    public List<ColumnPath> getParameterPaths();
 }

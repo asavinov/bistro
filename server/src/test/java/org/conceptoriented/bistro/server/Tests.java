@@ -134,7 +134,7 @@ public class Tests {
 
         // Calculate column
         Column tc = s.createColumn("C", t);
-        tc.calc(
+        tc.calculate(
                 p -> (Double)p[0] + (Double)p[1],
                 ta, tb
         );
@@ -210,7 +210,7 @@ public class Tests {
 
         // Calculate column
         Column tc = s.createColumn("C", t);
-        tc.calc(
+        tc.calculate(
                 p ->  Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]),
                 ta, tb
         );
@@ -284,7 +284,7 @@ public class Tests {
 
         // Calculate column
         Column tc = s.createColumn("C", t);
-        tc.calc(
+        tc.calculate(
                 p -> (Double)p[0] + (Double)p[1],
                 ta, tb
         );

@@ -170,7 +170,7 @@ public class TableDefinitionRange implements TableDefinition {
     public List<Element> getDependencies() {
         List<Element> ret = new ArrayList<>();
 
-        // All incoming (populating) proj-columns (if any)
+        // All incoming (populating) project-columns (if any)
         List<Column> projCols = this.table.getProjColumns();
         //ret.addAll(projCols);
 

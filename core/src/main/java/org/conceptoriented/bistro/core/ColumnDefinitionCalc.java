@@ -26,8 +26,11 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     @Override
     public List<Element> getDependencies() {
-        List<Column> cols = ColumnPath.getColumns(this.parameterPaths);
         List<Element> deps = new ArrayList<>();
+
+        deps.add(this.column.getInput()); // Columns depend on their input table
+
+        List<Column> cols = ColumnPath.getColumns(this.parameterPaths);
         for(Column col : cols) deps.add(col);
         return deps;
     }
@@ -43,7 +46,38 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
         Table mainTable = this.column.getInput(); // Loop/scan table
 
+        //
+        // Determine the scope of dirtiness
+        //
+
         Range mainRange = mainTable.getIdRange();
+
+        boolean fullScope = false;
+
+        if(!fullScope) {
+            if (this.column.getDefinitionChangedAt() > this.column.getChangedAt()) { // Definition has changes
+                fullScope = true;
+            }
+        }
+
+        if(!fullScope) { // Some column dependency has changes
+            List<Element> deps = this.getDependencies();
+            for(Element e : deps) {
+                if(!(e instanceof Column)) continue;
+                if(((Column)e).isChanged()) { // There is a column with some changes
+                    fullScope = true;
+                    break;
+                }
+            }
+        }
+
+        if(!fullScope) {
+            mainRange = mainTable.getAddedRange();
+        }
+
+        //
+        // Update dirty elements
+        //
 
         // Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading valuePaths
         List<ColumnPath> paramPaths = this.parameterPaths;

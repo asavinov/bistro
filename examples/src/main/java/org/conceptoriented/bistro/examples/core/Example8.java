@@ -32,7 +32,7 @@ public class Example8 {
         //
 
         Column timestamp = schema.createColumn("Timestamp", quotes);
-        timestamp.calc(
+        timestamp.calculate(
                 p -> Instant.ofEpochSecond(Long.valueOf((String)p[0]).longValue()),
                 quotes.getColumn("Time")
         );
@@ -60,7 +60,7 @@ public class Example8 {
         //
 
         Column timestamp2hour = schema.createColumn("Link To Hour", quotes, hourlyQuotes);
-        timestamp2hour.proj(
+        timestamp2hour.project(
                 timestamp // Timestamp will be mapped to hourly intervals
         );
 
@@ -70,7 +70,7 @@ public class Example8 {
 
         Column priceVolumeSum = schema.createColumn("Price Volume Sum", hourlyQuotes);
         priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        priceVolumeSum.accu(
+        priceVolumeSum.accumulate(
                 timestamp2hour,
                 (a,p) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)a, // [Price] * [Amount] + [out]
                 quotes.getColumn("Price"), quotes.getColumn("Amount")
@@ -78,14 +78,14 @@ public class Example8 {
 
         Column volumeSum = schema.createColumn("Volumne Sum", hourlyQuotes);
         volumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        volumeSum.accu(
+        volumeSum.accumulate(
                 timestamp2hour, // Time stamp
                 (a,p) -> Double.valueOf((String)p[0]) + (double)a, // [Amount] + [out]
                 quotes.getColumn("Amount")
         );
 
         Column VWAP = schema.createColumn("VWAP", hourlyQuotes);
-        VWAP.calc(
+        VWAP.calculate(
                 p -> (double)p[0] / (double)p[1],
                 priceVolumeSum, volumeSum
         );
