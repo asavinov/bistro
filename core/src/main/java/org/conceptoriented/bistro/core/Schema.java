@@ -117,43 +117,32 @@ public class Schema {
     // Evaluate
     //
 
-    /**
-     * Evaluate all columns of the schema. The order of evaluation is determined by dependencies. Only dirty columns are evaluated. Columns with errors are not evaluated.
-     */
+    protected Topology topology;
+    protected long topologyChangedAt; // Time of latest change
+    public long getTopologyChangedAt() {
+        return this.topologyChangedAt;
+    }
+
     public void evaluate() {
-        Topology topology = new Topology(this);
-        topology.create();
+        if(this.topology == null) {
+            this.topology = new Topology(this);
+        }
 
-        this.evaluateToplogy(topology);
-    }
+        // Find newest definition time
+        long newestColumnTime = this.columns.stream().mapToLong(x -> x.getDefinitionChangedAt()).max().getAsLong();
+        long newestTableTime = this.tables.stream().mapToLong(x -> x.getDefinitionChangedAt()).max().getAsLong();
+        long definitionChangedAt = Math.max(newestColumnTime, newestTableTime);
 
-    public void evaluate(Column column) {
-        Topology topology = new Topology(column);
-        topology.create();
+        // If topology is not up-to-date then update it
+        if(this.topologyChangedAt <= definitionChangedAt) {
+            this.topology = new Topology(this);
+            topology.create();
+            this.topologyChangedAt = System.nanoTime();
+        }
 
-        this.evaluateToplogy(topology);
-    }
-
-    public void evaluate(Column[] columns) {
-    }
-
-    public void evaluate(Table table) {
-        Topology topology = new Topology(table);
-        topology.create();
-
-        this.evaluateToplogy(topology);
-    }
-
-    //
-    // Dependency graph
-    //
-
-    protected void evaluateToplogy(Topology topology) {
-
-        for(List<Element> layer : topology.layers) {
+        for(List<Element> layer : this.topology.layers) {
 
             for(Element elem : layer) {
-
                 //
                 // Check possibility to evaluate
                 //
@@ -180,7 +169,7 @@ public class Schema {
         }
 
         // After evaluating, clear the changes in all elements of the graph
-        for(List<Element> layer : topology.layers) {
+        for(List<Element> layer : this.topology.layers) {
             for(Element elem : layer) {
                 elem.resetChanged();
             }
@@ -199,6 +188,9 @@ public class Schema {
     public Schema(String name) {
         this.id = UUID.randomUUID();
         this.name = name;
+
+
+        this.topologyChangedAt = System.nanoTime();
 
         // Create primitive tables
         Table objectType = createTable("Object");

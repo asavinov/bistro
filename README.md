@@ -91,19 +91,23 @@ Here are some benefits and unique features of Bistro Streams:
 
 ### What is Bistro intended for?
 
-The main general goal of Bistro is *data processing* where by data processing we mean producing new data from existing data.
+The main general goal of Bistro is *data processing* where by data processing we mean deriving new data from existing data.
 
 ### What kind of data Bistro can process?
 
-Bistro assumes that data is represented as a number of *sets* of elements. Each *element* is a tuple which a combination of *column* values. A *value* can be any (Java) object.
+Bistro assumes that data is represented as a number of *sets* of elements. Each *element* is a tuple which is a combination of *column* values. A *value* can be any (Java) object.
 
 ### How Bistro processes data?
 
-Tables and columns in Bistro may have *definitions*. A table definition specifies how the elements of this set are produced (inferred or derived) from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables). Table and column definitions in Bistro are analogous to queries in conventional DBMS.
+Tables and columns in Bistro may have *definitions*. A table definition specifies how elements of this set are produced (inferred or derived) from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables). Table and column definitions in Bistro are analogous to queries in conventional DBMS.
 
 ## Does Bistro have queries?
 
-No, Bistro does not provide any query language. Instead of submitting and executing queries against the data, Bistro uses definitions which are *evaluated* against the data. These definitions (in contrast to queries) are integral part of the database. A table with a definition (derived table) is a normal table which is treated equally to all other tables. A column with or without definition is also a normal column which defines a mapping from one set to another set.
+No, Bistro does not provide any query language. Instead, Bistro uses definitions which are *evaluated* against the data as opposed to executing a query. These definitions (in contrast to queries) are integral part of the database. A table or column with a definition is treated equally to all other tables and columns. It is similar to defining views in a database which can be updated if some data changes.
+
+## What are unique features of Bistro?
+
+Bistro heavily relies on column definitions and much less uses table definitions. In contrast, most traditional approaches (including SQL and, map-reduce) use set operations for data transformations. Describing data processing logic using column operations can be much more natural and simpler in many scenarios (for the same reason why spreadsheets are). In particular, Bistro does not use joins and group-by which are known to be difficult to understand and use but which are very hard to get rid of.
 
 ## What is the formal basis of Bistro?
 
