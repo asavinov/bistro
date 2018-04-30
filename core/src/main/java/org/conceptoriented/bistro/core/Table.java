@@ -77,7 +77,6 @@ public class Table implements Element {
     public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
         this.addedRange.start = this.addedRange.end;
         this.deletedRange.start = this.deletedRange.end;
-        this.changedAt = System.nanoTime();
     }
 
     @Override
@@ -289,9 +288,8 @@ public class Table implements Element {
     @Override
     public void evaluate() {
 
-        // Skip non-derived columns - they do not participate in evaluation
+        // Skip non-derived elements since they do not participate in evaluation (nothing to evaluate)
         if(!this.isDerived()) {
-            this.setChanged();
             return;
         }
 
@@ -344,16 +342,6 @@ public class Table implements Element {
             this.executionErrors.addAll(this.definition.getErrors());
         }
 
-        //
-        // Result of evaluation
-        //
-
-        if(this.executionErrors.size() == 0) {
-            this.setChanged();
-        }
-        else {
-            ; // Evaluation failed. Leave the old change date
-        }
     }
 
     //

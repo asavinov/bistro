@@ -59,13 +59,11 @@ public class Column implements Element {
     public void setChanged() {
         this.isChanged = true;
         this.changedAt = System.nanoTime();
-        System.nanoTime();
     }
 
     @Override
     public void resetChanged() { // Forget about the change status/scope (reset change delta)
         this.isChanged = false;
-        this.changedAt = System.nanoTime();
     }
 
     @Override
@@ -93,7 +91,7 @@ public class Column implements Element {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-    public void setValue(long id, Object value) { this.data.setValue(id, value); this.setChanged(); }
+    public void setValue(long id, Object value) { this.data.setValue(id, value); } // We do set the dirty flag by assuming that only newly added records are changed - if it is not so then it has to be set manually
 
     public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
 
@@ -234,9 +232,8 @@ public class Column implements Element {
     @Override
     public void evaluate() { // Evaluate only this individual column if possible
 
-        // Skip non-derived columns - they do not participate in evaluation
+        // Skip non-derived elements since they do not participate in evaluation (nothing to evaluate)
         if(!this.isDerived()) {
-            this.setChanged();
             return;
         }
 
@@ -275,17 +272,6 @@ public class Column implements Element {
 
         this.definition.evaluate();
         this.executionErrors.addAll(this.definition.getErrors());
-
-        //
-        // Result of evaluation
-        //
-
-        if(this.executionErrors.size() == 0) {
-            this.setChanged();
-        }
-        else {
-            this.isChanged = true; // Evaluation failed
-        }
     }
 
     //
