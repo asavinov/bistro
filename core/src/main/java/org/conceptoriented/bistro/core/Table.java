@@ -205,9 +205,8 @@ public class Table implements Element {
         if(deps == null) deps = new ArrayList<>();
 
         // Add what evaluation of where condition requires (except for this table columns)
-        if(this.expressionWhere != null) {
-            List<ColumnPath> paths = this.expressionWhere.getParameterPaths();
-            List<Column> cols = ColumnPath.getColumns(paths);
+        if(this.whereLambda != null && this.whereParameterPaths != null) {
+            List<Column> cols = ColumnPath.getColumns(this.whereParameterPaths);
             for(Column col : cols) {
                 if(col.getInput() == this) continue; // This table columns will be evaluated during population and hence during where evaluation, so we exclude them
                 deps.add(col);
@@ -361,7 +360,6 @@ public class Table implements Element {
 
         if(this.definitionType == TableDefinitionType.NOOP) {
             this.definition = null;
-            this.expressionWhere = null;
 
             this.whereLambda = null;
             this.whereParameterPaths.clear();
@@ -411,9 +409,6 @@ public class Table implements Element {
 
     EvaluatorCalc whereLambda;
     List<ColumnPath> whereParameterPaths = new ArrayList<>();
-
-    @Deprecated
-    protected Expression expressionWhere;
 
     public void where(EvaluatorCalc lambda, ColumnPath... paths) {
         this.setDefinitionType(TableDefinitionType.PROD);

@@ -49,19 +49,6 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         this.validate();
     }
 
-    @Deprecated
-    public ColumnDefinitionProj(Column column, Expression[] valueExprs, Column[] keyColumns) {
-        super(column, valueExprs, keyColumns);
-
-        // Use all existing keys by default if not specified
-        if(keyColumns == null || keyColumns.length == 0) {
-            this.keyColumns = column.getOutput().getKeyColumns();
-        }
-
-        this.isProj = true;
-        this.validate();
-    }
-
     public ColumnDefinitionProj(Column column, ColumnPath valuePath) {
         super(column, valuePath);
 

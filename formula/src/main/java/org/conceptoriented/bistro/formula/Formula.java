@@ -2,7 +2,6 @@ package org.conceptoriented.bistro.formula;
 
 import org.conceptoriented.bistro.core.ColumnPath;
 import org.conceptoriented.bistro.core.EvaluatorCalc;
-import org.conceptoriented.bistro.core.Expression;
 
 import java.util.List;
 

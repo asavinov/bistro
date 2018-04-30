@@ -1,14 +1,15 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.formula;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.conceptoriented.bistro.core.*;
+
 /**
  * This class is a basic implementation of the Expression interface.
  * It can be extended to implement custom expressions.
  */
-@Deprecated
 public class Expr implements Expression {
 
     @Override

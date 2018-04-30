@@ -14,9 +14,6 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
     EvaluatorCalc lambda;
     List<ColumnPath> parameterPaths = new ArrayList<>();
 
-    @Deprecated
-    Expression expr;
-
     List<BistroError> errors = new ArrayList<>();
 
     @Override
@@ -123,11 +120,4 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
             this.parameterPaths.add(new ColumnPath(columns[i]));
         }
     }
-
-    @Deprecated
-    public ColumnDefinitionCalc(Column column, Expression expr) {
-        this.column = column;
-        this.expr = expr;
-    }
-
 }
