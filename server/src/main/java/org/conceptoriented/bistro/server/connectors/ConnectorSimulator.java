@@ -31,12 +31,15 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
         long delay_millis = 100;
         int start = 0;
         int end = 0;
+        long submissionTime = System.nanoTime();
 
         List<Column> columns = this.table.getColumns();
 
         while(start < this.data.size()) {
 
+            //
             // Find next data
+            //
             for( ; end < this.data.size(); end++) {
                 if(this.delays == null) {
                     delay_millis = this.delay.toMillis();
@@ -47,25 +50,16 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                 if(delay_millis > 0) { end++; break; }
             }
 
-            // Sleep some time (duration between this and next)
-            try { Thread.sleep(delay_millis); }
-            catch (InterruptedException e) {
-                if(Thread.currentThread().isInterrupted()) {
-                    break;
-                }
-            }
-
-            // Timestamp to be inserted
-            Instant now = Instant.now();
-
-            // Create records to be added and create one action for each of them
+            //
+            // Create records to be added
+            //
             List<Action> toSubmit = new ArrayList<>();
             for( ; start < end; start++) {
 
                 Map<Column, Object> record = new HashMap<>();
 
                 // First, insert timestamp
-                record.put(columns.get(0), now);
+                record.put(columns.get(0), Instant.now());
 
                 // Then, insert all data fields
                 Object[] rec = this.data.get(start);
@@ -79,9 +73,24 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
                 toSubmit.add(new ActionAdd(this.table, record));
             }
 
-            // Add follow up actions at the end
             toSubmit.addAll(this.getActions());
             Task task = new Task(toSubmit, null);
+
+            //
+            // Sleep some time by waking up when the event has to be submitted
+            //
+            long restNanos = delay_millis * 1000000 - (System.nanoTime() - submissionTime);
+            if(restNanos > 10) {
+                try {
+                    Thread.sleep(restNanos / 1000000, (int)(restNanos % 1000000));
+                } catch (InterruptedException e) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+                }
+            }
+
+            submissionTime = System.nanoTime();
             this.server.submit(task);
         }
 
