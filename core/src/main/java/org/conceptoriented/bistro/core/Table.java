@@ -42,17 +42,17 @@ public class Table implements Element {
         return this.addedRange;
     }
 
-    protected Range deletedRange = new Range(); // Deleted ids
-    public Range getDeletedRange() {
-        return this.deletedRange;
+    protected Range removedRange = new Range(); // Removed ids
+    public Range getRemovedRange() {
+        return this.removedRange;
     }
 
     public Range getIdRange() {
-        return new Range(this.deletedRange.end, this.addedRange.end); // Derived from added and removed
+        return new Range(this.removedRange.end, this.addedRange.end); // Derived from added and removed
     }
 
     public long getLength() {
-        return this.addedRange.end - this.deletedRange.end; // All non-removed records
+        return this.addedRange.end - this.removedRange.end; // All non-removed records
     }
 
     protected long changedAt; // Time of latest change
@@ -64,7 +64,7 @@ public class Table implements Element {
     @Override
     public boolean isChanged() { // Changes in a table are made by adding and removing records
         if(this.addedRange.getLength() != 0) return true;
-        if(this.deletedRange.getLength() != 0) return true;
+        if(this.removedRange.getLength() != 0) return true;
         return false;
     }
 
@@ -76,7 +76,7 @@ public class Table implements Element {
     @Override
     public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
         this.addedRange.start = this.addedRange.end;
-        this.deletedRange.start = this.deletedRange.end;
+        this.removedRange.start = this.removedRange.end;
     }
 
     @Override
@@ -114,20 +114,20 @@ public class Table implements Element {
         return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
     }
 
-    public long remove() { // Remove oldest elements with smallest ids. The deleted id is returned.
+    public long remove() { // Remove oldest elements with smallest ids. The removed id is returned.
         this.getColumns().forEach( x -> x.remove() );
-        if(this.getLength() > 0) { this.deletedRange.end++; this.changedAt = System.nanoTime(); }
-        return this.deletedRange.end - 1; // Id of the deleted record (not valid id anymore)
+        if(this.getLength() > 0) { this.removedRange.end++; this.changedAt = System.nanoTime(); }
+        return this.removedRange.end - 1; // Id of the removed record (not valid id anymore)
     }
 
     public Range remove(long count) {
         long toRemove = Math.min(count, this.getLength());
-        if(toRemove > 0) { this.deletedRange.end += toRemove; this.changedAt = System.nanoTime(); }
-        return new Range(this.deletedRange.end - toRemove, this.deletedRange.end);
+        if(toRemove > 0) { this.removedRange.end += toRemove; this.changedAt = System.nanoTime(); }
+        return new Range(this.removedRange.end - toRemove, this.removedRange.end);
     }
 
     protected void removeAll() {
-        if(this.getLength() > 0) { this.deletedRange.end = this.addedRange.end; this.changedAt = System.nanoTime(); }
+        if(this.getLength() > 0) { this.removedRange.end = this.addedRange.end; this.changedAt = System.nanoTime(); }
     }
 
     // Initialize to default state (e.g., empty set) by also forgetting change history
@@ -137,8 +137,8 @@ public class Table implements Element {
         long initialId = 0;
         this.addedRange.end = initialId;
         this.addedRange.start = initialId;
-        this.deletedRange.end = initialId;
-        this.deletedRange.start = initialId;
+        this.removedRange.end = initialId;
+        this.removedRange.start = initialId;
 
         this.changedAt = System.nanoTime();
     }
@@ -464,7 +464,7 @@ public class Table implements Element {
         }
 
         //
-        // Evaluate lambda
+        // Evaluate adder
         //
         boolean result;
         try {

@@ -19,37 +19,6 @@ public class AccuTests {
     public void setUp() {
     }
 
-    @Test
-    public void accuTest() {
-        Schema s = this.createSchema();
-        Table t = s.getTable("T");
-        Table t2 = s.getTable("T2");
-
-        // Accu (group) formula
-        Column ta = t.getColumn("A");
-        Column t2g = t2.getColumn("G");
-
-        t2g.evaluate();
-
-        // Lambda for accumulation " [out] + 2.0 * [Id] "
-        ta.setDefaultValue(0.0);
-        ta.accumulate(
-                t2g,
-                (a,p) -> 2.0 * (Double)p[0] + (Double)a,
-                t2.getColumn("Id")
-        );
-        ta.evaluate();
-
-        // Check correctness of dependencies
-        List<Element> ta_deps = ta.getDependencies();
-        assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
-        assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
-
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
-    }
-
     Schema createSchema() {
 
         Schema schema = new Schema("My Schema");
@@ -69,9 +38,9 @@ public class AccuTests {
         t.add();
         t.add();
         t.add();
-        tid.setValue(0, 5.0);
-        tid.setValue(1, 10.0);
-        tid.setValue(2, 15.0);
+        tid.setValue(0, 5);
+        tid.setValue(1, 10);
+        tid.setValue(2, 15);
 
         //
         // Table 2 (fact table)
@@ -80,7 +49,7 @@ public class AccuTests {
 
         Column t2id = schema.createColumn("Id", t2);
 
-        // Define group column: G: T2 -> T
+        // Define group link column: G: T2 -> T (where T2:Id = T:Id)
         Column t2g = schema.createColumn("G", t2, t);
         t2g.link(
                 new Column[] { t2id }, // Values: Id from T2
@@ -91,12 +60,60 @@ public class AccuTests {
         t2.add();
         t2.add();
         t2.add();
-        t2id.setValue(0, 5.0);
-        t2id.setValue(1, 5.0);
-        t2id.setValue(2, 10.0);
-        t2id.setValue(3, 20.0);
+        t2id.setValue(0, 5);
+        t2id.setValue(1, 5);
+        t2id.setValue(2, 10);
+        t2id.setValue(3, 20);
 
         return schema;
+    }
+
+    @Test
+    public void accuTest() {
+        Schema s = this.createSchema();
+        Table t = s.getTable("T");
+        Table t2 = s.getTable("T2");
+
+        // Group link column
+        Column t2g = t2.getColumn("G");
+        Column t2id = t2.getColumn("Id");
+
+        // Accumulate column
+        // Lambda for accumulation " [out] + [Id] "
+        Column ta = t.getColumn("A");
+        ta.setDefaultValue(0.0);
+        ta.accumulate(
+                t2g,
+                (a,p) -> ((Number)a).doubleValue() + ((Number)p[0]).doubleValue(),
+                t2.getColumn("Id")
+        );
+
+        s.evaluate();
+
+        // Check correctness of dependencies
+        List<Element> ta_deps = ta.getDependencies();
+        assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
+        assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
+
+        assertEquals(10.0, ta.getValue(0));
+        assertEquals(10.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
+
+        //
+        // Test incremental evaluation using adder
+        //
+
+        t2.add();
+        t2id.setValue(4, 10);
+
+        s.evaluate();
+
+        //assertEquals(5.0, ta.getValue(0)); // 5.0 has to be subtracted by remover
+        assertEquals(20.0, ta.getValue(1)); // 10.0 has to be added by adder
+        assertEquals(0.0, ta.getValue(2));
+
+
+        t2.remove(); // Remove the oldest record with id 0 (and measure 5 linked to group id 0)
     }
 
 }

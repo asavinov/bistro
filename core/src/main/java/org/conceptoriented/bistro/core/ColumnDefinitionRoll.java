@@ -94,7 +94,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
             }
 
             //
-            // For all elements in the window [min, max), prepare (aggregate,distance,params) and call roll lambda
+            // For all elements in the window [min, max), prepare (aggregate,distance,params) and call roll adder
             //
 
             Object aggregate = this.column.getValue(i); // Initial aggregate (will be updated)

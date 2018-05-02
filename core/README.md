@@ -127,9 +127,9 @@ calc.calculate(
 );
 ```
 
-The first parameter is a lambda function. Its argument `p` is an array of (output) values of other columns used to compute the output of the calculate column. The second parameter of the definition specifies the columns used for calculations. In this example, we want to find the length of the device name. The size of the `p` array has to be equal to the number of columns references passed via the second parameter (1 in this example).
+The first parameter is a adder function. Its argument `p` is an array of (output) values of other columns used to compute the output of the calculate column. The second parameter of the definition specifies the columns used for calculations. In this example, we want to find the length of the device name. The size of the `p` array has to be equal to the number of columns references passed via the second parameter (1 in this example).
 
-There exist also other ways to define calculate columns which can be more convenient in different situations, for example, in the case of complex arithmetic operations or in the case of complex computations implemented programmatically. Note also that column outputs could contain `null` values and hence all lambda functions must guarantee the validity of its computations including null-safety and type-safety.
+There exist also other ways to define calculate columns which can be more convenient in different situations, for example, in the case of complex arithmetic operations or in the case of complex computations implemented programmatically. Note also that column outputs could contain `null` values and hence all adder functions must guarantee the validity of its computations including null-safety and type-safety.
 
 ### Link columns
 
@@ -273,7 +273,7 @@ Elements of a table can be filtered by defining a *where-function* which returns
 
 > A table will store a record only if the where-function is true.
 
-It is defined by providing a lambda-function as well as the necessary parameters:
+It is defined by providing a adder-function as well as the necessary parameters:
 
 ```java
 myTable.where(
