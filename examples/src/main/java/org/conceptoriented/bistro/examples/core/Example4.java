@@ -74,6 +74,7 @@ public class Example4 {
         productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
+                null,
                 items.getColumn("Amount")
         );
 
@@ -83,6 +84,7 @@ public class Example4 {
         categoriesAmount.accumulate(
                 productsCategory,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
+                null,
                 products.getColumn("Total Amount")
         );
 

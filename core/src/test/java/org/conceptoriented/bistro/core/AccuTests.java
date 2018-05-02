@@ -85,6 +85,7 @@ public class AccuTests {
         ta.accumulate(
                 t2g,
                 (a,p) -> ((Number)a).doubleValue() + ((Number)p[0]).doubleValue(),
+                (a,p) -> ((Number)a).doubleValue() - ((Number)p[0]).doubleValue(),
                 t2.getColumn("Id")
         );
 
@@ -108,12 +109,36 @@ public class AccuTests {
 
         s.evaluate();
 
-        //assertEquals(5.0, ta.getValue(0)); // 5.0 has to be subtracted by remover
-        assertEquals(20.0, ta.getValue(1)); // 10.0 has to be added by adder
+        assertEquals(10.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
         assertEquals(0.0, ta.getValue(2));
 
+        t2.remove();
 
-        t2.remove(); // Remove the oldest record with id 0 (and measure 5 linked to group id 0)
+        s.evaluate();
+
+        assertEquals(5.0, ta.getValue(0));
+        assertEquals(20.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
+
+        t2.remove();
+        t2.remove();
+        t2.add();
+        t2id.setValue(5, 15);
+
+        s.evaluate();
+
+        assertEquals(0.0, ta.getValue(0));
+        assertEquals(10.0, ta.getValue(1));
+        assertEquals(15.0, ta.getValue(2));
+
+        t2.remove(3);
+
+        s.evaluate();
+
+        assertEquals(0.0, ta.getValue(0));
+        assertEquals(0.0, ta.getValue(1));
+        assertEquals(0.0, ta.getValue(2));
     }
 
 }

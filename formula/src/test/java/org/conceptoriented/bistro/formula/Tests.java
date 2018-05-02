@@ -148,6 +148,7 @@ public class Tests {
         ta.accumulate(
                 t2g,
                 (a,p) -> (Double)a + 2.0 * (Double)p[0],
+                null,
                 t2.getColumn("Id")
         );
         ta.evaluate();

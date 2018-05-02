@@ -59,6 +59,7 @@ public class Example2 {
         productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
+                null,
                 items.getColumn("Amount")
         );
 

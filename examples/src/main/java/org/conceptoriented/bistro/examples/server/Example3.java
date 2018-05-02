@@ -90,6 +90,7 @@ public class Example3
         volumeSum.accumulate(
                 interval, // Link: Even time stamp -> Interval
                 (a,p) -> (double)a + Double.valueOf((String)p[0]),
+                null,
                 amount
         );
 
@@ -97,7 +98,8 @@ public class Example3
         quoteCount.setDefaultValue(0.0); // It will be used as an initial value
         quoteCount.accumulate(
                 interval, // Link: Even time stamp -> Interval
-                (a,p) -> (double)a + 1.0
+                (a,p) -> (double)a + 1.0,
+                null
         );
 
         Column avgVolume = schema.createColumn("Average Volume", intervals);

@@ -63,6 +63,7 @@ public class Example3 {
         ordersAmount.accumulate(
                 itemsOrder,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
+                null,
                 items.getColumn("Amount")
         );
 

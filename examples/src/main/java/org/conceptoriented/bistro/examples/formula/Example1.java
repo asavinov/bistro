@@ -78,6 +78,7 @@ public class Example1
         productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items)
+                null,
                 itemsAmount
         );
 
@@ -87,6 +88,7 @@ public class Example1
         ordersAmount.accumulate(
                 itemsOrder,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items),
+                null,
                 itemsAmount
         );
 

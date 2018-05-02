@@ -12,10 +12,8 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
     ColumnPath groupPath;
 
-    ColumnDefinitionCalc initDefinition;
     EvaluatorAccu adder;
     EvaluatorAccu remover;
-    ColumnDefinitionCalc finDefinition;
 
     ColumnPath[] paths;
 
@@ -37,26 +35,12 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
             if(!deps.contains(col)) deps.add(col);
         }
 
-        // Initializer dependencies
-        if(this.initDefinition != null) {
-            for(Element dep : this.initDefinition.getDependencies()) {
-                if(!deps.contains(dep)) deps.add(dep);
-            }
-        }
-
         // Updater dependencies
         if(this.paths != null && (this.adder != null || this.remover != null)) {
             for(ColumnPath path : this.paths) {
                 for(Column col : path.columns) {
                     if(!deps.contains(col)) deps.add(col);
                 }
-            }
-        }
-
-        // Finalizer dependencies
-        if(this.finDefinition != null) {
-            for(Element d : this.finDefinition.getDependencies()) {
-                if(!deps.contains(d)) deps.add(d);
             }
         }
 
@@ -89,48 +73,13 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
 
         //Range mainRange = mainTable.getIdRange();
         //this.evalUpdater(mainRange, this.adder);
-
-        //
-        // Finalization
-        //
-        // TODO: Remove finalizer mechanism for simplicity
-        if(this.finDefinition != null) { // Default
-            this.finDefinition.evaluate();
-        }
-        else {
-            ; // Skip finalization if not specified
-        }
     }
 
     protected void evalInitialier() {
-
-        // TODO: We need to initialize ONLY if the initializer expression is dirty (e.g., group table changed)
-        //   -> and then initialized records (possibly all) have to be FULLY (not incrementally) re-evaluated
-
-        // Initializer dependencies
-        List<Element> deps = new ArrayList<>();
-        boolean isColumnDepChanged = false;
-        if(this.initDefinition != null) {
-            for(Element dep : this.initDefinition.getDependencies()) {
-                if(deps.contains(dep)) continue;
-                deps.add(dep);
-                if(dep instanceof Column && ((Column)dep).isChanged()) isColumnDepChanged = true;
-            }
-        }
-
         Table mainTable = this.column.getInput();
-        if(isColumnDepChanged) { // Initialize all
-            this.initDefinition.evaluate();
-        }
-        else if(mainTable.isChanged()) {
+        if(mainTable.isChanged()) {
             Range addedRange = mainTable.getAddedRange();
-            if(this.initDefinition != null) {
-                // TODO: set or initialize values for only added range. In evaluate() it has to be done automatically
-                this.initDefinition.evaluate();
-            }
-            else {
-                this.column.setValue(); // TODO: we need a method setValues for a range of ids
-            }
+            this.column.setValue(); // TODO: we need a method setValues for a range of ids
         }
     }
 
@@ -179,43 +128,28 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         }
     }
 
-    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorAccu adder, ColumnPath[] paths) {
+    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorAccu adder, EvaluatorAccu remover, ColumnPath[] paths) {
         this.column = column;
 
         this.groupPath = groupPath;
 
-        this.initDefinition = null;
         this.adder = adder;
-        this.finDefinition = null;
+        this.remover = remover;
 
         this.paths = paths;
     }
 
-    public ColumnDefinitionAccu(Column column, Column groupColumn, EvaluatorAccu adder, Column[] columns) {
+    public ColumnDefinitionAccu(Column column, Column groupColumn, EvaluatorAccu adder, EvaluatorAccu remover, Column[] columns) {
         this.column = column;
 
         this.groupPath = new ColumnPath(groupColumn);
 
-        this.initDefinition = null;
         this.adder = adder;
-        this.finDefinition = null;
+        this.remover = remover;
 
         this.paths = new ColumnPath[columns.length];
         for (int i = 0; i < columns.length; i++) {
             this.paths[i] = new ColumnPath(columns[i]);
         }
     }
-
-    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorCalc initializer, EvaluatorAccu adder, EvaluatorCalc finalizer, ColumnPath[] paths) {
-        this.column = column;
-
-        this.groupPath = groupPath;
-
-        this.initDefinition = new ColumnDefinitionCalc(column, initializer, paths);
-        this.adder = adder;
-        this.finDefinition = new ColumnDefinitionCalc(column, finalizer, paths);
-
-        this.paths = paths;
-    }
-
 }

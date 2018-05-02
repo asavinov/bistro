@@ -437,20 +437,20 @@ public class Column implements Element {
     // Accumulate column
     //
 
-    public void accumulate(ColumnPath groupPath, EvaluatorAccu lambda, ColumnPath... paths) {
+    public void accumulate(ColumnPath groupPath, EvaluatorAccu adder, EvaluatorAccu remover, ColumnPath... paths) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
-        this.definition = new ColumnDefinitionAccu(this, groupPath, lambda, paths);
+        this.definition = new ColumnDefinitionAccu(this, groupPath, adder, remover, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void accumulate(Column groupColumn, EvaluatorAccu lambda, Column... columns) {
+    public void accumulate(Column groupColumn, EvaluatorAccu adder, EvaluatorAccu remover, Column... columns) {
         this.setDefinitionType(ColumnDefinitionType.ACCU);
 
-        this.definition = new ColumnDefinitionAccu(this, groupColumn, lambda, columns);
+        this.definition = new ColumnDefinitionAccu(this, groupColumn, adder, remover, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));

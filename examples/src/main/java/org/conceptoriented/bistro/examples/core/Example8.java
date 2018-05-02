@@ -73,6 +73,7 @@ public class Example8 {
         priceVolumeSum.accumulate(
                 timestamp2hour,
                 (a,p) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)a, // [Price] * [Amount] + [out]
+                null,
                 quotes.getColumn("Price"), quotes.getColumn("Amount")
         );
 
@@ -81,6 +82,7 @@ public class Example8 {
         volumeSum.accumulate(
                 timestamp2hour, // Time stamp
                 (a,p) -> Double.valueOf((String)p[0]) + (double)a, // [Amount] + [out]
+                null,
                 quotes.getColumn("Amount")
         );
 
