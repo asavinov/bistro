@@ -91,12 +91,21 @@ public class Column implements Element {
 
     public Object getValue(long id) { return this.data.getValue(id); }
 
-    public void setValue(long id, Object value) { this.data.setValue(id, value); } // We do set the dirty flag by assuming that only newly added records are changed - if it is not so then it has to be set manually
+    // Note: we do not set the change flag by assuming that only newly added records are changed - if it is not so then it has to be set manually
+    // Note: methods are not safe - they do not check the validity of arguments (ids, values etc.)
 
+    // One id
+    public void setValue(long id, Object value) { this.data.setValue(id, value); }
+
+    // Range of ids
+    public void setValue(Range range, Object value) { this.data.setValue(range, value); }
+    public void setValue(Range range) { this.data.setValue(range); } // Default value
+
+    // All ids
     public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
+    public void setValue() { this.data.setValue(); this.setChanged(); } // Default value
 
-    public void setValue() { this.data.setValue(); this.setChanged(); }
-
+    // Default value
     public Object getDefaultValue() { return this.data.getDefaultValue(); }
     public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.setChanged(); }
 

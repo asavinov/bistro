@@ -71,6 +71,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
             this.evalUpdater(addedRange, this.adder);
         }
 
+        // Full re-evaluation
         //Range mainRange = mainTable.getIdRange();
         //this.evalUpdater(mainRange, this.adder);
     }
@@ -79,7 +80,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         Table mainTable = this.column.getInput();
         if(mainTable.isChanged()) {
             Range addedRange = mainTable.getAddedRange();
-            this.column.setValue(); // TODO: we need a method setValues for a range of ids
+            this.column.setValue(addedRange);
         }
     }
 

@@ -41,19 +41,43 @@ public class ColumnData {
     }
 
     //
-    // Data access
+    // Output values
     //
 
     protected Object getValue(long id) { return this.values[id2offset(id)]; }
 
+    // One id
     protected void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
 
-    protected void setValue(Object value) { // All
-        Arrays.fill(this.values, startIdOffset, (int)(startIdOffset+this.idRange.getLength()), value);
+    // Range of ids
+    protected void setValue(Range range, Object value) {
+        Arrays.fill(
+                this.values,
+                this.id2offset(range.start),
+                this.id2offset(range.end),
+                value
+        );
     }
-    protected void setValue() { // All default value (depends on the column data type)
-        this.setValue(defaultValue);
+    protected void setValue(Range range) { // Default value
+        this.setValue(range, this.defaultValue);
     }
+
+    // All ids
+    protected void setValue(Object value) {
+        Arrays.fill(
+                this.values,
+                this.startIdOffset,
+                (int)(this.startIdOffset + this.idRange.getLength()),
+                value
+        );
+    }
+    protected void setValue() { // Default value
+        this.setValue(this.defaultValue);
+    }
+
+    //
+    // Input range
+    //
 
     protected void add() { this.add(1); }
     protected void add(long count) { // Remove the oldest records with lowest ids
@@ -66,7 +90,12 @@ public class ColumnData {
         }
 
         // Initialize
-        Arrays.fill(this.values, this.id2offset(this.idRange.end), this.id2offset(this.idRange.end) + (int)count, this.defaultValue);
+        Arrays.fill(
+                this.values,
+                this.id2offset(this.idRange.end),
+                this.id2offset(this.idRange.end) + (int)count,
+                this.defaultValue
+        );
 
         this.idRange.end += count;
     }
@@ -99,7 +128,13 @@ public class ColumnData {
     protected void gc() { // Garbage collection. Free some space if there is enough in the beginning of the array
         if(this.startIdOffset > INCREMENT_SIZE) {
             // Shift values to the beginning
-            System.arraycopy(this.values, this.startIdOffset, this.values, 0, (int)this.idRange.getLength());
+            System.arraycopy(
+                    this.values,
+                    this.startIdOffset,
+                    this.values,
+                    0,
+                    (int)this.idRange.getLength()
+            );
             this.startIdOffset = 0;
 
             // Free space at the end of the allocated array
@@ -115,7 +150,12 @@ public class ColumnData {
     public long findSorted(Object value) {
 
         // The data is supposed to be sorted (for example, range table or time stamps)
-        int insertIndex = Arrays.binarySearch(this.values, this.startIdOffset, (int)(this.startIdOffset+this.idRange.getLength()), value);
+        int insertIndex = Arrays.binarySearch(
+                this.values,
+                this.startIdOffset,
+                (int)(this.startIdOffset + this.idRange.getLength()),
+                value
+        );
 
         long id = offset2id(insertIndex);
 
