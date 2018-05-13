@@ -13,24 +13,24 @@ import org.conceptoriented.bistro.core.*;
 public class Expr implements Expression {
 
     @Override
-    public EvaluatorCalc getEvaluator() { return this.evaluateLambda; };
+    public EvalCalculate getEvaluator() { return this.evaluateLambda; };
 
     List<ColumnPath> parameterPaths = new ArrayList<>();
     @Override public void setParameterPaths(List<ColumnPath> paths) { this.parameterPaths.addAll(paths); }
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
-    EvaluatorCalc evaluateLambda;
+    EvalCalculate evaluateLambda;
     @Override public Object evaluate(Object[] params) throws BistroError {
         return evaluateLambda.evaluate(params);
     }
 
-    public Expr(EvaluatorCalc eval, ColumnPath... params) {
+    public Expr(EvalCalculate eval, ColumnPath... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new ColumnPath[]{};
         this.setParameterPaths(Arrays.asList(params));
     }
-    public Expr(EvaluatorCalc eval, Column... params) {
+    public Expr(EvalCalculate eval, Column... params) {
         this.evaluateLambda = eval;
 
         if(params == null) params = new Column[]{};

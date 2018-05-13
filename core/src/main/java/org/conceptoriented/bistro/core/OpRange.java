@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TableDefinitionRange implements TableDefinition {
+class OpRange implements Operation {
 
     Table table; // Used only if materialized as a table
 
@@ -153,7 +153,7 @@ public class TableDefinitionRange implements TableDefinition {
         }
 
         // This column has to be noop
-        if(this.rangeColumn.getDefinitionType() != ColumnDefinitionType.NOOP) {
+        if(this.rangeColumn.getDefinitionType() != OperationType.NOOP) {
             this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Table definition error.", "A column for storing range values must be NOOP column."));
             return;
         }
@@ -324,7 +324,7 @@ public class TableDefinitionRange implements TableDefinition {
         return index;
     }
 
-    public TableDefinitionRange(Table table, Object origin, Object period, Long length) {
+    public OpRange(Table table, Object origin, Object period, Long length) {
         this.table = table;
 
         // Find columns to be set during population

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ColumnDefinitionLink implements ColumnDefinition {
+class OpLink implements Operation {
 
     Column column;
 
@@ -53,7 +53,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
 
     @Override
     public void evaluate() {
-        if(this.column.getOutput().getDefinitionType() == TableDefinitionType.RANGE) {
+        if(this.column.getOutput().getDefinitionType() == OperationType.RANGE) {
             this.evalRange();
         }
         else if(this.valuePaths != null) {
@@ -66,7 +66,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         errors.clear(); // Clear state
 
         Table typeTable = this.column.getOutput();
-        TableDefinitionRange rangeZableDef = (TableDefinitionRange)typeTable.definition;
+        OpRange rangeZableDef = (OpRange)typeTable.definition;
 
         Table mainTable = this.column.getInput();
 
@@ -192,7 +192,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         }
     }
 
-    public ColumnDefinitionLink(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
+    public OpLink(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
         this.column = column;
 
         this.valuePaths = Arrays.asList(valuePaths);
@@ -200,7 +200,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         this.keyColumns = Arrays.asList(keyColumns);
     }
 
-    public ColumnDefinitionLink(Column column, Column[] valueColumns, Column[] keyColumns) {
+    public OpLink(Column column, Column[] valueColumns, Column[] keyColumns) {
         this.column = column;
 
         List<ColumnPath> paths = new ArrayList<>();
@@ -213,7 +213,7 @@ public class ColumnDefinitionLink implements ColumnDefinition {
         this.keyColumns = Arrays.asList(keyColumns);
     }
 
-    public ColumnDefinitionLink(Column column, ColumnPath valuePath) {
+    public OpLink(Column column, ColumnPath valuePath) {
         this.column = column;
 
         this.valuePaths = Arrays.asList(valuePath);

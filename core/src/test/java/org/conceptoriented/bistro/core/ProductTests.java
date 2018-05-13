@@ -9,7 +9,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ProdTests {
+public class ProductTests {
 
     @BeforeClass
     public static void setUpClass() {

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TableDefinitionProd implements TableDefinition {
+class OpProduct implements Operation {
 
     Table table;
 
@@ -122,7 +122,7 @@ public class TableDefinitionProd implements TableDefinition {
 
     }
 
-    public TableDefinitionProd(Table table) {
+    public OpProduct(Table table) {
         this.table = table;
     }
 

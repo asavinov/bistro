@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * The logic of evaluation of rolling columns.
  */
-public class ColumnDefinitionRoll implements ColumnDefinition {
+class OpRoll implements Operation {
 
     Column column;
 
@@ -31,7 +31,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
     double sizeFuture; // Window size (future, larger ids)
     // Inclusive or exclusive? One can be inclusive and the other exclusive.
 
-    EvaluatorRoll lambda;
+    EvalRoll lambda;
     ColumnPath[] paths;
 
     List<BistroError> errors = new ArrayList<>();
@@ -142,7 +142,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionRoll(Column column, ColumnPath distancePath, double sizePast, double sizeFuture, EvaluatorRoll lambda, ColumnPath[] paths) {
+    public OpRoll(Column column, ColumnPath distancePath, double sizePast, double sizeFuture, EvalRoll lambda, ColumnPath[] paths) {
         this.column = column;
 
         this.distancePath = distancePath;
@@ -154,7 +154,7 @@ public class ColumnDefinitionRoll implements ColumnDefinition {
         this.paths = paths;
     }
 
-    public ColumnDefinitionRoll(Column column, Column distanceColumn, double sizePast, double sizeFuture, EvaluatorRoll lambda, Column[] columns) {
+    public OpRoll(Column column, Column distanceColumn, double sizePast, double sizeFuture, EvalRoll lambda, Column[] columns) {
         this(column, distanceColumn != null ? new ColumnPath(distanceColumn) : null, sizePast, sizeFuture, lambda, new ColumnPath[] {});
 
         this.paths = new ColumnPath[columns.length];

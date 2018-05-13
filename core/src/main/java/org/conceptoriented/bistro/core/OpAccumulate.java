@@ -6,14 +6,14 @@ import java.util.List;
 /**
  * The logic of evaluation of accumulate columns.
  */
-public class ColumnDefinitionAccu implements ColumnDefinition {
+class OpAccumulate implements Operation {
 
     Column column;
 
     ColumnPath groupPath;
 
-    EvaluatorAccu adder;
-    EvaluatorAccu remover;
+    EvalAccumulate adder;
+    EvalAccumulate remover;
 
     ColumnPath[] paths;
 
@@ -84,7 +84,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         }
     }
 
-    protected void evalUpdater(Range mainRange, EvaluatorAccu lambda) {
+    protected void evalUpdater(Range mainRange, EvalAccumulate lambda) {
 
         // Get all necessary parameters and prepare (resolve) the corresponding data (function) objects for reading valuePaths
         Object[] paramValues = new Object[this.paths.length]; // Will store valuePaths for all params
@@ -129,7 +129,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         }
     }
 
-    public ColumnDefinitionAccu(Column column, ColumnPath groupPath, EvaluatorAccu adder, EvaluatorAccu remover, ColumnPath[] paths) {
+    public OpAccumulate(Column column, ColumnPath groupPath, EvalAccumulate adder, EvalAccumulate remover, ColumnPath[] paths) {
         this.column = column;
 
         this.groupPath = groupPath;
@@ -140,7 +140,7 @@ public class ColumnDefinitionAccu implements ColumnDefinition {
         this.paths = paths;
     }
 
-    public ColumnDefinitionAccu(Column column, Column groupColumn, EvaluatorAccu adder, EvaluatorAccu remover, Column[] columns) {
+    public OpAccumulate(Column column, Column groupColumn, EvalAccumulate adder, EvalAccumulate remover, Column[] columns) {
         this.column = column;
 
         this.groupPath = new ColumnPath(groupColumn);

@@ -8,9 +8,9 @@ import java.util.List;
  * This class combines one evaluator with the specification where its parameters have to be read from as an array of column valuePaths.
  * The column valuePaths allow for applying the same evaluator to different keyColumns.
  */
-public interface Expression extends EvaluatorCalc {
+public interface Expression extends EvalCalculate {
 
-    public EvaluatorCalc getEvaluator();
+    public EvalCalculate getEvaluator();
 
     public void setParameterPaths(List<ColumnPath> paths);
     public List<ColumnPath> getParameterPaths();

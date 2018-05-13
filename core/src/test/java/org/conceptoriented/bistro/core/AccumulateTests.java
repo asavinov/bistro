@@ -9,7 +9,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class AccuTests {
+public class AccumulateTests {
 
     @BeforeClass
     public static void setUpClass() {
@@ -33,7 +33,7 @@ public class AccuTests {
 
         // Define accumulate column
         Column ta = schema.createColumn("A", t);
-        ta.setDefinitionType(ColumnDefinitionType.ACCU);
+        ta.setDefinitionType(OperationType.ACCUMULATE);
 
         t.add();
         t.add();

@@ -152,8 +152,8 @@ public class Column implements Element {
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
 
-        if(this.getDefinitionType() == ColumnDefinitionType.NOOP) {
-            if(this.isKey() && this.getInput().getDefinitionType() == TableDefinitionType.PROD) {
+        if(this.getDefinitionType() == OperationType.NOOP) {
+            if(this.isKey() && this.getInput().getDefinitionType() == OperationType.PRODUCT) {
                 deps.add(this.getInput()); // Key-columns depend on the product-table (if any) because they are filled by their population procedure
             }
         }
@@ -287,13 +287,13 @@ public class Column implements Element {
     // Column (definition) kind
     //
 
-    ColumnDefinition definition; // It is instantiated by calculate-link-accumulate methods (or definition errors are added)
+    Operation definition; // It is instantiated by calculate-link-accumulate methods (or definition errors are added)
 
-    protected ColumnDefinitionType definitionType;
-    public ColumnDefinitionType getDefinitionType() {
+    protected OperationType definitionType;
+    public OperationType getDefinitionType() {
         return this.definitionType;
     }
-    public void setDefinitionType(ColumnDefinitionType definitionType) {
+    public void setDefinitionType(OperationType definitionType) {
         this.definitionType = definitionType;
         this.definitionErrors.clear();
         this.executionErrors.clear();
@@ -305,7 +305,7 @@ public class Column implements Element {
     }
 
     public boolean isDerived() {
-        if(this.definitionType == ColumnDefinitionType.NOOP) {
+        if(this.definitionType == OperationType.NOOP) {
             return false;
         }
         return true;
@@ -328,7 +328,7 @@ public class Column implements Element {
     }
 
     public void noop(boolean isKey) {
-        this.setDefinitionType(ColumnDefinitionType.NOOP);
+        this.setDefinitionType(OperationType.NOOP);
         this.key = true;
         // TODO: Error check: some other definitions might become invalid if they depend on the key column status
         //   Either mark this column as having a definition error (so it will skipped), or mark other columns as having definition errors
@@ -338,10 +338,10 @@ public class Column implements Element {
     // Calcuate column
     //
 
-    public void calculate(EvaluatorCalc lambda, ColumnPath... paths) {
-        this.setDefinitionType(ColumnDefinitionType.CALC);
+    public void calculate(EvalCalculate lambda, ColumnPath... paths) {
+        this.setDefinitionType(OperationType.CALCULATE);
 
-        this.definition = new ColumnDefinitionCalc(this, lambda, paths);
+        this.definition = new OpCalculate(this, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -349,10 +349,10 @@ public class Column implements Element {
         }
     }
 
-    public void calculate(EvaluatorCalc lambda, Column... columns) {
-        this.setDefinitionType(ColumnDefinitionType.CALC);
+    public void calculate(EvalCalculate lambda, Column... columns) {
+        this.setDefinitionType(OperationType.CALCULATE);
 
-        this.definition = new ColumnDefinitionCalc(this, lambda, columns);
+        this.definition = new OpCalculate(this, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -365,9 +365,9 @@ public class Column implements Element {
     //
 
     public void link(ColumnPath[] valuePaths, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.LINK);
+        this.setDefinitionType(OperationType.LINK);
 
-        this.definition = new ColumnDefinitionLink(this, valuePaths, keyColumns);
+        this.definition = new OpLink(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -375,9 +375,9 @@ public class Column implements Element {
     }
 
     public void link(Column[] valueColumns, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.LINK);
+        this.setDefinitionType(OperationType.LINK);
 
-        this.definition = new ColumnDefinitionLink(this, valueColumns, keyColumns);
+        this.definition = new OpLink(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -385,9 +385,9 @@ public class Column implements Element {
     }
 
     public void link(ColumnPath valuePath) { // Link to range table (using inequality as a condition)
-        this.setDefinitionType(ColumnDefinitionType.LINK);
+        this.setDefinitionType(OperationType.LINK);
 
-        this.definition = new ColumnDefinitionLink(this, valuePath);
+        this.definition = new OpLink(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -399,9 +399,9 @@ public class Column implements Element {
     //
 
     public void project(ColumnPath[] valuePaths, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.PROJ);
+        this.setDefinitionType(OperationType.PROJECT);
 
-        this.definition = new ColumnDefinitionProj(this, valuePaths, keyColumns);
+        this.definition = new OpProject(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -409,9 +409,9 @@ public class Column implements Element {
     }
 
     public void project(Column[] valueColumns, Column... keyColumns) {
-        this.setDefinitionType(ColumnDefinitionType.PROJ);
+        this.setDefinitionType(OperationType.PROJECT);
 
-        this.definition = new ColumnDefinitionProj(this, valueColumns, keyColumns);
+        this.definition = new OpProject(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -423,9 +423,9 @@ public class Column implements Element {
     //
 
     public void project(ColumnPath valuePath) {
-        this.setDefinitionType(ColumnDefinitionType.PROJ);
+        this.setDefinitionType(OperationType.PROJECT);
 
-        this.definition = new ColumnDefinitionProj(this, valuePath);
+        this.definition = new OpProject(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -433,9 +433,9 @@ public class Column implements Element {
     }
 
     public void project(Column valueColumn) {
-        this.setDefinitionType(ColumnDefinitionType.PROJ);
+        this.setDefinitionType(OperationType.PROJECT);
 
-        this.definition = new ColumnDefinitionProj(this, new ColumnPath(valueColumn));
+        this.definition = new OpProject(this, new ColumnPath(valueColumn));
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -446,20 +446,20 @@ public class Column implements Element {
     // Accumulate column
     //
 
-    public void accumulate(ColumnPath groupPath, EvaluatorAccu adder, EvaluatorAccu remover, ColumnPath... paths) {
-        this.setDefinitionType(ColumnDefinitionType.ACCU);
+    public void accumulate(ColumnPath groupPath, EvalAccumulate adder, EvalAccumulate remover, ColumnPath... paths) {
+        this.setDefinitionType(OperationType.ACCUMULATE);
 
-        this.definition = new ColumnDefinitionAccu(this, groupPath, adder, remover, paths);
+        this.definition = new OpAccumulate(this, groupPath, adder, remover, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void accumulate(Column groupColumn, EvaluatorAccu adder, EvaluatorAccu remover, Column... columns) {
-        this.setDefinitionType(ColumnDefinitionType.ACCU);
+    public void accumulate(Column groupColumn, EvalAccumulate adder, EvalAccumulate remover, Column... columns) {
+        this.setDefinitionType(OperationType.ACCUMULATE);
 
-        this.definition = new ColumnDefinitionAccu(this, groupColumn, adder, remover, columns);
+        this.definition = new OpAccumulate(this, groupColumn, adder, remover, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -470,40 +470,40 @@ public class Column implements Element {
     // Rolling column
     //
 
-    public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, ColumnPath... paths) {
-        this.setDefinitionType(ColumnDefinitionType.ROLL);
+    public void roll(int sizePast, int sizeFuture, EvalRoll lambda, ColumnPath... paths) {
+        this.setDefinitionType(OperationType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, null, sizePast, sizeFuture, lambda, paths);
-
-        if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-        }
-    }
-
-    public void roll(int sizePast, int sizeFuture, EvaluatorRoll lambda, Column... columns) {
-        this.setDefinitionType(ColumnDefinitionType.ROLL);
-
-        this.definition = new ColumnDefinitionRoll(this, null, sizePast, sizeFuture, lambda, columns);
+        this.definition = new OpRoll(this, null, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void roll(ColumnPath distancePath, int sizePast, int sizeFuture, EvaluatorRoll lambda, ColumnPath... paths) {
-        this.setDefinitionType(ColumnDefinitionType.ROLL);
+    public void roll(int sizePast, int sizeFuture, EvalRoll lambda, Column... columns) {
+        this.setDefinitionType(OperationType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
+        this.definition = new OpRoll(this, null, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
         }
     }
 
-    public void roll(Column distanceColumn, int sizePast, int sizeFuture, EvaluatorRoll lambda, Column... columns) {
-        this.setDefinitionType(ColumnDefinitionType.ROLL);
+    public void roll(ColumnPath distancePath, int sizePast, int sizeFuture, EvalRoll lambda, ColumnPath... paths) {
+        this.setDefinitionType(OperationType.ROLL);
 
-        this.definition = new ColumnDefinitionRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
+        this.definition = new OpRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
+
+        if(this.hasDependency(this)) {
+            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+        }
+    }
+
+    public void roll(Column distanceColumn, int sizePast, int sizeFuture, EvalRoll lambda, Column... columns) {
+        this.setDefinitionType(OperationType.ROLL);
+
+        this.definition = new OpRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -539,7 +539,7 @@ public class Column implements Element {
         this.output = output;
 
         // Where its output values come from
-        this.definitionType = ColumnDefinitionType.NOOP;
+        this.definitionType = OperationType.NOOP;
 
         // Where its output values are stored
         this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);

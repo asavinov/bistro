@@ -182,7 +182,7 @@ public class Tests {
 
         // Define accu column
         Column ta = schema.createColumn("A", t1);
-        ta.setDefinitionType(ColumnDefinitionType.ACCU);
+        ta.setDefinitionType(OperationType.ACCUMULATE);
 
         t1.add();
         t1.add();

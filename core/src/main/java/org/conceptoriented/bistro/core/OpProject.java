@@ -1,14 +1,11 @@
 package org.conceptoriented.bistro.core;
 
-import java.util.Arrays;
-import java.util.List;
-
-class ColumnDefinitionProj extends ColumnDefinitionLink {
+class OpProject extends OpLink {
 
     void validate() {
 
         // Output table must be product-table (cannot be noop-table). It could be a warning because it does not prevent from evaluating/populating.
-        if(this.column.getOutput().getDefinitionType() == TableDefinitionType.NOOP) {
+        if(this.column.getOutput().getDefinitionType() == OperationType.NOOP) {
             this.errors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Column definition error.", "Proj-column must have product-table as type. Change to either link-column or product-table."));
         }
 
@@ -25,7 +22,7 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         }
     }
 
-    public ColumnDefinitionProj(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
+    public OpProject(Column column, ColumnPath[] valuePaths, Column[] keyColumns) {
         super(column, valuePaths, keyColumns);
 
         // Use all existing keys by default if not specified
@@ -37,7 +34,7 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         this.validate();
     }
 
-    public ColumnDefinitionProj(Column column, Column[] valueColumns, Column[] keyColumns) {
+    public OpProject(Column column, Column[] valueColumns, Column[] keyColumns) {
         super(column, valueColumns, keyColumns);
 
         // Use all existing keys by default if not specified
@@ -49,7 +46,7 @@ class ColumnDefinitionProj extends ColumnDefinitionLink {
         this.validate();
     }
 
-    public ColumnDefinitionProj(Column column, ColumnPath valuePath) {
+    public OpProject(Column column, ColumnPath valuePath) {
         super(column, valuePath);
 
         this.isProj = true;

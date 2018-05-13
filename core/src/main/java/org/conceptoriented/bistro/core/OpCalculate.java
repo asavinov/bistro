@@ -7,11 +7,11 @@ import java.util.List;
 /**
  * The logic of evaluation of calculate columns.
  */
-public class ColumnDefinitionCalc implements ColumnDefinition {
+class OpCalculate implements Operation {
 
     Column column;
 
-    EvaluatorCalc lambda;
+    EvalCalculate lambda;
     List<ColumnPath> parameterPaths = new ArrayList<>();
 
     List<BistroError> errors = new ArrayList<>();
@@ -107,13 +107,13 @@ public class ColumnDefinitionCalc implements ColumnDefinition {
 
     }
 
-    public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, ColumnPath[] paths) {
+    public OpCalculate(Column column, EvalCalculate lambda, ColumnPath[] paths) {
         this.column = column;
         this.lambda = lambda;
         this.parameterPaths = Arrays.asList(paths);
     }
 
-    public ColumnDefinitionCalc(Column column, EvaluatorCalc lambda, Column[] columns) {
+    public OpCalculate(Column column, EvalCalculate lambda, Column[] columns) {
         this.column = column;
         this.lambda = lambda;
         for (int i = 0; i < columns.length; i++) {

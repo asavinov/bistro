@@ -48,7 +48,7 @@ public class FormulaBase implements Formula {
 	}
 
 	@Override
-	public EvaluatorCalc getEvaluator() { return this; }
+	public EvalCalculate getEvaluator() { return this; }
 
 	@Override
 	public Object evaluate(Object[] params) throws BistroError {
