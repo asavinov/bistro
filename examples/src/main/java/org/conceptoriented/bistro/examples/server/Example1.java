@@ -12,20 +12,20 @@ import java.util.concurrent.ThreadLocalRandom;
  * Hello Bistro Streams.
  * Create server and feed it with constant events.
  */
-public class Example1
-{
+public class Example1 {
 
     public static Schema schema;
 
     public static void main(String[] args) throws IOException, BistroError {
 
-        // Time while the server will process events (after that it will stop so it has to be enough for all events).
+        // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 10000;
 
         //
         // Create schema
         //
         Schema schema = new Schema("My Schema");
+
         Table table = schema.createTable("EVENTS");
         Column column1 = schema.createColumn("Message", table);
         Column column2 = schema.createColumn("Temperature", table);

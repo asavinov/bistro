@@ -16,8 +16,7 @@ import org.conceptoriented.bistro.server.connectors.*;
  * Feed events to the engine into one table.
  * Compute two moving averages and fire alerts when the fast one significantly deviates from the slow one.
  */
-public class Example2
-{
+public class Example2 {
 
     public static String location = "src/main/resources/ds4";
 
@@ -28,7 +27,7 @@ public class Example2
         // 46549 events for 1 month. We want to play them for 1 minute, which is approximately 775 events per second
         double acceleration = 31*24*60;
 
-        // Time processing events by the server (after that it will stop so it has to be enough for all events).
+        // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 20000;
 
         // This number of records will be kept in the table

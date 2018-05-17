@@ -24,8 +24,7 @@ import java.util.List;
  * Compute several moving averages for the aggregated (projected) time series data.
  * Fire alerts when the fast curve deviates from the slow curve.
  */
-public class Example3
-{
+public class Example3 {
 
     public static String location = "src/main/resources/ds4";
 
@@ -36,7 +35,7 @@ public class Example3
         // 46549 events for 1 month. We want to play them for 1 minute, which is approximately 775 events per second
         double acceleration = 31*24*60;
 
-        // Time processing events by the server (after that it will stop so it has to be enough for all events).
+        // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 20000;
 
         // Size of regular intervals for aggregation and analysis
