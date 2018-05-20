@@ -4,6 +4,9 @@ import org.conceptoriented.bistro.core.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,4 +55,17 @@ public class ExUtils {
         return lines;
     }
 
+    // Suspend the current thread for the time till the next second
+    public static void waitToSecond() {
+
+        Instant now = Instant.now();
+        Instant next = now.truncatedTo(ChronoUnit.SECONDS).plusSeconds(1);
+
+        Duration restTime = Duration.between(now, next);
+
+        try {
+            Thread.sleep(restTime.toMillis()) ;
+        } catch (InterruptedException e) {
+        }
+    }
 }

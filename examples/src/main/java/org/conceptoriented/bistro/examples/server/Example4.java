@@ -4,6 +4,7 @@ import org.conceptoriented.bistro.core.BistroError;
 import org.conceptoriented.bistro.core.Column;
 import org.conceptoriented.bistro.core.Schema;
 import org.conceptoriented.bistro.core.Table;
+import org.conceptoriented.bistro.examples.ExUtils;
 import org.conceptoriented.bistro.server.Action;
 import org.conceptoriented.bistro.server.ConnectorBase;
 import org.conceptoriented.bistro.server.Server;
@@ -18,11 +19,27 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Hello Bistro Streams.
- * Create server and feed it with constant events.
+ * A sensor asynchronously sends its (X, Y) coordinates to the server.
+ * The goal is to detect anomalies by analyzing its trajectory.
+ * <p>
+ * The analysis consists of the following main steps:
+ * <ul>
+ * <li>The events from the sensor are stored in table A´which has X and Y columns as well as a time stamp.
+ *
+ * <li>The incoming asynchronous data events are aggregated over some raster which is a number of time intervals or tumbling windows.
+ * The raster is represented by a range table each record of which represents an interval of fixed length.
+ * Table A has a link column which points to the raster table.
+ * All events from A will reference some raster interval (tumbling window) it belongs to.
+ *
+ * <li>Event (X, Y) coordinates are aggregated over tumbling windows (raster intervals).
+ * This aggregation over tumbling windows is performed by defining accumulate columns.
+ *
+ * <li>The behavior of the sensor (trajectory) is analyzed over time using rolling aggregation.
+ *
+ * <li>Anomalies are detected by comparing computed values with some thresholds and firing alerts.
+ * <ul/>
  */
 public class Example4 {
 
@@ -30,150 +47,217 @@ public class Example4 {
 
     public static void main(String[] args) throws IOException, BistroError {
 
-        // Time while the server will process events (after that it will stop so it has to be enough for all events).
-        long serverProcessingTime = 10000;
+        Schema schema = new Schema("Example 4");
 
         //
-        // Create schema
+        // Create event tables each having a timestamp, X, and Y columns (link derived column will be defined later)
         //
-        Schema schema = new Schema("My Schema");
+        Table sensor_a = schema.createTable("A");
+        Column at = schema.createColumn("T", sensor_a);
+        Column ax = schema.createColumn("X", sensor_a);
+        Column ay = schema.createColumn("Y", sensor_a);
 
-        Table table = schema.createTable("EVENTS");
-        Column column1 = schema.createColumn("Message", table);
-        Column column2 = schema.createColumn("Temperature", table);
+        //
+        // Create range table with time intervals
+        //
+
+        Table intervals = schema.createTable("INTERVALS");
+        Column intervalTime = schema.createColumn("Time", intervals);
+        intervalTime.noop(true);
+        Column intervalNo = schema.createColumn("Interval", intervals);
+        intervalNo.noop(true);
+
+        // Range table. Each record will represent an interval in time of fixed length
+        intervals.range(
+                Instant.now().truncatedTo(ChronoUnit.SECONDS), // Start interval: snap raster to seconds
+                Duration.ofMillis(1000), // Tumbling window size. Time interval for aggregation
+                10000L // Maximum number of intervals
+        );
+
+        //
+        // Define project columns of event tables. Each event belongs to some interval
+        //
+
+        Column ai = schema.createColumn("Interval", sensor_a, intervals);
+        ai.project(
+                at // Timestamp of the event will be mapped to a time interval (window)
+        );
+
+        //
+        // Define accumulate columns for aggregating X,Y coordinates over intervals
+        //
+
+        Column axSum = schema.createColumn("AX Sum", intervals);
+        axSum.setDefaultValue(0.0);
+        axSum.accumulate(ai, (a,p) -> (double)a + (double)p[0], null, ax);
+
+        Column aySum = schema.createColumn("AY Sum", intervals);
+        aySum.setDefaultValue(0.0);
+        aySum.accumulate(ai, (a,p) -> (double)a + (double)p[0], null, ay);
+
+        Column aCount = schema.createColumn("A Count", intervals);
+        aCount.setDefaultValue(0.0);
+        aCount.accumulate(ai, (a,p) -> (double)a + 1.0, null);
+
+        Column axAvg = schema.createColumn("AX Average", intervals);
+        axAvg.calculate((p) -> (double)p[0] / (double)p[1], axSum, aCount);
+
+        Column ayAvg = schema.createColumn("AY Average", intervals);
+        ayAvg.calculate((p) -> (double)p[0] / (double)p[1], aySum, aCount);
+
+        //
+        // Rolling aggregation to analyze trajectory
+        //
+
+        Column axSmoothed = schema.createColumn("AX Smoothed", intervals);
+        axSmoothed.setDefaultValue(0.0);
+        axSmoothed.roll(
+                6, 0, // Window size
+                (a,d,p) -> p[0] != null ? (double)a + (double)p[0] / 6.0 : 0.0,
+                axAvg
+        );
+
+        Column aySmoothed = schema.createColumn("AY Smoothed", intervals);
+        aySmoothed.setDefaultValue(0.0);
+        aySmoothed.roll(
+                6, 0, // Window size
+                (a,d,p) -> p[0] != null ? (double)a + (double)p[0] / 6.0 : 0.0,
+                ayAvg
+        );
+
+        // Deviation of the current (X,Y) from the smoothed (X,Y)
+        Column xyDeviation = schema.createColumn("XY Deviation", intervals);
+        xyDeviation.calculate(
+                (p) -> {
+                    if(p[0] == null ||  p[1] == null ||  p[2] == null ||  p[3] == null) return 0.0;
+                    double dX = (double)p[2] - (double)p[0];
+                    double dY = (double)p[3] - (double)p[1];
+                    return Math.sqrt(dX*dX + dY*dY);
+                },
+                axSmoothed, aySmoothed, axAvg, ayAvg // Parameters
+        );
 
         //
         // Create and start server
         //
+
         Server server = new Server(schema);
-        server.start();
-        System.out.println("Server started.");
 
         //
-        // Create and start connector
+        // Connectors
         //
 
-        ConnectorTimer outTimer = new ConnectorTimer(server,500);
+        ProducerConnector simulator = new ProducerConnector(server, sensor_a, 345, 1000.0, 1.0, 0.001);
 
-        outTimer.addAction(new ActionEval(schema)); // Evaluate
+        //
+        // Periodically check the state, detect anomalies and print them
+        //
+
+        ConnectorTimer timer = new ConnectorTimer(server,1000);
+
+        timer.addAction(new ActionEval(schema)); // Evaluate
+
+        timer.addAction( // Print some status info
+                x -> {
+                    long len = intervals.getIdRange().end;
+                    if(len < 2) return;
+                    // Latest complete deviation
+                    double deviation = (double) xyDeviation.getValue(len - 2);
+                    System.out.print("o " + len + ": ");
+                    if(deviation > 2.0) {
+                        System.out.print(">>> Anomaly detected. Deviation is too large: " + deviation + "\n");
+                    }
+                    else {
+                        System.out.print("Deviation from moving average: " + deviation + "\n");
+                    }
+                }
+        );
+
+        // Delete old events and intervals
+        timer.addAction(new ActionRemove(sensor_a, 2000));
+        timer.addAction(new ActionRemove(intervals, 20));
 
         //
         // Start the server
         //
 
-        try {
-            server.start();
-            outTimer.start();
-            System.out.println("Server started.");
+        server.start();
 
-            Thread.sleep(serverProcessingTime);
+        ExUtils.waitToSecond();
+        simulator.start();
+        timer.start();
 
-            outTimer.stop();
-            server.stop();
-            System.out.println("Server stopped.");
+        System.out.println("Server started. Press Ctrl-C to stop.");
 
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        //
+        // Add shutdown hook
+        //
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                timer.stop();
+                simulator.stop();
+                server.stop();
+                System.out.println("Server stopped.");
+            }
+            catch (Exception e) {
+                System.out.println("Errors in shutdown hook: " + e);
+                System.exit(1) ;
+            }
+        }));
     }
 }
 
 
-// Based on the source code from this project: https://github.com/ashokc/Kafka-Streams-Catching-Data-in-the-Act
-class ProducerProcess extends ConnectorBase implements Runnable {
+// Based on this project: https://github.com/ashokc/Kafka-Streams-Catching-Data-in-the-Act
+class ProducerConnector extends ConnectorBase implements Runnable {
 
-//	Y = A * sin (w*t).	w: angular velocity. radinans/second
-//	angularV = 2.0 * Math.PI / 60.0 ;	It will take 60secs i.e. 1 minute to trace the full circle. => period = 1 min
+    Thread thread;
+    Table table;
+    List<Column> columns = new ArrayList<>();
 
-    //private static final Logger logger = LogManager.getLogger(ProducerProcess.class);
-    String[] topics ;
-    boolean sync ;
-    String clientId; //Properties producerProps ;
-    long sleepTimeMillis ;
+    //	Y = A * sin (w*t).	w: angular velocity. radinans/second
+    //	angularV = 2.0 * Math.PI / 60.0 ;	It will take 60secs i.e. 1 minute to trace the full circle. => period = 1 min (one revolution a minute)
 
-    private double amplitude, angularV, error, xReference, yReference ;
+    long sleepTimeMillis;
 
-    private Random random = new Random() ;
-    //private Producer<String, RawVertex> producer ;
-    //private int partitionNumber ;
-    //Elastic elastic = new Elastic() ;
+    private double amplitude;
+    private double angularV;
+    private double error;
 
-    ProducerProcess (Server server, String[] topics, /*boolean sync,*/ String clientId, /*Properties producerProps,*/ long sleepTimeMillis, double amplitude, double angularV, double error, double xReference, double yReference) {
-        super(server);
-
-        this.topics = topics ; // args[6]
-        //this.sync = sync; // args[5]
-        this.clientId = clientId; //this.producerProps = producerProps ;
-        this.sleepTimeMillis = sleepTimeMillis ; // args[7]
-
-        this.amplitude = amplitude ; // args[8]
-        // args[9]
-        this.angularV = angularV * 2.0 * Math.PI / 60.0 ;			// one revolution a minute
-        this.error = error ; // args[10]
-        this.xReference = xReference ; // args[11]
-        this.yReference = yReference ;
-
-        //producer = new KafkaProducer<String, RawVertex>(producerProps); // args[12]
-    }
+    private Random random = new Random(123456) ;
 
     @Override
     public void run() {
-        //String clientId = producerProps.getProperty("client.id") ;
-        //if (clientId.equals("A")) {
-        //    partitionNumber = 0 ;
-        //}
-        //else if (clientId.equals("B")) {
-        //    partitionNumber = 1 ;
-        //}
-        //else if (clientId.equals("C")) {
-        //    partitionNumber = 2 ;
-        //}
-        long timeStart = System.currentTimeMillis() ; // current time in milliseconds
-        long timePrev = timeStart ;
-        double valX = xReference ;
-        double valY = yReference ;
+
+        double valX = 0.0;
+        double valY = 0.0;
+
         try {
-            //logger.info ("-------------- Kafka Producer Start:" + producerProps.getProperty("client.id") + " ----------------") ;
             while ( !(Thread.currentThread().isInterrupted()) ) {
-                for (String topic: topics) {
-                    //String key = clientId ;
-                    long currentTime = System.currentTimeMillis() ;
-                    double rand = -error + random.nextDouble() * 2.0 * error ;
-                    valX = valX + amplitude * Math.sin(angularV * (currentTime - timePrev) * 0.001) * rand ;
-                    valY = valY + amplitude * Math.cos(angularV * (currentTime - timePrev) * 0.001) * rand ;
-                    //RawVertex rawVertex = new RawVertex (clientId, currentTime, valX, valY) ;
-                    //ProducerRecord<String, RawVertex> record = new ProducerRecord<>(topic, partitionNumber, key, rawVertex) ;
-                    //if (sync) {
-                    //    RecordMetadata metadata = producer.send(record).get();
-                    //}
-                    //else {
-                    //    producer.send(record, new KafkaCallback(producerProps.getProperty("acks"))) ;
-                    //}
 
-                    this.submit(valX, valY); // Create and submit a record with coordinates
+                double rand = -error + random.nextDouble() * 2.0 * error ;
+                valX = valX + amplitude * Math.sin(angularV) * rand;
+                valY = valY + amplitude * Math.cos(angularV) * rand;
 
-                    timePrev = currentTime ;
-                }
+                //System.out.println("Coordinates: " + valX + ", " + valY);
+                this.submit(valX, valY); // Create and submit a record with coordinates
+
                 Thread.sleep(sleepTimeMillis) ;
             }
         }
         catch (InterruptedException e) {
-            //logger.error ("Producer " + producerProps.getProperty("client.id") + " Was Interrupted", e) ;
+            System.out.println("Interrupted: " + e);
         }
         catch (Exception e) {
-            //logger.error ("Producer " + producerProps.getProperty("client.id") + " ran into some errors", e) ;
-        }
-        finally {
-            //producer.close();
+            System.out.println("Error: " + e);
         }
     }
 
     @Override
     public void start() throws BistroError {
         this.columns = this.table.getColumns();
-        this.thread = new Thread(this, "ProducerProcess Thread");
+        this.thread = new Thread(this, "ProducerConnector Thread");
         this.thread.start();
     }
 
@@ -186,10 +270,6 @@ class ProducerProcess extends ConnectorBase implements Runnable {
         }
     }
 
-    Thread thread;
-    Table table;
-    List<Column> columns;
-
     private void submit(double valX, double valY) {
         Map<Column, Object> record = new HashMap<>();
         // First, insert timestamp
@@ -200,5 +280,20 @@ class ProducerProcess extends ConnectorBase implements Runnable {
         Action action = new ActionAdd(this.table, record);
         Task task = new Task(action, null);
         this.server.submit(task);
+    }
+
+    ProducerConnector(Server server, Table table, long sleepTimeMillis, double amplitude, double angularV, double error) {
+        super(server);
+
+        this.table = table;
+        columns.add(table.getColumn("T"));
+        columns.add(table.getColumn("X"));
+        columns.add(table.getColumn("Y"));
+
+        this.sleepTimeMillis = sleepTimeMillis;
+
+        this.amplitude = amplitude;
+        this.angularV = angularV * 2.0 * Math.PI / 60.0;
+        this.error = error;
     }
 }

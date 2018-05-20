@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.examples.server;
 
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.examples.ExUtils;
 import org.conceptoriented.bistro.server.*;
 import org.conceptoriented.bistro.server.actions.*;
 import org.conceptoriented.bistro.server.connectors.*;
@@ -9,8 +10,15 @@ import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Hello Bistro Streams.
- * Create server and feed it with constant events.
+ * Use one timer which wakes up every 1 second and executes sequentially several actions:
+ *
+ * <ul>
+ * <li>The first action explicitly adds one record to the table with random value.
+ * <li>The second action deletes old records by keeping the number of records constant.
+ * <li>The third action prints the state of the table.
+ * <ul/>
+ *
+ * Use Ctrl-C to stop the server.
  */
 public class Example1 {
 
@@ -34,14 +42,13 @@ public class Example1 {
         // Create and start server
         //
         Server server = new Server(schema);
-        server.start();
-        System.out.println("Server started.");
 
         //
-        // Create and start connector
+        // Create connector
         //
         ConnectorTimer timer = new ConnectorTimer(server,1000); // Do something every 1 second
-        timer.addAction(
+
+        timer.addAction( // Add one record
                 x -> {
                     long id = table.add();
                     double value = ThreadLocalRandom.current().nextDouble(30.0, 40.0);
@@ -49,24 +56,42 @@ public class Example1 {
                     column2.setValue(id, value);
                 }
         );
-        timer.addAction(new ActionRemove(table, 5)); // Keep only 5 latest events
-        timer.addAction(
+
+        timer.addAction( // Keep only 5 latest events
+                new ActionRemove(table, 5)
+        );
+
+        timer.addAction( // Print something
                 x -> {
                     System.out.println("Number of events: " + table.getLength());
                 }
         );
 
+        //
+        // Start server and connectors
+        //
+
+        server.start();
+
+        ExUtils.waitToSecond();
         timer.start();
 
-        try {
-            Thread.sleep(serverProcessingTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Server started. Press Ctrl-C to stop.");
 
-        timer.stop();
-        server.stop();
-        System.out.println("Server stopped.");
+        //
+        // Add shutdown hook
+        //
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                timer.stop();
+                server.stop();
+                System.out.println("Server stopped.");
+            }
+            catch (Exception e) {
+                System.out.println("Errors in shutdown hook: " + e);
+                System.exit(1) ;
+            }
+        }));
     }
-
 }

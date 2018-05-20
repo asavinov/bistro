@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.examples.server;
 
 import org.conceptoriented.bistro.core.*;
+import org.conceptoriented.bistro.examples.ExUtils;
 import org.conceptoriented.bistro.server.Action;
 import org.conceptoriented.bistro.server.Context;
 import org.conceptoriented.bistro.server.Server;
@@ -19,10 +20,26 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Feed events to the engine into one table.
- * Project the events to the range table with regular intervals and aggregate the quotes over these intervals.
- * Compute several moving averages for the aggregated (projected) time series data.
- * Fire alerts when the fast curve deviates from the slow curve.
+ * Feed bitcoin quotes to the server by storing them as records of one table with timestamp, price and amount.
+ * <p>
+ * We do not analyze quotes in the quote table.
+ * Instead, we want to aggregate them for fixed time intervals which are represented as elements of the second table.
+ * Each record of this table represents one time interval (tumbling window).
+ * Then we project each quote to an element of this table with tumbling windows by creating a link column.
+ * This link column is used then to perform aggregation of quotes.
+ * <p>
+ * Aggregate quotes for each time interval (tumbling window) by computing average volume.
+ * This is done by defining accumulate columns.
+ * <p>
+ * Now we can analyze data aggregated over tumbling windows.
+ * Our goal is to find large changes of the volume by comparing the current volume with the previous volume.
+ * This is done by defining a rolling aggregation column with window size 2 which essentially will aggregate two records.
+ * The result of such rolling aggregation is essentially is a difference function of the average volume column.
+ * <p>
+ * In order to detect anomalous volume changes we execute a custom action.
+ * This action simply compares the value of the difference column with the threshold.
+ * It is important however that the last tumbling window contains incomplete aggregations (because new quotes can still be added).
+ * Therefore, we ignore this incomplete time interval and use the previous window for detecting anomalies in volume.
  */
 public class Example3 {
 
@@ -38,13 +55,10 @@ public class Example3 {
         // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 20000;
 
-        // Size of regular intervals for aggregation and analysis
-        Duration intervalSize = Duration.ofMillis(1000);
-
         //
         // Create schema
         //
-        schema = new Schema("Example 2");
+        schema = new Schema("Example 3");
 
         //
         // Table with (asynchronous) source quotes
@@ -57,7 +71,7 @@ public class Example3 {
         Column amount = schema.createColumn("Amount", quotes);
 
         //
-        // Table with (synchronous) time intervals
+        // Table with (synchronous) time intervals (each record is one tumbling window)
         //
 
         Table intervals = schema.createTable("INTERVALS");
@@ -66,28 +80,27 @@ public class Example3 {
         Column intervalNo = schema.createColumn("Interval", intervals);
         intervalNo.noop(true);
 
-        // Definition
-        Instant startInterval = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        // Range table. Each record will represent an interval in time of fixed length
         intervals.range(
-                startInterval,
-                intervalSize,
+                Instant.now().truncatedTo(ChronoUnit.SECONDS), // Start interval: snap raster to seconds
+                Duration.ofMillis(1000), // Tumbling window size. Time interval for aggregation
                 10000L // Maximum number of intervals
         );
 
-        // Project column pointing to the range table
+        // Project column: each quote record belongs to some interval (tumbling window)
         Column interval = schema.createColumn("Interval", quotes, intervals);
         interval.project(
-                time // Timestamp of the event will be mapped to time ranges
+                time // Timestamp of the event will be mapped to a time interval (window)
         );
 
         //
-        // Aggregated and rolling columns
+        // Aggregation for each time interval (tumbling window)
         //
 
         Column volumeSum = schema.createColumn("Volume Sum", intervals);
         volumeSum.setDefaultValue(0.0); // It will be used as an initial value
         volumeSum.accumulate(
-                interval, // Link: Even time stamp -> Interval
+                interval, // Link: Event time stamp -> Interval
                 (a,p) -> (double)a + Double.valueOf((String)p[0]),
                 null,
                 amount
@@ -96,7 +109,7 @@ public class Example3 {
         Column quoteCount = schema.createColumn("Quote Count", intervals);
         quoteCount.setDefaultValue(0.0); // It will be used as an initial value
         quoteCount.accumulate(
-                interval, // Link: Even time stamp -> Interval
+                interval, // Link: Event time stamp -> Interval
                 (a,p) -> (double)a + 1.0,
                 null
         );
@@ -107,10 +120,14 @@ public class Example3 {
                 volumeSum, quoteCount
         );
 
+        //
+        // Rolling aggregation for two tumbling windows
+        //
+
         Column avgVolumeIncrease = schema.createColumn("Average Volume Increase", intervals);
         avgVolumeIncrease.setDefaultValue(0.0); // It will be used as an initial value
         avgVolumeIncrease.roll(
-                2, 0,
+                2, 0, // Window size: 2 records - this one and the previous one (to compute difference)
                 (a,d,p) -> {
                     if(d == 0) return (double)a + (double)p[0]; // Current interval
                     else if(d == 1) return (double)a - (double)p[0]; // Previous interval
@@ -120,43 +137,48 @@ public class Example3 {
         );
 
         //
-        // Create server and connectors
+        // Create server
         //
 
         Server server = new Server(schema);
 
+        //
+        // Create input connector (simulator)
+        //
+
         // Feed data into the schema
-        ConnectorSimulatorFile inSimulator = null;
+        ConnectorSimulatorFile simulator = null;
         try {
-            inSimulator = new ConnectorSimulatorFile(server, quotes, location +"/.krakenEUR.csv", "Time", acceleration);
+            simulator = new ConnectorSimulatorFile(server, quotes, location +"/.krakenEUR.csv", "Time", acceleration);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        inSimulator.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
+        simulator.setConverter( x -> Instant.ofEpochSecond(Long.valueOf(x)) );
+
+        MyAction3 myAction = new MyAction3(intervals, avgVolumeIncrease);
+        simulator.addAction(
+                myAction // Check criteria of alert and print if detected using a custom action
+        );
 
         //
         // Periodically check the state, detect anomalies and print them
         //
 
-        // Periodically check the status
-        ConnectorTimer outTimer = new ConnectorTimer(server,500);
+        // Periodically check status
+        ConnectorTimer timer = new ConnectorTimer(server,500);
 
-        outTimer.addAction(new ActionEval(schema)); // Evaluate
+        timer.addAction(new ActionEval(schema)); // Evaluate
 
-        outTimer.addAction( // Print some status info
+        timer.addAction( // Print some status info
                 x -> {
                     long len = quotes.getIdRange().end;
                     System.out.print("o " + len + "\n");
                 }
         );
 
-        // Detect anomalies and print if found
-        MyAction3 myAction = new MyAction3(intervals, avgVolumeIncrease);
-        inSimulator.addAction(myAction);
-
         // Delete old source events and intervals
-        outTimer.addAction(new ActionRemove(quotes, 2000));
-        outTimer.addAction(new ActionRemove(intervals, 20)); // Note that old intervals will be re-created by projecting old events if they still exist
+        timer.addAction(new ActionRemove(quotes, 2000));
+        timer.addAction(new ActionRemove(intervals, 20)); // Note that old intervals will be re-created by projecting old events if they still exist
 
         //
         // Start the server
@@ -165,17 +187,9 @@ public class Example3 {
         try {
             server.start();
 
-            // Synchronize simulator start with second borders (start with the next second)
-            try {
-                Instant nextSecond = Instant.now().truncatedTo(ChronoUnit.SECONDS).plusMillis(1100);
-                long toNextSecond = Duration.between(Instant.now(), nextSecond).toMillis();
-                Thread.sleep(toNextSecond);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            inSimulator.start();
-            outTimer.start();
+            ExUtils.waitToSecond();
+            simulator.start();
+            timer.start();
         } catch (BistroError bistroError) {
             bistroError.printStackTrace();
         }
@@ -189,15 +203,14 @@ public class Example3 {
 
         // All connectors have to be stopped.
         try {
-            outTimer.stop();
-            inSimulator.stop();
+            timer.stop();
+            simulator.stop();
             server.stop();
         } catch (BistroError bistroError) {
             bistroError.printStackTrace();
         }
         System.out.println("");
         System.out.println("Server stopped.");
-
 
         // Note that currently the simulated data feed is not synchronized and not deterministically
         // mapped (projected) to time intervals of fixed length. Therefore, we cannot produce
@@ -221,7 +234,9 @@ class MyAction3 implements Action {
     @Override
     public void evaluate(Context ctx) throws BistroError {
 
-        long end = this.table.getIdRange().end - 1; // Note that we skip the last interval because it is not complete yet
+        // Note that we skip the last interval because it is not complete yet
+        // We check conditions only on complete intervals
+        long end = this.table.getIdRange().end - 1;
 
         for( ; lastEnd < end; lastEnd++) {
 

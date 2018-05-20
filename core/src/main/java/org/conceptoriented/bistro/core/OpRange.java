@@ -105,7 +105,8 @@ class OpRange implements Operation {
         return ret;
     }
 
-    protected boolean inInterval(Object intervalValue, Object value) { // Check if the value is within the specified interval
+    // Check if the value is within the specified interval [start, end)
+    protected boolean inInterval(Object value, Object intervalValue) {
 
         if(this.rangeType.equals("Number")) {
             double nextValue = (Double)intervalValue + (Double)this.period;
@@ -131,6 +132,28 @@ class OpRange implements Operation {
                 return true;
             }
             if(((LocalDate)value).isAfter((LocalDate)intervalValue) && ((LocalDate)value).isBefore(nextValue)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Check if the value is before specified interval start [start, end)
+    protected boolean beforeInterval(Object value, Object intervalValue) {
+
+        if(this.rangeType.equals("Number")) {
+            if((double)value < (double)intervalValue) {
+                return true;
+            }
+        }
+        else if(this.rangeType.equals("Duration")) {
+            if(((Instant)value).isBefore((Instant)intervalValue)) {
+                return true;
+            }
+        }
+        else if(this.rangeType.equals("Period")) {
+            if(((LocalDate)value).isBefore((LocalDate)intervalValue)) {
                 return true;
             }
         }
@@ -207,6 +230,7 @@ class OpRange implements Operation {
     }
 
     // Append a new interval the specified value belongs to as well as all intervals between the last one
+    // Note that we cannot append old dates before the origin (because intervals are supposed to be ordered)
     protected long add(Object value) {
 
         // Constraint
@@ -235,14 +259,18 @@ class OpRange implements Operation {
 
             // Find initial (previous) interval
             id = this.table.getIdRange().end - 1;
-            intervalValue = this.rangeColumn.getValue(id);
             if(this.intervalColumn != null) {
                 intervalNo = (long) this.intervalColumn.getValue(id);
             }
 
+            intervalValue = this.rangeColumn.getValue(id);
+            if(this.beforeInterval(value, intervalValue)) { // This may happen if an old time is appended - we cannot append older intervals
+                return id;
+            }
+
             while(true) {
                 // If the current interval covers the value then break
-                if(this.inInterval(intervalValue, value)) {
+                if(this.inInterval(value, intervalValue)) {
                     break;
                 }
 
@@ -304,7 +332,7 @@ class OpRange implements Operation {
 
                 Object lastValue = this.rangeColumn.getValue(idRange.end-1);
 
-                boolean inInterval = this.inInterval(lastValue, value);
+                boolean inInterval = this.inInterval(value, lastValue);
                 if(inInterval) {
                     // Proj: no insertion needed - link to the existing interval
                     index = index - 1; // Closest left border
