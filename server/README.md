@@ -6,13 +6,50 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
-> General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the [root project](https://github.com/asavinov/bistro)
+---
+> **Bistro Streams does for stream analytics what column stores did for databases**
+---
 
+
+* [About Bistro Streams](#about-bistro-streams)
+  * [What is Bistro Streams: a stream analytics server](#what-is-bistro-streams-a-stream-analytics-server)
+  * [How it works: a novel approach to stream processing](#how-it-works-a-novel-approach-to-stream-processing)
+  * [Why Bistro Streams: benefits](#why-bistro-streams-benefits)
 * [Getting started with Bistro Streams](#getting-started-with-bistro-streams)
   * [Creating a server](#creating-a-server)
   * [Actions](#actions)
   * [Connectors](#connectors)
 * [How to build](#how-to-build)
+
+# About Bistro Streams
+
+## What is Bistro Streams: a stream analytics server
+
+Bistro Streams is a light-weight column-oriented *stream analytics server* which radically changes the way stream data is processed. In contrast to other stream processing systems, Bistro Streams defines its data processing logic using *column definitions*. In particular, it does not use such difficult to comprehend and execute operations like join and group-by. In fact, it is a *general-purpose* server which can be used not only for in-stream analytics but also for other tasks data like integration, data migration, extract-transform-load (ETL) or big data processing. Yet, currently its features are more focused on stream analytics with applications in IoT and edge computing.
+
+## How it works: a novel approach to stream processing
+
+Internally, Bistro Streams is simply a database consisting of a number of tables and columns. These tables and columns may have their own *definitions* and it is precisely how data is being processed in the system. In other words, instead of continuously evaluating queries, Bistro Streams evaluates column and table definitions by deriving new data from the existing data. The unique distinguishing feature of Bistro Streams is *how* it processes data: it relies on the mechanism of evaluating column and table definitions by deriving their outputs and population, respectively, as opposed to executing set-oriented queries in traditional systems.
+
+The role of Bistro Streams is to organize interaction of this internal database with the outside world. In particular, the server provides functions for (synchronously or asynchronously) feeding data into the database and reading data from the database. These functions are implemented by *connectors* which know how to interact with the outside data sources and how to interact with the internal data engine. Thus the internal database (Bistro Engine) is unaware of who and why changes its state - this role is implemented by connectors in the server. On the other hand, Bistro Streams is unaware of how this data state is managed - it is the task of Bistro Engine.
+
+Bistro Streams consists of the following components:
+
+* A *schema* instance is a database (Bistro Engine) storing the current data state. Yet, it does not have any threads and is not able to do any operations itself.
+* A *server* instance provides one or more threads and ability to change the data state. The server knows how to work with the data and its threads are intended for working exclusively with the data state. Yet, the server does not know what to do, that is, it does not have any sources of data and any source of commands to be executed.
+* *Actions* describe operations with data which are submitted to the server by external threads (in the same virtual machine) and are then executed by the server. Actions are written in terms of the Bistro Engine API.
+* A *task* is simply a sequence of actions. Tasks are used if we want to execute several actions sequentially.
+* A *connector* is essentially an arbitrary process which runs in the same virtual machine. Its task is to connect the server with the outside world. On one hand, it knows something about the outside world (e.g., how to receive notifications from an event hub using a certain protocol). On the other hand, it knows how to work with the server by submitting actions. Thus connectors are intended for streaming data between Bistro Streams and other systems or for moving data into and out of Bistro Streams.
+
+## Why Bistro Streams: benefits
+
+Here are some benefits and unique features of Bistro Streams:
+
+* Bistro Streams is a light-weight server and therefore very suitable for running on edge devices. It is estimated that dozens billions connected things will come online by 2020 and analytics at the edge is becoming the cornerstone of any successful IoT solution. Bistro Streams is able to produce results and make intelligent decisions immediately at the edge of the network or directly on device (as opposed to cloud computing where data is transmitted to a centralized server for analysis). In other words, Bistro Streams is intended to analyze data as it is being created by producing results immediately as close to the data source as possible
+* Bistro Streams is based on a general-purpose data processing engine which supports arbitrary operations with data starting from simple filters and ending with artificial intelligence and data mining.
+* Bistro Streams is easily configurable and adaptable to various environments and tasks. It separates the logic of interaction with the outside world and the logic of data processing. It is easy to implement a custom *connector* for interacting with specific devices or data sources, and it is also easy to implement custom *actions* to interact with the internal data processing engine.
+* Bistro Streams is based on a novel data processing paradigm which is conceptually simpler and easier to use than conventional approaches to data processing based on SQL-like languages or MapReduce. In order to define how data has to be processed it is enough to define new columns as opposed to writing complex queries which can be difficult to understand, execute and maintain.
+* Bistro Streams is very efficient in deriving new data (query execution in classical systems) from small incremental updates (typically when new events are received). It maintains dirty state for each column and data, and knows how to propagate it to other elements of the database by updating their state incrementally via inference.
 
 # Getting started with Bistro Streams
 
@@ -137,3 +174,33 @@ dependencies {
     // Other dependencies
 }
 ```
+
+# How to build
+
+# How to build
+
+From the project folder (`git/bistro/server`) execute the following commands to clean, build and publish the artifact:
+
+```console
+$ gradlew clean
+$ gradlew build
+$ gradlew publish
+```
+
+The artifact will be stored in your local repository from where it will be available to other projects.
+
+In order to include this artifact into your project add the following lines to dependencies of your `build.gradle`:
+
+```groovy
+dependencies {
+    compile("org.conceptoriented:bistro-core:0.7.0")
+
+    // Other dependencies
+}
+```
+
+# Links and references
+
+Links and references can be found in the [root project](https://github.com/asavinov/bistro)
+
+Information about how to write programs for Bistro Streams can be found in the [Bistro Engine sub-project](../core)

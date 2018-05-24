@@ -12,22 +12,39 @@ public class ColumnPath {
     public List<Column> columns = new ArrayList<>();
 
     public Object getValue(long id) {
+        int len = this.columns.size();
         Object out = id;
-        for(Column col : columns) {
-            out = col.getValue((long)out);
-            if(out == null) break;
+        for(int i = 0; i < len; i++) {
+            Column col = this.columns.get(i);
+            out = col.getValue((long)out); // Previously obtained id is supposed to be valid
+
+            if(i == len - 1) { // Do not check the output for the very last segment (return as is)
+                break;
+            }
+
+            // New retrieved output might not be valid id (null or -1) and then it cannot be used in next segment
+            if (out == null) break;
+            if ((long)out < 0) break;
         }
         return out;
     }
 
     // Skip first segment and use the argument is its output
     public Object getValueSkipFirst(Object firstOutput) {
+        int len = this.columns.size();
         Object out = firstOutput;
-        if(this.columns.size() > 1){
-            for(int i = 1; i < this.columns.size(); i++) {
+        if(len > 1) {
+            for(int i = 1; i < len; i++) {
                 Column col = this.columns.get(i);
                 out = col.getValue((long)out);
-                if(out == null) break;
+
+                if(i == len - 1) { // Do not check the output for the very last segment (return as is)
+                    break;
+                }
+
+                // New retrieved output might not be valid id (null or -1) and then it cannot be used in next segment
+                if (out == null) break;
+                if ((long)out < 0) break;
             }
         }
         return out;

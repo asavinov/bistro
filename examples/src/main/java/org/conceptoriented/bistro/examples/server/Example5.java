@@ -41,13 +41,13 @@ import java.util.*;
  * <li>Anomalies are detected by comparing computed values with some thresholds and firing alerts.
  * <ul/>
  */
-public class Example4 {
+public class Example5 {
 
     public static Schema schema;
 
     public static void main(String[] args) throws IOException, BistroError {
 
-        Schema schema = new Schema("Example 4");
+        Schema schema = new Schema("Example 5");
 
         //
         // Create event tables each having a timestamp, X, and Y columns (link derived column will be defined later)
@@ -147,7 +147,7 @@ public class Example4 {
         // Connectors
         //
 
-        ProducerConnector simulator = new ProducerConnector(server, sensor_a, 345, 1000.0, 1.0, 0.001);
+        SensorSimulator simulator = new SensorSimulator(server, sensor_a, 345, 1000.0, 1.0, 0.001);
 
         //
         // Periodically check the state, detect anomalies and print them
@@ -210,10 +210,10 @@ public class Example4 {
 
 
 // Based on this project: https://github.com/ashokc/Kafka-Streams-Catching-Data-in-the-Act
-class ProducerConnector extends ConnectorBase implements Runnable {
+class SensorSimulator extends ConnectorBase implements Runnable {
 
     Thread thread;
-    Table table;
+    Table table; // Add records to this table
     List<Column> columns = new ArrayList<>();
 
     //	Y = A * sin (w*t).	w: angular velocity. radinans/second
@@ -257,7 +257,7 @@ class ProducerConnector extends ConnectorBase implements Runnable {
     @Override
     public void start() throws BistroError {
         this.columns = this.table.getColumns();
-        this.thread = new Thread(this, "ProducerConnector Thread");
+        this.thread = new Thread(this, "SensorSimulator Thread");
         this.thread.start();
     }
 
@@ -282,7 +282,7 @@ class ProducerConnector extends ConnectorBase implements Runnable {
         this.server.submit(task);
     }
 
-    ProducerConnector(Server server, Table table, long sleepTimeMillis, double amplitude, double angularV, double error) {
+    public SensorSimulator(Server server, Table table, long sleepTimeMillis, double amplitude, double angularV, double error) {
         super(server);
 
         this.table = table;
