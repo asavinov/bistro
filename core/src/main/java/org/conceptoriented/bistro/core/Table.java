@@ -117,7 +117,7 @@ public class Table implements Element {
     public long remove() { // Remove oldest elements with smallest ids. The removed id is returned.
         this.getColumns().forEach( x -> x.remove() );
         if(this.getLength() > 0) { this.removedRange.end++; this.changedAt = System.nanoTime(); }
-        return this.removedRange.end - 1; // Id of the removed record (not valid id anymore)
+        return this.removedRange.end - 1; // Id of the removed record (this id is not valid anymore)
     }
 
     public Range remove(long count) {
@@ -126,14 +126,27 @@ public class Table implements Element {
         return new Range(this.removedRange.end - toRemove, this.removedRange.end);
     }
 
-    protected void removeAll() {
+    public void removeAll() {
         if(this.getLength() > 0) { this.removedRange.end = this.addedRange.end; this.changedAt = System.nanoTime(); }
+    }
+
+    public long remove(Column column, Object value) { // Remove old records with smallest values - less than the specified threshold (think of it as date of birth or id or timestamp)
+        long insertId = column.findSortedFromStart(value); // It can be in any range: deleted, existing, added
+        long toRemove = insertId - this.removedRange.end; // Records which are still not marked as removed
+        if(toRemove > 0) {
+            toRemove = Math.min(toRemove, this.getLength());
+            this.remove(toRemove);
+        }
+        else {
+            toRemove = 0;
+        }
+        return toRemove;
     }
 
     // Initialize to default state (e.g., empty set) by also forgetting change history
     // It is important to propagate this operation to all dependents as reset (not simply emptying) because some of them (like accumulation) have to forget/reset history and ids/references might become invalid
     // TODO: This propagation can be done manually or we can introduce a special method or it a special reset flag can be introduced which is then inherited and executed by all dependents during evaluation.
-    protected void reset() {
+    public void reset() {
         long initialId = 0;
         this.addedRange.end = initialId;
         this.addedRange.start = initialId;

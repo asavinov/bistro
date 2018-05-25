@@ -117,8 +117,7 @@ public class Column implements Element {
     protected void add(long count) { this.data.add(count); this.isChanged = true; }
 
     protected void remove() { this.data.remove(1); this.isChanged = true; }
-    protected void remove(long count) { this.data.remove(count); this.isChanged = true; }
-
+    protected void remove(long count) { this.data.remove(count); this.isChanged = true; } // Remove the specified number of oldest records
     protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
 
     protected void reset() {
@@ -133,6 +132,7 @@ public class Column implements Element {
     }
 
     protected long findSorted(Object value) { return this.data.findSorted(value); }
+    protected long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
 
     //
     // Element interface
@@ -395,7 +395,7 @@ public class Column implements Element {
     }
 
     //
-    // Proj to values (using equality)
+    // Project to values (using equality)
     //
 
     public void project(ColumnPath[] valuePaths, Column... keyColumns) {
@@ -419,7 +419,7 @@ public class Column implements Element {
     }
 
     //
-    // Proj to ranges/intervals (using inequality)
+    // Project to ranges/intervals (using inequality)
     //
 
     public void project(ColumnPath valuePath) {

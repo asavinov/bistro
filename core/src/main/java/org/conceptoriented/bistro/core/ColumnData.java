@@ -101,7 +101,7 @@ public class ColumnData {
     }
 
     protected void remove() { this.remove(1); }
-    protected void remove(long count) { // Remove the oldest records with lowest ids
+    protected void remove(long count) { // Remove the specified number of oldest records
         this.startIdOffset += count;
         this.idRange.start += count;
 
@@ -156,8 +156,31 @@ public class ColumnData {
                 (int)(this.startIdOffset + this.idRange.getLength()),
                 value
         );
+        // TODO: In the case of multiple equal values, the index can be any. It is better if we return the first or last element of such intervals. So we need to check for equality and return start or end.
 
         long id = offset2id(insertIndex);
+
+        return id;
+    }
+
+    protected long findSortedFromStart(Object value) { // Find insertion index with the value strictly less than the specified value
+
+        // Values must be comparable (implement Comparable interface)
+
+        // Start from the last/old/smallest ids and move in the loop until a greater or equal value is found
+        int start = this.id2offset(this.idRange.start);
+        int end = this.id2offset(this.idRange.end);
+        for(int i = start; i < end; i++) {
+            Object val = this.values[i];
+            if(val == null) continue;
+            if(((Comparable)val).compareTo((Comparable)value) < 0) { // It is still small
+                continue;
+            }
+            end = i;
+            break;
+        }
+
+        long id = offset2id(end);
 
         return id;
     }

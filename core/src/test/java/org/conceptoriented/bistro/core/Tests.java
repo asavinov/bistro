@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,6 +87,61 @@ public class Tests {
         vals = Arrays.asList(5L, "String value 5"); // Record exist but we specify different type (integer instead of double)
         found_id = t.find(vals, cols, false);
         assertTrue(found_id < 0); // Not found because of different types: Long is not comparable with Double
+    }
+
+    @Test
+    public void removeTest() { // Rest deletion operations
+
+        Schema s = new Schema("My Schema");
+        Table t = s.createTable("T");
+        Column c1 = s.createColumn("C1", t);
+        Column c2 = s.createColumn("C1", t);
+
+        List<Column> cols = Arrays.asList(c1, c2);
+        long id;
+        long count;
+
+        t.add(5);
+        t.setValues(0, cols, Arrays.asList(1.0, Instant.parse("2018-01-01T00:01:00.000Z"))); // Oldest record
+        t.setValues(1, cols, Arrays.asList(2.0, Instant.parse("2018-01-01T00:02:00.000Z")));
+        t.setValues(2, cols, Arrays.asList(3.0, Instant.parse("2018-01-01T00:03:00.000Z")));
+        t.setValues(3, cols, Arrays.asList(4.0, Instant.parse("2018-01-01T00:04:00.000Z")));
+        t.setValues(4, cols, Arrays.asList(5.0, Instant.parse("2018-01-01T00:05:00.000Z"))); // Newest record
+
+        // Remove all c1<2.0 which means 1 record with id 0
+        count = t.remove(c1, 2.0);
+        assertEquals(1, count);
+        assertEquals(0, t.getRemovedRange().start);
+        assertEquals(1, t.getRemovedRange().end);
+        assertEquals(4, t.getLength());
+
+        // This record has been already deleted before so no changes expected
+        count = t.remove(c2, Instant.parse("2018-01-01T00:02:00.000Z"));
+        assertEquals(0, count);
+        assertEquals(0, t.getRemovedRange().start);
+        assertEquals(1, t.getRemovedRange().end);
+        assertEquals(4, t.getLength());
+
+        // Remove 2 older records
+        count = t.remove(c2, Instant.parse("2018-01-01T00:03:03.000Z"));
+        assertEquals(2, count);
+        assertEquals(0, t.getRemovedRange().start);
+        assertEquals(3, t.getRemovedRange().end);
+        assertEquals(2, t.getLength());
+
+        s.evaluate();
+        // After evaluation the removed range has to be reset
+        assertEquals(3, t.getRemovedRange().start);
+        assertEquals(3, t.getRemovedRange().end);
+        assertEquals(2, t.getLength());
+
+        // Remove more records than exist by specifying very large threshold
+        count = t.remove(c2, Instant.parse("2018-01-01T01:03:03.000Z"));
+        assertEquals(2, count);
+        assertEquals(3, t.getRemovedRange().start);
+        assertEquals(5, t.getRemovedRange().end);
+        assertEquals(0, t.getLength());
+
     }
 
 }

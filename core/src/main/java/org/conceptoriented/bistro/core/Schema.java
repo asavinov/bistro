@@ -126,6 +126,8 @@ public class Schema {
     public void evaluate() {
         if(this.topology == null) {
             this.topology = new Topology(this);
+            topology.create();
+            this.topologyChangedAt = System.nanoTime();
         }
 
         // Find newest definition time

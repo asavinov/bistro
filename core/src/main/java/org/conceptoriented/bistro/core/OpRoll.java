@@ -16,8 +16,10 @@ class OpRoll implements Operation {
     // Empty - row id (distance between row ids)
     // One - time or 1D space. difference of values in this column
     // Two - 2D space
+    // etc.
 
-    private double computeDistance(long pastId, long futureId) { // It is essentially a comparator so maybe check the corresponding standard interface
+    // It is essentially a comparator so maybe check the corresponding standard interface
+    private double computeDistance(long pastId, long futureId) {
         if(distancePath == null) {
             return (double)(futureId - pastId);
         }
@@ -29,7 +31,7 @@ class OpRoll implements Operation {
     // Constraint: only elements within the specified distance from the central (group) element will be accumulated
     double sizePast; // Window size (past, smaller ids)
     double sizeFuture; // Window size (future, larger ids)
-    // Inclusive or exclusive? One can be inclusive and the other exclusive.
+    // TODO: Questions: inclusive or exclusive? One can be inclusive and the other exclusive. See also remove() method for deleting old elements
 
     EvalRoll lambda;
     ColumnPath[] paths;
