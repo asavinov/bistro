@@ -68,8 +68,7 @@ public class Tests {
 
 
     @Test
-    public void timerTest()
-    {
+    public void timerTest() throws BistroError, InterruptedException {
         // Create schema
         Schema schema = new Schema("My Schema");
         Table table = schema.createTable("T");
@@ -95,36 +94,21 @@ public class Tests {
         // Run the server
         //
 
-        try {
-            server.start();
-            timer.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error starting server.");
-        }
+        server.start();
+        timer.start();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            fail("Interrupted while waiting for the server to do its work.");
-        }
+        Thread.sleep(500);
 
         // All connectors have to be stopped.
-        try {
-            timer.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error stopping server.");
-        }
+        timer.stop();
+        server.stop();
 
         assertEquals(2L, table.getLength() );
         assertEquals(message, c.getValue(0));
     }
 
     @Test
-    public void simulatorTest() {
+    public void simulatorTest() throws BistroError, InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -164,33 +148,18 @@ public class Tests {
         // Run the server
         //
 
-        try {
-            server.start();
-            connector.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error starting server.");
-        }
+        server.start();
+        connector.start();
 
-        try {
-            Thread.sleep(500);
+        Thread.sleep(500);
 
-            server.submit(new ActionEval(s)); // Send evaluation task manually
+        server.submit(new ActionEval(s)); // Send evaluation task manually
 
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            fail("Interrupted while waiting for the server to do its work.");
-        }
+        Thread.sleep(200);
 
         // All connectors have to be stopped.
-        try {
-            connector.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error stopping server.");
-        }
+        connector.stop();
+        server.stop();
 
         assertEquals(4L, t.getLength() );
 
@@ -200,7 +169,7 @@ public class Tests {
     }
 
     @Test
-    public void simulatorFileTest() {
+    public void simulatorFileTest() throws BistroError, InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -238,33 +207,18 @@ public class Tests {
         // Run the server
         //
 
-        try {
-            server.start();
-            connector.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error starting server.");
-        }
+        server.start();
+        connector.start();
 
-        try {
-            Thread.sleep(1500);
+        Thread.sleep(1500);
 
-            server.submit(new ActionEval(s)); // Send evaluation task manually
+        server.submit(new ActionEval(s)); // Send evaluation task manually
 
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            fail("Interrupted while waiting for the server to do its work.");
-        }
+        Thread.sleep(200);
 
         // All connectors have to be stopped.
-        try {
-            connector.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-            fail("Error stopping server.");
-        }
+        connector.stop();
+        server.stop();
 
         assertEquals(21L, t.getLength() );
 
@@ -275,7 +229,7 @@ public class Tests {
     }
 
     @Test
-    public void customProducerTest() throws BistroError {
+    public void customProducerTest() throws BistroError, InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -295,12 +249,7 @@ public class Tests {
         ProducingConnector producer = new ProducingConnector(server, t);
         producer.start();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            fail("Interrupted while waiting for the server to do its work.");
-        }
+        Thread.sleep(500);
 
         // All connectors have to be stopped.
         producer.stop();

@@ -1,10 +1,7 @@
 package org.conceptoriented.bistro.core;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.UUID;
-
-import static java.util.Arrays.binarySearch;
 
 /**
  * It is responsible for explicit representation of a function, that is, a mapping from input ids to output columnPaths.
@@ -173,7 +170,7 @@ public class ColumnData {
         for(int i = start; i < end; i++) {
             Object val = this.values[i];
             if(val == null) continue;
-            if(((Comparable)val).compareTo((Comparable)value) < 0) { // It is still small
+            if(((Comparable)val).compareTo(value) < 0) { // It is still small
                 continue;
             }
             end = i;
