@@ -3,8 +3,9 @@ buildscript {
         flatDir {
             dirs "$rootProject.projectDir"
         }
-		mavenLocal()
-		mavenCentral()
+        mavenLocal()
+        mavenCentral()
+        jcenter()
 	}
     dependencies {
     }
@@ -14,36 +15,76 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
-jar {
-    baseName = 'bistro-core'
-    version =  '0.8.0-SNAPSHOT'
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    //jcenter()
-}
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+description 'General-purpose data analysis engine radically changing the way batch and stream data is processed'
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-core'
 version = '0.8.0-SNAPSHOT'
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
 dependencies {
     testCompile("junit:junit:4.12")
+}
+
+
+
+test {
+    testLogging.showStandardStreams = true // To see print output in unit tests
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.4.1'
 }
 
+jar {
+    baseName = 'bistro-core'
+    version =  '0.8.0-SNAPSHOT'
+}
+
+// Generate archive with source files
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allJava
+    // from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    // from javadoc
+}
+javadoc.failOnError = false // Ignore syntactic errors in javadoc html
+
+artifacts {
+    archives jar
+    archives sourceJar
+    archives javadocJar
+}
+
+// Uncomment this section to sign archives and pom (gradle.properties will be needed specifying access to the keys)
+/*
+signing {
+    required { !version.endsWith("SNAPSHOT") }
+    sign configurations.archives
+}
+// call signArchives task before publish task
+//task preparePublish(dependsOn: signArchives)
+*/
+
 // Install into (local) maven repository
 publishing {
     publications {
+
         mavenJava(MavenPublication) {
             from components.java
 
@@ -53,36 +94,99 @@ publishing {
             //version '0.8.0-SNAPSHOT'
 
             //artifact jar
-            artifact sourcesJar
+            artifact sourceJar
             artifact javadocJar
+
+            // Add fields to POM which are required by Sonatype OSS
+            customizePom(pom, rootProject)
+
+            // Uncomment this section to sign archives and pom (gradle.properties will be needed specifying access to the keys)
+/*
+            // create and sign pom artifact
+            pom.withXml {
+                def pomFile = file("${project.buildDir}/generated-pom.xml")
+                writeTo(pomFile)
+                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
+                artifact(pomAscFile) {
+                    classifier = null
+                    extension = 'pom.asc'
+                }
+            }
+
+            // create the signed artifacts
+            project.tasks.signArchives.signatureFiles.each {
+                artifact(it) {
+                    def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                    if (matcher.find()) {
+                        classifier = matcher.group(1)
+                    } else {
+                        classifier = null
+                    }
+                    extension = 'jar.asc'
+                }
+            }
+*/
+
         }
+
     }
     repositories {
         mavenLocal()
+/*
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+*/
     }
 }
 
-// Generate archive with source files (to be installed into maven repository)
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier 'sources'
-	from sourceSets.main.allSource
-}
+def customizePom(pom, gradleProject) {
+    pom.withXml {
+        def root = asNode()
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
+        // eliminate test-scoped dependencies (no need in maven central POMs)
+        root.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
 
-artifacts {
-    archives jar
-    archives sourcesJar
-    archives javadocJar
-}
+        // add all items necessary for maven central publication
+        root.children().last() + {
+            resolveStrategy = Closure.DELEGATE_FIRST
 
-// To see print output from unit tests
-test {
-    testLogging.showStandardStreams = true
+            name 'Bistro Engine'
+            description gradleProject.description
+            url 'http://conceptoriented.org'
+            organization {
+                name 'Concept-Oriented'
+                url 'http://conceptoriented.org'
+            }
+            issueManagement {
+                system 'GitHub'
+                url 'https://github.com/asavinov/bistro/issues'
+            }
+            scm {
+                url 'https://github.com/asavinov/bistro'
+                connection 'scm:git:git://github.com/asavinov/bistro.git'
+                developerConnection 'scm:git:ssh:git@github.com/asavinov/bistro.git'
+            }
+            licenses {
+                license {
+                    name 'MIT License'
+                    url 'https://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
+            developers {
+                developer {
+                    id 'asavinov'
+                    name 'Alexandr Savinov'
+                    email 'savinov@conceptoriented.org'
+                }
+            }
+        }
+    }
 }
-
-// http://blog.omega-prime.co.uk/2015/11/30/easy-publishing-to-maven-central-with-gradle/
-// http://mike-neck.github.io/blog/2013/06/21/how-to-publish-artifacts-with-gradle-maven-publish-plugin-version-1-dot-6/
