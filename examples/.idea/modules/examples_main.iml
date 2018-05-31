@@ -10,13 +10,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-formula:0.8.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-server:0.8.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.8.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
     <orderEntry type="library" name="Gradle: net.objecthunter:exp4j:0.4.8" level="project" />
     <orderEntry type="library" name="Gradle: com.udojava:EvalEx:2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-server:0.8.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Gradle: org.conceptoriented:bistro-core:0.8.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
     <orderEntry type="library" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />

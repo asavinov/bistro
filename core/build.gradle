@@ -36,14 +36,20 @@ dependencies {
     testCompile("junit:junit:4.12")
 }
 
-
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 test {
     testLogging.showStandardStreams = true // To see print output in unit tests
 }
 
+//
+// Tasks
+//
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.4.1'
+    gradleVersion = '4.7'
 }
 
 jar {
@@ -51,7 +57,6 @@ jar {
     version =  '0.8.0-SNAPSHOT'
 }
 
-// Generate archive with source files
 task sourceJar(type: Jar, dependsOn: classes) {
     classifier 'sources'
     from sourceSets.main.allJava
@@ -71,7 +76,9 @@ artifacts {
     archives javadocJar
 }
 
-// Uncomment this section to sign archives and pom (gradle.properties will be needed specifying access to the keys)
+//
+// Sign. Uncomment this section to sign archives and pom (gradle.properties will be needed with credentials and other parameters)
+//
 /*
 signing {
     required { !version.endsWith("SNAPSHOT") }
@@ -81,7 +88,9 @@ signing {
 //task preparePublish(dependsOn: signArchives)
 */
 
-// Install into (local) maven repository
+//
+// Publish into maven repository
+//
 publishing {
     publications {
 
@@ -93,16 +102,18 @@ publishing {
             artifactId 'bistro-core'
             //version '0.8.0-SNAPSHOT'
 
+            // Add POM fields required by Sonatype OSS
+            customizePom(pom, rootProject)
+
             //artifact jar
             artifact sourceJar
             artifact javadocJar
 
-            // Add fields to POM which are required by Sonatype OSS
-            customizePom(pom, rootProject)
-
-            // Uncomment this section to sign archives and pom (gradle.properties will be needed specifying access to the keys)
+			//
+            // Uncomment this section to sign archives and pom (gradle.properties will be needed with credentials and other parameters)
+			//
 /*
-            // create and sign pom artifact
+            // Sign pom and create pom artifact
             pom.withXml {
                 def pomFile = file("${project.buildDir}/generated-pom.xml")
                 writeTo(pomFile)
@@ -113,7 +124,7 @@ publishing {
                 }
             }
 
-            // create the signed artifacts
+            // Create signed artifacts
             project.tasks.signArchives.signatureFiles.each {
                 artifact(it) {
                     def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
@@ -132,15 +143,26 @@ publishing {
     }
     repositories {
         mavenLocal()
+
+        //
+        // Uncomment to publish in central repository
+        //
 /*
         maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+
+            //url 'https://oss.sonatype.org/content/repositories/snapshots'
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+
+            // Download: https://oss.sonatype.org/content/groups/public
+            // Download: https://oss.sonatype.org/content/groups/staging
+
             credentials {
                 username sonatypeUsername
                 password sonatypePassword
             }
         }
 */
+
     }
 }
 
@@ -159,9 +181,9 @@ def customizePom(pom, gradleProject) {
 
             name 'Bistro Engine'
             description gradleProject.description
-            url 'http://conceptoriented.org'
+            url 'https://github.com/asavinov/bistro'
             organization {
-                name 'Concept-Oriented'
+                name 'Alexandr Savinov'
                 url 'http://conceptoriented.org'
             }
             issueManagement {
@@ -176,7 +198,7 @@ def customizePom(pom, gradleProject) {
             licenses {
                 license {
                     name 'MIT License'
-                    url 'https://opensource.org/licenses/MIT'
+                    url 'https://github.com/asavinov/bistro/blob/master/LICENSE'
                     distribution 'repo'
                 }
             }

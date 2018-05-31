@@ -39,7 +39,7 @@ import java.util.*;
  * <li>The behavior of the sensor (trajectory) is analyzed over time using rolling aggregation.
  *
  * <li>Anomalies are detected by comparing computed values with some thresholds and firing alerts.
- * <ul/>
+ * </ul>
  */
 public class Example5 {
 

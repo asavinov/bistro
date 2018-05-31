@@ -3,9 +3,10 @@ buildscript {
         flatDir {
             dirs "$rootProject.projectDir"
         }
-		mavenLocal()
-		mavenCentral()
-	}
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
     dependencies {
     }
 }
@@ -14,9 +15,42 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+description 'Bistro Streams is a light-weight column-oriented stream analytics engine which radically changes the way stream data is processed'
+
+group = 'org.conceptoriented'
+archivesBaseName = 'bistro-server'
+version = '0.8.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile("org.conceptoriented:bistro-core:0.8.0-SNAPSHOT")
+    testCompile("junit:junit:4.12")
+}
 
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+test {
+    testLogging.showStandardStreams = true // To see print output in unit tests
+}
+
+//
+// Tasks
+//
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.7'
 }
 
 jar {
@@ -24,31 +58,43 @@ jar {
     version =  '0.8.0-SNAPSHOT'
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    //jcenter()
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allJava
+    // from sourceSets.main.allSource
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    // from javadoc
+}
+javadoc.failOnError = false // Ignore syntactic errors in javadoc html
 
-group = 'org.conceptoriented'
-archivesBaseName = 'bistro-server'
-version = '0.8.0-SNAPSHOT'
-
-dependencies {
-    compile("org.conceptoriented:bistro-core:0.8.0-SNAPSHOT")
-    testCompile("junit:junit:4.12")
+artifacts {
+    archives jar
+    archives sourceJar
+    archives javadocJar
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.4.1'
+//
+// Sign. Uncomment this section to sign archives and pom (gradle.properties will be needed with credentials and other parameters)
+//
+/*
+signing {
+    required { !version.endsWith("SNAPSHOT") }
+    sign configurations.archives
 }
+// call signArchives task before publish task
+//task preparePublish(dependsOn: signArchives)
+*/
 
-// Install into (local) maven repository
+//
+// Publish into maven repository
+//
 publishing {
     publications {
+
         mavenJava(MavenPublication) {
             from components.java
 
@@ -57,34 +103,113 @@ publishing {
             artifactId 'bistro-server'
             //version '0.8.0-SNAPSHOT'
 
+            // Add POM fields required by Sonatype OSS
+            customizePom(pom, rootProject)
+
             //artifact jar
-            artifact sourcesJar
+            artifact sourceJar
             artifact javadocJar
+
+            //
+            // Uncomment this section to sign archives and pom (gradle.properties will be needed with credentials and other parameters)
+            //
+/*
+            // Sign pom and create pom artifact
+            pom.withXml {
+                def pomFile = file("${project.buildDir}/generated-pom.xml")
+                writeTo(pomFile)
+                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
+                artifact(pomAscFile) {
+                    classifier = null
+                    extension = 'pom.asc'
+                }
+            }
+
+            // Create signed artifacts
+            project.tasks.signArchives.signatureFiles.each {
+                artifact(it) {
+                    def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                    if (matcher.find()) {
+                        classifier = matcher.group(1)
+                    } else {
+                        classifier = null
+                    }
+                    extension = 'jar.asc'
+                }
+            }
+*/
+
         }
     }
+
     repositories {
         mavenLocal()
+
+        //
+        // Uncomment to publish in central repository
+        //
+/*
+        maven {
+
+            //url 'https://oss.sonatype.org/content/repositories/snapshots'
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+
+            // Download: https://oss.sonatype.org/content/groups/public
+            // Download: https://oss.sonatype.org/content/groups/staging
+
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+*/
+
     }
 }
 
-// Generate archive with source files (to be installed into maven repository)
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier 'sources'
-	from sourceSets.main.allSource
-}
+def customizePom(pom, gradleProject) {
+    pom.withXml {
+        def root = asNode()
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
+        // eliminate test-scoped dependencies (no need in maven central POMs)
+        root.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
 
-artifacts {
-    archives jar
-    archives sourcesJar
-    archives javadocJar
-}
+        // add all items necessary for maven central publication
+        root.children().last() + {
+            resolveStrategy = Closure.DELEGATE_FIRST
 
-// To see print output from unit tests
-test {
-    testLogging.showStandardStreams = true
+            name 'Bistro Streams'
+            description gradleProject.description
+            url 'https://github.com/asavinov/bistro'
+            organization {
+                name 'Alexandr Savinov'
+                url 'http://conceptoriented.org'
+            }
+            issueManagement {
+                system 'GitHub'
+                url 'https://github.com/asavinov/bistro/issues'
+            }
+            scm {
+                url 'https://github.com/asavinov/bistro'
+                connection 'scm:git:git://github.com/asavinov/bistro.git'
+                developerConnection 'scm:git:ssh:git@github.com/asavinov/bistro.git'
+            }
+            licenses {
+                license {
+                    name 'MIT License'
+                    url 'https://github.com/asavinov/bistro/blob/master/LICENSE'
+                    distribution 'repo'
+                }
+            }
+            developers {
+                developer {
+                    id 'asavinov'
+                    name 'Alexandr Savinov'
+                    email 'savinov@conceptoriented.org'
+                }
+            }
+        }
+    }
 }

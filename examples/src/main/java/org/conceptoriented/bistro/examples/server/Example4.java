@@ -19,8 +19,8 @@ import java.util.*;
 /**
  *
  * <pre>
- * CLICKS -> USERS -> REGIONS
- * <pre/>
+ * CLICKS - USERS - REGIONS
+ * </pre>
  */
 public class Example4 {
 

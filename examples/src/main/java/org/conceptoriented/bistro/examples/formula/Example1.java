@@ -3,8 +3,8 @@ package org.conceptoriented.bistro.examples.formula;
 import java.io.*;
 
 import org.conceptoriented.bistro.core.*;
-import org.conceptoriented.bistro.formula.*;
 import org.conceptoriented.bistro.examples.*;
+//import org.conceptoriented.bistro.formula.*;
 
 public class Example1
 {
@@ -41,10 +41,10 @@ public class Example1
 
         // [OrderDetails].[Amount] = [Quantity] * [UnitPrice]
         Column itemsAmount = schema.createColumn("Amount", items, columnType);
-        Expression expr = new FormulaExp4j("[Quantity] * [UnitPrice]", items);
-        itemsAmount.calculate(
-                expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{})
-        );
+        //Expression expr = new FormulaExp4j("[Quantity] * [UnitPrice]", items);
+        //itemsAmount.calculate(
+        //        expr.getEvaluator(), expr.getParameterPaths().toArray(new ColumnPath[]{})
+        //);
 
         //
         // Links from OrderItems to Products and Orders

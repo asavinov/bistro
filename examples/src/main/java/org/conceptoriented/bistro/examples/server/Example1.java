@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * <li>The first action explicitly adds one record to the table with random value.
  * <li>The second action deletes old records by keeping the number of records constant.
  * <li>The third action prints the state of the table.
- * <ul/>
+ * </ul>
  *
  * Use Ctrl-C to stop the server.
  */
