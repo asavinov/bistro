@@ -8,8 +8,8 @@
 
 ---
 > **Bistro Streams does for stream analytics what column stores did for databases**
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
 ---
-
 
 * [About Bistro Streams](#about-bistro-streams)
   * [What is Bistro Streams: a stream analytics server](#what-is-bistro-streams-a-stream-analytics-server)
@@ -20,6 +20,7 @@
   * [Actions](#actions)
   * [Connectors](#connectors)
 * [How to build](#how-to-build)
+* [More information](#more-information)
 
 # About Bistro Streams
 
@@ -199,8 +200,6 @@ dependencies {
 }
 ```
 
-# Links and references
+# More information
 
-Links and references can be found in the [root project](https://github.com/asavinov/bistro)
-
-Information about how to write programs for Bistro Streams can be found in the [Bistro Engine sub-project](../core)
+More information on how to write programs for Bistro Streams can be found in the [Bistro Engine sub-project](../core)

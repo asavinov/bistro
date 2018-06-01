@@ -6,6 +6,8 @@
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
 
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
+
 > General information about Bistro including what is Bistro, how it works, its formal basis and why Bistro should be used can be found in the [root project](https://github.com/asavinov/bistro)
 
 # Bistro examples
