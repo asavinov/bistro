@@ -22,7 +22,7 @@ description 'A library for writing data processing scripts using a formula expre
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-formula'
-version = '0.8.0-SNAPSHOT'
+version = '0.8.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -41,7 +41,7 @@ dependencies {
     compile("net.objecthunter:exp4j:0.4.8")
     compile("com.udojava:EvalEx:2.0")
 
-    compile("org.conceptoriented:bistro-core:0.8.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.8.0")
 }
 
 configurations.all {
@@ -62,7 +62,7 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'bistro-formula'
-    version =  '0.8.0-SNAPSHOT'
+    version =  '0.8.0'
 }
 
 task sourceJar(type: Jar, dependsOn: classes) {
@@ -114,7 +114,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-formula'
-            //version '0.8.0-SNAPSHOT'
+            //version '0.8.0'
 
             // Add POM fields required by Sonatype OSS
             customizePom(pom, rootProject)

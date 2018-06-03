@@ -5,10 +5,11 @@
  | |_) | \__ \ |_| | | (_) |  C O L U M N S  F I R S T
  |____/|_|___/\__|_|  \___/ ___________________________
 ```
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.conceptoriented/bistro-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.conceptoriented/bistro-core)
 
 ---
 > **Bistro Engine makes columns (functions) first-class elements of data processing equal to tables (sets)**
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
 ---
 
 * [About Bistro Engine](#about-bistro-engine)
@@ -34,6 +35,7 @@
     * [Range tables](#range-tables)
   * [Schema evaluation](#schema-evaluation)
 * [How to build](#how-to-build)
+* [How to use](#how-to-use)
 * [References](#references)
 
 # About Bistro Engine
@@ -383,11 +385,13 @@ $ gradlew publish
 
 The artifact will be stored in your local repository from where it will be available to other projects.
 
+# How to use
+
 In order to include this artifact into your project add the following lines to dependencies of your `build.gradle`:
 
 ```groovy
 dependencies {
-    compile("org.conceptoriented:bistro-core:0.7.0")
+    compile("org.conceptoriented:bistro-core:0.8.0")
 
     // Other dependencies
 }

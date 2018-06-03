@@ -22,7 +22,7 @@ description 'Example of using Bistro Engine and Bistro Streams'
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-examples'
-version = '0.8.0-SNAPSHOT'
+version = '0.8.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -41,9 +41,9 @@ dependencies {
     compile("net.objecthunter:exp4j:0.4.8")
     compile("com.udojava:EvalEx:2.0")
 
-    compile("org.conceptoriented:bistro-core:0.8.0-SNAPSHOT")
-    compile("org.conceptoriented:bistro-server:0.8.0-SNAPSHOT")
-    //compile("org.conceptoriented:bistro-formula:0.8.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-core:0.8.0")
+    compile("org.conceptoriented:bistro-server:0.8.0")
+    //compile("org.conceptoriented:bistro-formula:0.8.0")
 }
 
 configurations.all {
@@ -64,7 +64,7 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'bistro-examples'
-    version =  '0.8.0-SNAPSHOT'
+    version =  '0.8.0'
 
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
@@ -114,7 +114,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-examples'
-            //version '0.8.0-SNAPSHOT'
+            //version '0.8.0'
 
             // Add POM fields required by Sonatype OSS
             customizePom(pom, rootProject)

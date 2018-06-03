@@ -7,7 +7,7 @@ import org.conceptoriented.bistro.examples.*;
 
 public class Example6 {
 
-    public static String location = "src/main/resources/ds3";
+    public static String location = "src/main/resources/ds4";
 
     public static Schema schema;
 
@@ -23,44 +23,44 @@ public class Example6 {
         // Create tables and columns by loading data from CSV files
         //
 
-        Table quotes = ExUtils.readFromCsv(schema, location, "BTC-EUR.csv");
-
-        // We need it for exponential moving average (it is a sum of all coefficients used as weights for computing average in a window)
-        double sumExpWeights = 0.0;
-        for(int i=0; i<7; i++) sumExpWeights += (1 / Math.exp(i));
-        final double sumExpWeightsFinal = sumExpWeights; // To use in lambda we need final
+        Table quotes = ExUtils.readFromCsv(schema, location, ".krakenEUR.csv");
 
         //
-        // Calculate daily (relative) price span (in percent)
+        // Convert time (in seconds) from string to long
         //
 
-        // [Quotes].[Span] = ([High] - [Low]) / [Close]
-        Column spanDaily = schema.createColumn("Span", quotes);
-        spanDaily.calculate(
-                p -> 100.0 * (Double.valueOf((String)p[0]) - Double.valueOf((String)p[1])) / Double.valueOf((String)p[2]),
-                quotes.getColumn("High"), quotes.getColumn("Low"), quotes.getColumn("Close")
+        Column time_seconds = schema.createColumn("Time Seconds", quotes);
+        time_seconds.calculate(
+                p -> Long.valueOf((String)p[0]).longValue(),
+                quotes.getColumn("Time")
         );
 
         //
-        // Weekly aggregated price span
+        // Volume Weighted Average Price - VWAP = SUM(Price*Volume) / SUM(Volume)
         //
 
-        // [Quotes].[SpanWeekly] = ROLL_SUM_(7 days) [Quotes].[Span]
-        Column spanWeekly = schema.createColumn("SpanWeekly", quotes);
-        spanWeekly.setDefaultValue(0.0); // It will be used as an initial value
-        spanWeekly.roll(
-                7, 0,
-                (a,d,p) -> (double)a + ((double)p[0] / 7.0), // [out] + [Span]. Equal weights for all 7 constituents
-                spanDaily
+        Column priceVolumeSum = schema.createColumn("PriceSum", quotes);
+        priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        priceVolumeSum.roll(
+                time_seconds, // Time stamp
+                60, 0, // 3600 seconds moving average
+                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) * Double.valueOf((String)p[1])), // [out] + [Price] * [Amount]
+                quotes.getColumn("Price"), quotes.getColumn("Amount")
         );
 
-        // [Quotes].[spanWeeklyExp] = ROLL_SUM_(7 days exp) [Quotes].[Span]
-        Column spanWeeklyExp = schema.createColumn("SpanWeeklyExp", quotes);
-        spanWeeklyExp.setDefaultValue(0.0); // It will be used as an initial value
-        spanWeeklyExp.roll(
-                7, 0,
-                (a,d,p) -> (double)a + ((double)p[0] / Math.exp(d)) / sumExpWeightsFinal, // [out] + ([Span] / e^d).
-                spanDaily
+        Column volumeSum = schema.createColumn("VolumneSum", quotes);
+        volumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        volumeSum.roll(
+                time_seconds, // Time stamp
+                60, 0, // 3600 seconds moving average
+                (a,d,p) -> (double)a + Double.valueOf((String)p[0]), // [out] + [Amount]
+                quotes.getColumn("Amount")
+        );
+
+        Column VWAP = schema.createColumn("VWAP", quotes);
+        VWAP.calculate(
+                p -> (double)p[0] / (double)p[1],
+                priceVolumeSum, volumeSum
         );
 
         //
@@ -71,26 +71,13 @@ public class Example6 {
 
         Object value;
 
-        value = spanDaily.getValue(0); // value = 1.9550342130987395
-        value = spanDaily.getValue(1); // value = 1.8682399213372616
-        value = spanDaily.getValue(6); // value = 1.860920666013707
-        value = spanDaily.getValue(7); // value = 2.514506769825934
-        value = spanDaily.getValue(99); // value = 24.29761718053468
-        if(Math.abs((double)value - 24.29761718053468) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = volumeSum.getValue(3); // value = 0,54029262 (3 elements including this one)
+        if(Math.abs((double)value - 0.54029262) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = spanWeekly.getValue(0); // value = 0.2792906018712485
-        value = spanWeekly.getValue(1); // value = 0.546182019205143
-        value = spanWeekly.getValue(6); // value = 1.6796769410665702
-        value = spanWeekly.getValue(7); // value = 1.7596015920275978
-        value = spanWeekly.getValue(99); // value = 16.36032122029923
-        if(Math.abs((double)value - 16.36032122029923) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = priceVolumeSum.getValue(3); // value = 214,430001602
+        if(Math.abs((double)value - 214.430001602) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = spanWeeklyExp.getValue(0); // value = 1.23694526739464
-        value = spanWeeklyExp.getValue(1); // value = 1.6370774693408667
-        value = spanWeeklyExp.getValue(6); // value = 1.6303675306364669
-        value = spanWeeklyExp.getValue(7); // value = 2.1895729057377022
-        value = spanWeeklyExp.getValue(99); // value = 20.678198203000097
-        if(Math.abs((double)value - 20.678198203000097) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = VWAP.getValue(3); // value = 396,87753203440017374288769667074
+        if(Math.abs((double)value - 396.87753203440017374288769667074) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
-
 }

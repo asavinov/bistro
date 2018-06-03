@@ -1,6 +1,8 @@
 package org.conceptoriented.bistro.examples.core;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.examples.*;
@@ -29,35 +31,62 @@ public class Example7 {
         // Convert time (in seconds) from string to long
         //
 
-        Column time_seconds = schema.createColumn("Time Seconds", quotes);
-        time_seconds.calculate(
-                p -> Long.valueOf((String)p[0]).longValue(),
+        Column timestamp = schema.createColumn("Timestamp", quotes);
+        timestamp.calculate(
+                p -> Instant.ofEpochSecond(Long.valueOf((String)p[0]).longValue()),
                 quotes.getColumn("Time")
         );
 
         //
-        // Volume Weighted Average Price - VWAP = SUM(Price*Volume) / SUM(Volume)
+        // Range table with 1 hour intervals
         //
 
-        Column priceVolumeSum = schema.createColumn("PriceSum", quotes);
+        Table hourlyQuotes = schema.createTable("Hourly Quotes");
+
+        Column hourColumn = schema.createColumn("Hour", hourlyQuotes);
+        hourColumn.noop(true);
+
+        Column intervalColumn = schema.createColumn("Interval", hourlyQuotes);
+        intervalColumn.noop(true);
+
+        hourlyQuotes.range(
+                Instant.parse("2015-12-01T00:00:10.00Z"),
+                Duration.ofSeconds(3600),
+                10000L
+        );
+
+        //
+        // Link to range
+        //
+
+        Column timestamp2hour = schema.createColumn("Link To Hour", quotes, hourlyQuotes);
+        timestamp2hour.project(
+                timestamp // Timestamp will be mapped to hourly intervals
+        );
+
+        //
+        // Accumulate for each hour
+        //
+
+        Column priceVolumeSum = schema.createColumn("Price Volume Sum", hourlyQuotes);
         priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        priceVolumeSum.roll(
-                time_seconds, // Time stamp
-                60, 0, // 3600 seconds moving average
-                (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) * Double.valueOf((String)p[1])), // [out] + [Price] * [Amount]
+        priceVolumeSum.accumulate(
+                timestamp2hour,
+                (a,p) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)a, // [Price] * [Amount] + [out]
+                null,
                 quotes.getColumn("Price"), quotes.getColumn("Amount")
         );
 
-        Column volumeSum = schema.createColumn("VolumneSum", quotes);
+        Column volumeSum = schema.createColumn("Volumne Sum", hourlyQuotes);
         volumeSum.setDefaultValue(0.0); // It will be used as an initial value
-        volumeSum.roll(
-                time_seconds, // Time stamp
-                60, 0, // 3600 seconds moving average
-                (a,d,p) -> (double)a + Double.valueOf((String)p[0]), // [out] + [Amount]
+        volumeSum.accumulate(
+                timestamp2hour, // Time stamp
+                (a,p) -> Double.valueOf((String)p[0]) + (double)a, // [Amount] + [out]
+                null,
                 quotes.getColumn("Amount")
         );
 
-        Column VWAP = schema.createColumn("VWAP", quotes);
+        Column VWAP = schema.createColumn("VWAP", hourlyQuotes);
         VWAP.calculate(
                 p -> (double)p[0] / (double)p[1],
                 priceVolumeSum, volumeSum
@@ -71,13 +100,21 @@ public class Example7 {
 
         Object value;
 
-        value = volumeSum.getValue(3); // value = 0,54029262 (3 elements including this one)
-        if(Math.abs((double)value - 0.54029262) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = hourlyQuotes.getLength();
+        if(((Number)value).longValue() != 288) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = priceVolumeSum.getValue(3); // value = 214,430001602
-        if(Math.abs((double)value - 214.430001602) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = timestamp2hour.getValue(20);
+        if(((Number)value).longValue() != 0) System.out.println(">>> UNEXPECTED RESULT.");
+        value = timestamp2hour.getValue(21);
+        if(((Number)value).longValue() != 1) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = VWAP.getValue(3); // value = 396,87753203440017374288769667074
-        if(Math.abs((double)value - 396.87753203440017374288769667074) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+        value = volumeSum.getValue(0);
+        if(Math.abs((double)value - 7.0947694) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+
+        value = priceVolumeSum.getValue(3);
+        if(Math.abs((double)value - 48473.09601907268) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
+
+        value = VWAP.getValue(5);
+        if(Math.abs((double)value - 400.61719044972426) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 }
