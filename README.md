@@ -8,7 +8,7 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/asavinov/bistro/blob/master/LICENSE)
 
-## About Bistro project?
+## About Bistro project
 
 The goal of this project is to implement a novel general-purpose data modeling and data processing technology which radically differs from most of the existing approaches. Shortly, it can be viewed as a major alternative to set-orientation like SQL or MapReduce. The project consists of the following sub-projects:
 
