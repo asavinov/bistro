@@ -2,12 +2,17 @@ package org.conceptoriented.bistro.server;
 
 import org.conceptoriented.bistro.core.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
+
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     Schema schema;
     public Schema getSchema() {
@@ -46,21 +51,22 @@ public class Server {
         queue = new ArrayBlockingQueue<>(1000);
         this.executor = new ThreadPoolExecutor(n, n, 0L, TimeUnit.MILLISECONDS, queue);
         //this.executor = Executors.newSingleThreadExecutor();
+
+        this.logger.info("Bistro Server started.");
     }
 
     public void stop() throws BistroError {
         if(this.executor != null) {
             try {
-                System.out.println("Attempt to shutdown executor");
                 this.executor.shutdown();
                 this.executor.awaitTermination(5, TimeUnit.SECONDS);
             }
             catch (InterruptedException e) {
-                System.err.println("tasks interrupted");
+                this.logger.error("Tasks interrupted during shutdown of Bistro Server executors.");
             }
             finally {
                 if (!executor.isTerminated()) {
-                    System.err.println("Cancel non-finished tasks");
+                    this.logger.error("Cancel non-finished tasks during stopping Bistro Server.");
                     this.executor.shutdownNow();
                 }
                 this.executor = null;
@@ -68,6 +74,8 @@ public class Server {
         }
 
         this.queue = null;
+
+        this.logger.info("Bistro Server stopped.");
     }
 
     public void submit(Task task) {
@@ -88,11 +96,13 @@ public class Server {
 
     @Override
     public String toString() {
-        return "Server";
+        return "Bistro Server";
     }
 
     public Server(Schema schema) {
         this.schema = schema;
+
+        this.logger.info("Bistro Server created.");
     }
 }
 

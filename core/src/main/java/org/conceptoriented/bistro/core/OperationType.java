@@ -1,12 +1,16 @@
 package org.conceptoriented.bistro.core;
 
+/**
+ * All operations implemented by the system.
+ * For each operation type, there is one class which implements it.
+ */
 public enum OperationType {
 
     //
     // Column operations
     //
 
-    // No definition column
+    // No operation column
     // These columns are not overwritten automatically during evaluation. They are set and reset only via API and then retain their output during inference.
     NOOP(0),
 

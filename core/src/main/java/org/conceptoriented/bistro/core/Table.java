@@ -83,9 +83,7 @@ public class Table implements Element {
     public boolean isDirty() {
 
         // Definition has changed
-        if(this.definition != null) {
-            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
-        }
+        if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
 
         // One of its dependencies has changes or is dirty
         for(Element dep : this.getDependencies()) {
@@ -210,12 +208,13 @@ public class Table implements Element {
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
 
-        if(this.getDefinitionType() == OperationType.NOOP || this.definition == null) {
+        if(this.getOperationType() == OperationType.NOOP) {
             return deps;
         }
 
-        deps = this.definition.getDependencies();
-        if(deps == null) deps = new ArrayList<>();
+        if(this.operation != null) {
+            deps = this.operation.getDependencies();
+        }
 
         // Add what evaluation of where condition requires (except for this table columns)
         if(this.whereLambda != null && this.whereParameterPaths != null) {
@@ -256,8 +255,8 @@ public class Table implements Element {
         List<BistroError> ret = new ArrayList<>();
         ret.addAll(this.definitionErrors);
 
-        if(this.definition != null) {
-            ret.addAll(this.definition.getErrors());
+        if(this.operation != null) {
+            ret.addAll(this.operation.getErrors());
         }
 
         return ret;
@@ -317,11 +316,11 @@ public class Table implements Element {
         }
 
         if(this.hasDefinitionErrorsDeep()) {
-            // TODO: Add error: cannot evaluate because of definition error in a dependency
+            // TODO: Add error: cannot evaluate because of operation error in a dependency
             return;
         }
 
-        if(this.definition == null) {
+        if(this.getOperationType() == OperationType.NOOP) {
             return;
         }
 
@@ -338,10 +337,10 @@ public class Table implements Element {
         // Really evaluate
         //
 
-        // If there exist project-columns then its is a project-table - skip full population
+        // If there exists (incoming) project-columns then its is a project-table - skip full population
         boolean isProj = false;
         for(Column col : this.schema.getColumns()) {
-            if(col.getDefinitionType() != OperationType.PROJECT) continue;
+            if(col.getOperationType() != OperationType.PROJECT) continue;
             isProj = true;
             break;
         }
@@ -349,40 +348,29 @@ public class Table implements Element {
             // Only reset to initial state (empty). Population will be performed by project columns
             this.reset();
         }
+        // Else populate it using its own operation
         else {
-            this.definition.evaluate();
-            this.executionErrors.addAll(this.definition.getErrors());
+            this.operation.evaluate();
+            this.executionErrors.addAll(this.operation.getErrors());
         }
 
     }
 
     //
-    // Table (definition) kind
+    // Table (operation) kind
     //
 
-    Operation definition; // It is instantiated by product-product methods (or definition errors are added)
+    Operation operation; // It is instantiated by product-product methods (or operation errors are added)
 
-    protected OperationType definitionType;
-    public OperationType getDefinitionType() {
-        return this.definitionType;
-    }
-    public void setDefinitionType(OperationType definitionType) {
-        this.definitionType = definitionType;
-        this.definitionErrors.clear();
-        this.executionErrors.clear();
-
-        if(this.definitionType == OperationType.NOOP) {
-            this.definition = null;
-
-            this.whereLambda = null;
-            this.whereParameterPaths.clear();
-        }
-
-        this.definitionChangedAt = System.nanoTime();
+    @Override
+    public OperationType getOperationType() {
+        if(this.operation == null && this.whereLambda == null) return OperationType.NOOP;
+        else if (this.operation == null && this.whereLambda != null) return OperationType.PRODUCT;
+        else return this.operation.getOperationType();
     }
 
     public boolean isDerived() {
-        if(this.definitionType == OperationType.NOOP) {
+        if(this.getOperationType() == OperationType.NOOP) {
             return false;
         }
         return true;
@@ -397,9 +385,19 @@ public class Table implements Element {
     // Noop table
     //
 
-    // Note that the table retains its current population (which will not be overwritten automatically later during population) and it has to be emptied manually if necessary
     public void noop() {
-        this.setDefinitionType(OperationType.NOOP);
+        this.definitionErrors.clear();
+        this.executionErrors.clear();
+
+        this.whereLambda = null;
+        this.whereParameterPaths.clear();
+
+        this.operation = null;
+        this.definitionChangedAt = System.nanoTime();
+
+        // TODO: Should we retains its current population (and if not, then has it to be overwritten automatically later during population or not) or it has to be emptied manually if necessary
+
+        // TODO: Error check: some other definitions might become invalid if they depend on this table
     }
 
     //
@@ -407,9 +405,9 @@ public class Table implements Element {
     //
 
     public void product() {
-        this.setDefinitionType(OperationType.PRODUCT); // Reset definition
+        this.noop();
 
-        this.definition = new OpProduct(this); // Create definition
+        this.operation = new OpProduct(this); // Create operation
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -424,7 +422,9 @@ public class Table implements Element {
     List<ColumnPath> whereParameterPaths = new ArrayList<>();
 
     public void where(EvalCalculate lambda, ColumnPath... paths) {
-        this.setDefinitionType(OperationType.PRODUCT);
+        this.noop();
+
+        this.operation = new OpProduct(this); // Create operation
 
         this.whereLambda = lambda;
         this.whereParameterPaths = Arrays.asList(paths);
@@ -436,7 +436,9 @@ public class Table implements Element {
     }
 
     public void where(EvalCalculate lambda, Column... columns) {
-        this.setDefinitionType(OperationType.PRODUCT);
+        this.noop(); // Reset operation
+
+        this.operation = new OpProduct(this); // Create operation
 
         this.whereLambda = lambda;
         for(int i=0; i<columns.length; i++) {
@@ -500,9 +502,9 @@ public class Table implements Element {
     //
 
     public void range(Object origin, Object period, Long length) {
-        this.setDefinitionType(OperationType.RANGE); // Reset definition
+        this.noop(); // Reset operation
 
-        this.definition = new OpRange(this, origin, period, length); // Create definition
+        this.operation = new OpRange(this, origin, period, length); // Create operation
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -554,8 +556,14 @@ public class Table implements Element {
 
         // If not found then add if requested
         if(index < 0 && append) {
-            index = this.add();
-            this.setValues(index, columns, values);
+
+            // Check if this record satisfies the where condition and we really can add it
+            boolean whereTrue = this.isWhereTrue(values, columns);
+            if(whereTrue) {
+                // Really add
+                index = this.add();
+                this.setValues(index, columns, values);
+            }
         }
 
         return index;
@@ -574,7 +582,7 @@ public class Table implements Element {
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getSchema().getColumns()) {
             if(col.getOutput() != this) continue;
-            if(col.getDefinitionType() != OperationType.PROJECT) continue; // Skip non-key columns
+            if(col.getOperationType() != OperationType.PROJECT) continue; // Skip non-key columns
             ret.add(col);
         }
         return ret;
@@ -586,7 +594,7 @@ public class Table implements Element {
 
     @Override
     public String toString() {
-        return "[" + name + "]";
+        return "[" + name + "] - " + this.getOperationType();
     }
 
     @Override
@@ -605,9 +613,6 @@ public class Table implements Element {
         this.schema = schema;
         this.id = UUID.randomUUID();
         this.name = name;
-
-        // Where its instances come from
-        this.definitionType = OperationType.NOOP;
 
         this.reset();
 

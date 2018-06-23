@@ -21,7 +21,7 @@ description 'General-purpose data analysis engine radically changing the way bat
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-core'
-version = '0.8.0'
+version = '0.9.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -34,6 +34,12 @@ repositories {
 
 dependencies {
     testCompile("junit:junit:4.12")
+
+    compile("org.slf4j:slf4j-api:1.7.25")
+    compile("org.slf4j:slf4j-simple:1.7.25")
+
+    //compile("ch.qos.logback:logback-core:1.2.3")
+    //compile("ch.qos.logback:logback-classic:1.2.3")
 }
 
 configurations.all {
@@ -54,7 +60,7 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'bistro-core'
-    version =  '0.8.0'
+    version =  '0.9.0-SNAPSHOT'
 }
 
 task sourceJar(type: Jar, dependsOn: classes) {
@@ -100,7 +106,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-core'
-            //version '0.8.0'
+            //version '0.9.0-SNAPSHOT'
 
             // Add POM fields required by Sonatype OSS
             customizePom(pom, rootProject)

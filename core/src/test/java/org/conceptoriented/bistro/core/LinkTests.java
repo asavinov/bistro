@@ -134,7 +134,7 @@ public class LinkTests {
         Table t = s.getTable("R"); // Group range table
         Table f = s.getTable("F"); // Fact table
 
-        // Modify definition to allow for more intervals
+        // Modify operation to allow for more intervals
         t.range(
                 10.0, // Origin: unchanged
                 20.0, // Step: unchanged
@@ -161,7 +161,7 @@ public class LinkTests {
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
         assertTrue(f_c_deps.contains(f.getColumn("A")));
-        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table definition
+        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table operation
 
         // Range table does not depend on the incoming project columns and their input table
         List<Element> t_deps = t.getDependencies();
@@ -266,7 +266,7 @@ public class LinkTests {
         Table t = s.getTable("R"); // Group range table
         Table f = s.getTable("F"); // Fact table
 
-        // Modify definition to allow for more intervals
+        // Modify operation to allow for more intervals
         t.range(
                 Instant.parse("2018-01-01T00:45:00.00Z"),
                 Duration.ofHours(2),
@@ -293,7 +293,7 @@ public class LinkTests {
         // Check correctness of dependencies
         List<Element> f_c_deps = f_b.getDependencies();
         assertTrue(f_c_deps.contains(f.getColumn("A")));
-        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table definition
+        assertTrue(f_c_deps.contains(t)); // Project column depends on the output (range) table operation
 
         // Range table does not depend on the incoming project columns and their input table
         List<Element> t_deps = t.getDependencies();

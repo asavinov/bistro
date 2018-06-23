@@ -31,7 +31,7 @@
 
 ## What is Bistro Streams: a stream analytics server
 
-Bistro Streams is a light-weight column-oriented *stream analytics server* which radically changes the way stream data is processed. It is a *general-purpose* server which is not limited by in-stream analytics but can also be applied to batch processing including such tasks as data integration, data migration, extract-transform-load (ETL) or big data processing. Yet, currently its implemented features are more focused on stream analytics with applications in IoT and edge computing.
+Bistro Streams is a light-weight column-oriented *stream analytics server* which radically changes the way stream data is processed. It is a *general-purpose* server which is not limited by in-stream analytics but can also be applied to batch processing including such tasks as (real-time) data integration, data migration, extract-transform-load (ETL), data monitoring, anomaly detection or big data processing. Yet, currently its implemented features are more focused on stream analytics with applications in IoT and edge computing.
 
 Bistro Streams defines its data processing logic using *column definitions* as opposed to the existing approaches which process data using set operations. In particular, it does not use such difficult to comprehend and execute operations like join and group-by. More about the column-oriented approach to data processing can be found here:
 * Root project with FAQ about Bistro: https://github.com/asavinov/bistro

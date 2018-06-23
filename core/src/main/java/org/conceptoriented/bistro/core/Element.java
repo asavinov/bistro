@@ -19,6 +19,8 @@ public interface Element {
     public List<BistroError> getDefinitionErrors();
     public boolean hasDefinitionErrorsDeep();
 
+    public OperationType getOperationType();
+
     // Having changed flag means that there have been SOME changes in this element
     // In the case of no additional information about the scope of changes (delta), we assume that changes can be anywhere in this element and normally this leads to full re-evaluation of dependents
     // Columns do not set this flag in data methods (by assuming that changes are only in newly added records). If necessary, the flag has to be set manually.

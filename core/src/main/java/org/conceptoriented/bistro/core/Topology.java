@@ -38,7 +38,7 @@ public class Topology {
                 if(done.contains(elem)) continue;
 
                 // Do not add to done so dependents are also excluded from the graph.
-                // It is important for avoiding cycles (same element in different layers) because elements in cycles are supposed to have definition error.
+                // It is important for avoiding cycles (same element in different layers) because elements in cycles are supposed to have operation error.
                 if(!elem.getDefinitionErrors().isEmpty()) continue;
 
                 boolean isNext = true;

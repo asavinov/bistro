@@ -166,7 +166,6 @@ public class Example4 {
                 timer.stop();
                 simulator.stop();
                 server.stop();
-                System.out.println("Server stopped.");
             }
             catch (Exception e) {
                 System.out.println("Errors in shutdown hook: " + e);

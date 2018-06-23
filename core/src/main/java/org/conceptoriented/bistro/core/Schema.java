@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Schema {
+
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final UUID id;
     public UUID getId() {
@@ -126,11 +131,11 @@ public class Schema {
     public void evaluate() {
         if(this.topology == null) {
             this.topology = new Topology(this);
-            topology.create();
+            this.topology.create();
             this.topologyChangedAt = System.nanoTime();
         }
 
-        // Find newest definition time
+        // Find newest operation time
         long newestColumnTime = this.columns.stream().mapToLong(x -> x.getDefinitionChangedAt()).max().getAsLong();
         long newestTableTime = this.tables.stream().mapToLong(x -> x.getDefinitionChangedAt()).max().getAsLong();
         long definitionChangedAt = Math.max(newestColumnTime, newestTableTime);
@@ -152,7 +157,7 @@ public class Schema {
                 if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
                     continue;
                 }
-                if(elem.hasDefinitionErrorsDeep()) { // Columns with definition errors cannot evaluated (including cycles)
+                if(elem.hasDefinitionErrorsDeep()) { // Columns with operation errors cannot evaluated (including cycles)
                     continue;
                 }
 
@@ -189,13 +194,15 @@ public class Schema {
 
     public Schema(String name) {
         this.id = UUID.randomUUID();
-        this.name = name;
 
+        this.name = name;
 
         this.topologyChangedAt = System.nanoTime();
 
         // Create primitive tables
         Table objectType = createTable("Object");
+
+        this.logger.info("Bistro Schema created.");
     }
 
 }

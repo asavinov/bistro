@@ -29,12 +29,16 @@ class OpRoll implements Operation {
     }
 
     // Constraint: only elements within the specified distance from the central (group) element will be accumulated
-    double sizePast; // Window size (past, smaller ids)
-    double sizeFuture; // Window size (future, larger ids)
-    // TODO: Questions: inclusive or exclusive? One can be inclusive and the other exclusive. See also remove() method for deleting old elements
+    double sizePast; // Window size (past, smaller ids, minimum) - exclusive
+    double sizeFuture; // Window size (future, larger ids, maximum) - inclusive
 
     EvalRoll lambda;
     ColumnPath[] paths;
+
+    @Override
+    public OperationType getOperationType() {
+        return OperationType.ROLL;
+    }
 
     List<BistroError> errors = new ArrayList<>();
     @Override

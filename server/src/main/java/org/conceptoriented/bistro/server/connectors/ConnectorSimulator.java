@@ -4,6 +4,9 @@ import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
 import org.conceptoriented.bistro.server.actions.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,6 +20,8 @@ import java.util.Map;
  * The data is appended to the table using the specified list of delays.
  */
 public class ConnectorSimulator extends ConnectorBase implements Runnable {
+
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     Table table;
     Duration delay;
@@ -100,6 +105,8 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
     public void start() throws BistroError {
         this.thread = new Thread(this, "Bistro ConnectorSimulator Thread");
         this.thread.start();
+
+        this.logger.info("Bistro ConnectorSimulator started.");
     }
 
     @Override
@@ -109,6 +116,8 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
             this.thread.interrupt();
             this.thread = null;
         }
+
+        this.logger.info("Bistro ConnectorSimulator stopped.");
     }
 
     public ConnectorSimulator(Server server, Table table, Duration delay, List<Object[]> data) {

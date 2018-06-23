@@ -17,6 +17,11 @@ class OpAccumulate implements Operation {
 
     ColumnPath[] paths;
 
+    @Override
+    public OperationType getOperationType() {
+        return OperationType.ACCUMULATE;
+    }
+
     List<BistroError> errors = new ArrayList<>();
     @Override
     public List<BistroError> getErrors() {

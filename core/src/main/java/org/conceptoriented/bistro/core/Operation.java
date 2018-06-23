@@ -4,9 +4,11 @@ import java.util.List;
 
 /**
  * Objects of this class know how to produce (derive, infer) new data from existing (input) data.
- * In particular, it knows what subsets to iterate through, how to read inputs and how to write output values.
+ * It knows what subsets to iterate through, how to (optimally) iterate, how to read inputs
+ * and how to write produced output values back to the data state.
  */
 public interface Operation {
+    public OperationType getOperationType();
     public List<BistroError> getErrors();
     public List<Element> getDependencies();
     public void evaluate();

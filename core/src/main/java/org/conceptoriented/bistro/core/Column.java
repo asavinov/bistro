@@ -70,7 +70,7 @@ public class Column implements Element {
     public boolean isDirty() {
 
         // Definition has changed
-        if(this.definition != null) {
+        if(this.operation != null) {
             if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
         }
 
@@ -152,13 +152,13 @@ public class Column implements Element {
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
 
-        if(this.getDefinitionType() == OperationType.NOOP) {
-            if(this.isKey() && this.getInput().getDefinitionType() == OperationType.PRODUCT) {
+        if(this.getOperationType() == OperationType.NOOP) {
+            if(this.isKey() && this.getInput().getOperationType() == OperationType.PRODUCT) {
                 deps.add(this.getInput()); // Key-columns depend on the product-table (if any) because they are filled by their population procedure
             }
         }
-        else if(this.definition != null) {
-            deps = this.definition.getDependencies();
+        else if(this.operation != null) {
+            deps = this.operation.getDependencies();
             if(deps == null) deps = new ArrayList<>();
         }
 
@@ -201,8 +201,8 @@ public class Column implements Element {
         List<BistroError> ret = new ArrayList<>();
         ret.addAll(this.definitionErrors);
 
-        if(this.definition != null) {
-            ret.addAll(this.definition.getErrors());
+        if(this.operation != null) {
+            ret.addAll(this.operation.getErrors());
         }
 
         return ret;
@@ -258,11 +258,11 @@ public class Column implements Element {
         }
 
         if(this.hasDefinitionErrorsDeep()) {
-            // TODO: Add error: cannot evaluate because of definition error in a dependency
+            // TODO: Add error: cannot evaluate because of operation error in a dependency
             return;
         }
 
-        if(this.definition == null) {
+        if(this.operation == null) {
             return;
         }
 
@@ -279,33 +279,24 @@ public class Column implements Element {
         // Really evaluate
         //
 
-        this.definition.evaluate();
-        this.executionErrors.addAll(this.definition.getErrors());
+        this.operation.evaluate();
+        this.executionErrors.addAll(this.operation.getErrors());
     }
 
     //
-    // Column (definition) kind
+    // Column (operation) kind
     //
 
-    Operation definition; // It is instantiated by calculate-link-accumulate methods (or definition errors are added)
+    Operation operation; // It is instantiated by calculate-link-accumulate methods (or operation errors are added)
 
-    protected OperationType definitionType;
-    public OperationType getDefinitionType() {
-        return this.definitionType;
-    }
-    public void setDefinitionType(OperationType definitionType) {
-        this.definitionType = definitionType;
-        this.definitionErrors.clear();
-        this.executionErrors.clear();
-
-        this.definition = null;
-        this.key = false;
-
-        this.definitionChangedAt = System.nanoTime();
+    @Override
+    public OperationType getOperationType() {
+        if(this.operation == null) return OperationType.NOOP;
+        else return this.operation.getOperationType();
     }
 
     public boolean isDerived() {
-        if(this.definitionType == OperationType.NOOP) {
+        if(this.getOperationType() == OperationType.NOOP) {
             return false;
         }
         return true;
@@ -321,17 +312,23 @@ public class Column implements Element {
     //
 
     // If true, its outputs will be set by the table population procedure during inference for each new instance
-    // It is actually part of the noop-column definition (only noop-columns can be keys)
+    // It is actually part of the noop-column operation (only noop-columns can be keys)
     private boolean key = false;
     public boolean isKey() {
         return this.key;
     }
 
     public void noop(boolean isKey) {
-        this.setDefinitionType(OperationType.NOOP);
-        this.key = true;
+
+        this.definitionErrors.clear();
+        this.executionErrors.clear();
+
+        this.operation = null;
+        this.definitionChangedAt = System.nanoTime();
+
+        this.key = isKey;
         // TODO: Error check: some other definitions might become invalid if they depend on the key column status
-        //   Either mark this column as having a definition error (so it will skipped), or mark other columns as having definition errors
+        //   Either mark this column as having a operation error (so it will skipped), or mark other columns as having operation errors
     }
 
     //
@@ -339,9 +336,9 @@ public class Column implements Element {
     //
 
     public void calculate(EvalCalculate lambda, ColumnPath... paths) {
-        this.setDefinitionType(OperationType.CALCULATE);
+        this.noop(false);
 
-        this.definition = new OpCalculate(this, lambda, paths);
+        this.operation = new OpCalculate(this, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -350,9 +347,9 @@ public class Column implements Element {
     }
 
     public void calculate(EvalCalculate lambda, Column... columns) {
-        this.setDefinitionType(OperationType.CALCULATE);
+        this.noop(false);
 
-        this.definition = new OpCalculate(this, lambda, columns);
+        this.operation = new OpCalculate(this, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -365,9 +362,9 @@ public class Column implements Element {
     //
 
     public void link(ColumnPath[] valuePaths, Column... keyColumns) {
-        this.setDefinitionType(OperationType.LINK);
+        this.noop(false);
 
-        this.definition = new OpLink(this, valuePaths, keyColumns);
+        this.operation = new OpLink(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -375,9 +372,9 @@ public class Column implements Element {
     }
 
     public void link(Column[] valueColumns, Column... keyColumns) {
-        this.setDefinitionType(OperationType.LINK);
+        this.noop(false);
 
-        this.definition = new OpLink(this, valueColumns, keyColumns);
+        this.operation = new OpLink(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -385,9 +382,9 @@ public class Column implements Element {
     }
 
     public void link(ColumnPath valuePath) { // Link to range table (using inequality as a condition)
-        this.setDefinitionType(OperationType.LINK);
+        this.noop(false);
 
-        this.definition = new OpLink(this, valuePath);
+        this.operation = new OpLink(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -399,9 +396,9 @@ public class Column implements Element {
     //
 
     public void project(ColumnPath[] valuePaths, Column... keyColumns) {
-        this.setDefinitionType(OperationType.PROJECT);
+        this.noop(false);
 
-        this.definition = new OpProject(this, valuePaths, keyColumns);
+        this.operation = new OpProject(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -409,9 +406,9 @@ public class Column implements Element {
     }
 
     public void project(Column[] valueColumns, Column... keyColumns) {
-        this.setDefinitionType(OperationType.PROJECT);
+        this.noop(false);
 
-        this.definition = new OpProject(this, valueColumns, keyColumns);
+        this.operation = new OpProject(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -423,9 +420,9 @@ public class Column implements Element {
     //
 
     public void project(ColumnPath valuePath) {
-        this.setDefinitionType(OperationType.PROJECT);
+        this.noop(false);
 
-        this.definition = new OpProject(this, valuePath);
+        this.operation = new OpProject(this, valuePath);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -433,9 +430,9 @@ public class Column implements Element {
     }
 
     public void project(Column valueColumn) {
-        this.setDefinitionType(OperationType.PROJECT);
+        this.noop(false);
 
-        this.definition = new OpProject(this, new ColumnPath(valueColumn));
+        this.operation = new OpProject(this, new ColumnPath(valueColumn));
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -447,9 +444,9 @@ public class Column implements Element {
     //
 
     public void accumulate(ColumnPath groupPath, EvalAccumulate adder, EvalAccumulate remover, ColumnPath... paths) {
-        this.setDefinitionType(OperationType.ACCUMULATE);
+        this.noop(false);
 
-        this.definition = new OpAccumulate(this, groupPath, adder, remover, paths);
+        this.operation = new OpAccumulate(this, groupPath, adder, remover, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -457,9 +454,9 @@ public class Column implements Element {
     }
 
     public void accumulate(Column groupColumn, EvalAccumulate adder, EvalAccumulate remover, Column... columns) {
-        this.setDefinitionType(OperationType.ACCUMULATE);
+        this.noop(false);
 
-        this.definition = new OpAccumulate(this, groupColumn, adder, remover, columns);
+        this.operation = new OpAccumulate(this, groupColumn, adder, remover, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -471,9 +468,9 @@ public class Column implements Element {
     //
 
     public void roll(int sizePast, int sizeFuture, EvalRoll lambda, ColumnPath... paths) {
-        this.setDefinitionType(OperationType.ROLL);
+        this.noop(false);
 
-        this.definition = new OpRoll(this, null, sizePast, sizeFuture, lambda, paths);
+        this.operation = new OpRoll(this, null, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -481,9 +478,9 @@ public class Column implements Element {
     }
 
     public void roll(int sizePast, int sizeFuture, EvalRoll lambda, Column... columns) {
-        this.setDefinitionType(OperationType.ROLL);
+        this.noop(false);
 
-        this.definition = new OpRoll(this, null, sizePast, sizeFuture, lambda, columns);
+        this.operation = new OpRoll(this, null, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -491,9 +488,9 @@ public class Column implements Element {
     }
 
     public void roll(ColumnPath distancePath, int sizePast, int sizeFuture, EvalRoll lambda, ColumnPath... paths) {
-        this.setDefinitionType(OperationType.ROLL);
+        this.noop(false);
 
-        this.definition = new OpRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
+        this.operation = new OpRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -501,9 +498,9 @@ public class Column implements Element {
     }
 
     public void roll(Column distanceColumn, int sizePast, int sizeFuture, EvalRoll lambda, Column... columns) {
-        this.setDefinitionType(OperationType.ROLL);
+        this.noop(false);
 
-        this.definition = new OpRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
+        this.operation = new OpRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
             this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
@@ -516,7 +513,7 @@ public class Column implements Element {
 
     @Override
     public String toString() {
-        return "[" + getName() + "]: " + input.getName() + " -> " + output.getName();
+        return "[" + getName() + "]: " + input.getName() + " -> " + this.getOperationType() + " -> " + output.getName();
     }
 
     @Override
@@ -537,9 +534,6 @@ public class Column implements Element {
         this.name = name;
         this.input = input;
         this.output = output;
-
-        // Where its output values come from
-        this.definitionType = OperationType.NOOP;
 
         // Where its output values are stored
         this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);

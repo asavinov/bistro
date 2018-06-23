@@ -14,6 +14,11 @@ class OpLink implements Operation {
 
     List<Column> keyColumns = new ArrayList<>();
 
+    @Override
+    public OperationType getOperationType() {
+        return OperationType.LINK;
+    }
+
     List<BistroError> errors = new ArrayList<>();
     @Override
     public List<BistroError> getErrors() {
@@ -28,7 +33,7 @@ class OpLink implements Operation {
 
         if(this.isProj) {
             // Project column will itself populate the output table and hence does not depend on it
-            // Project column however depends on the output table definition (e.g., where predicate could change) - therefore we add it as a workaround
+            // Project column however depends on the output table operation (e.g., where predicate could change) - therefore we add it as a workaround
             deps.add(this.column.getOutput());
         }
         else {
@@ -53,7 +58,7 @@ class OpLink implements Operation {
 
     @Override
     public void evaluate() {
-        if(this.column.getOutput().getDefinitionType() == OperationType.RANGE) {
+        if(this.column.getOutput().getOperationType() == OperationType.RANGE) {
             this.evalRange();
         }
         else if(this.valuePaths != null) {
@@ -66,7 +71,7 @@ class OpLink implements Operation {
         errors.clear(); // Clear state
 
         Table typeTable = this.column.getOutput();
-        OpRange rangeZableDef = (OpRange)typeTable.definition;
+        OpRange rangeZableDef = (OpRange)typeTable.operation;
 
         Table mainTable = this.column.getInput();
 
@@ -133,7 +138,7 @@ class OpLink implements Operation {
         }
 
         if(!fullScope) {
-            if(typeTable.getDefinitionChangedAt() > this.column.getChangedAt()) { // Type table definition has changed
+            if(typeTable.getDefinitionChangedAt() > this.column.getChangedAt()) { // Type table operation has changed
                 fullScope = true;
             }
         }
@@ -165,26 +170,14 @@ class OpLink implements Operation {
             // Evaluate ALL child rhs expressions by producing an array/record of their results
             for(int keyNo = 0; keyNo < this.keyColumns.size(); keyNo++) {
 
-                // Read one columnPath
+                // Read a value from the column path
                 Object result = this.valuePaths.get(keyNo).getValue(i);
 
                 rhsResults.set(keyNo, result);
             }
 
-            //
-            // Check if this record satisfies the where condition
-            //
-            boolean whereTrue = typeTable.isWhereTrue(rhsResults, keyColumns);
-            if(typeTable.getExecutionErrors().size() > 0) {
-                this.errors.addAll(typeTable.getExecutionErrors());
-                return;
-            }
-
-            if(!whereTrue) continue;
-
-            //
-            // Find element in the type table which corresponds to these expression results (can be null if not found and not added)
-            //
+            // Find element in the type table which corresponds to these expression results
+            // In it is not found and needs to be added and can be really added (satisfies where conditions) then it is appended as a new element
             Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
 
             // Update output

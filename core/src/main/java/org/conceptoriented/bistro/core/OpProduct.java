@@ -11,6 +11,11 @@ class OpProduct implements Operation {
     List<BistroError> errors = new ArrayList<>();
 
     @Override
+    public OperationType getOperationType() {
+        return OperationType.PRODUCT;
+    }
+
+    @Override
     public List<BistroError> getErrors() {
         return this.errors;
     }

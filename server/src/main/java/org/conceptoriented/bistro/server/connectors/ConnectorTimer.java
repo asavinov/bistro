@@ -3,6 +3,9 @@ package org.conceptoriented.bistro.server.connectors;
 import org.conceptoriented.bistro.core.*;
 import org.conceptoriented.bistro.server.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -13,6 +16,8 @@ import java.util.TimerTask;
  * This connector is normally used to execute some regular actions, for example, evaluating the data, deleting unnecessary (old) data or persisting the current state.
  */
 public class ConnectorTimer extends ConnectorBase {
+
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     Timer timer;
     long period;
@@ -45,11 +50,15 @@ public class ConnectorTimer extends ConnectorBase {
         );
 
         //this.timer.schedule(new TimerCallback(this), this.period, this.period); // ALternatively, create a dedicated class
+
+        this.logger.info("Bistro ConnectorTimer started.");
     }
 
     @Override
     public void stop() throws BistroError {
         this.timer.cancel();
+
+        this.logger.info("Bistro ConnectorTimer stopped.");
     }
 
     public ConnectorTimer(Server server, long period) {

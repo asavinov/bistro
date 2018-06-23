@@ -17,6 +17,11 @@ class OpCalculate implements Operation {
     List<BistroError> errors = new ArrayList<>();
 
     @Override
+    public OperationType getOperationType() {
+        return OperationType.CALCULATE;
+    }
+
+    @Override
     public List<BistroError> getErrors() {
         return this.errors;
     }

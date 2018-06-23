@@ -33,7 +33,6 @@ public class AccumulateTests {
 
         // Define accumulate column
         Column ta = schema.createColumn("A", t);
-        ta.setDefinitionType(OperationType.ACCUMULATE);
 
         t.add();
         t.add();

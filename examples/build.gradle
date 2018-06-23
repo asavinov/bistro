@@ -22,7 +22,7 @@ description 'Example of using Bistro Engine and Bistro Streams'
 
 group = 'org.conceptoriented'
 archivesBaseName = 'bistro-examples'
-version = '0.8.0'
+version = '0.9.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -36,14 +36,14 @@ repositories {
 dependencies {
     testCompile("junit:junit:4.12")
 
-    antlr("org.antlr:antlr4:4.7.1")
-    compile("org.antlr:antlr4-runtime:4.7.1")
-    compile("net.objecthunter:exp4j:0.4.8")
-    compile("com.udojava:EvalEx:2.0")
+    compile("org.conceptoriented:bistro-core:0.9.0-SNAPSHOT")
+    compile("org.conceptoriented:bistro-server:0.9.0-SNAPSHOT")
 
-    compile("org.conceptoriented:bistro-core:0.8.0")
-    compile("org.conceptoriented:bistro-server:0.8.0")
-    //compile("org.conceptoriented:bistro-formula:0.8.0")
+    //antlr("org.antlr:antlr4:4.7.1")
+    //compile("org.antlr:antlr4-runtime:4.7.1")
+    //compile("net.objecthunter:exp4j:0.4.8")
+    //compile("com.udojava:EvalEx:2.0")
+    //compile("org.conceptoriented:bistro-formula:0.9.0-SNAPSHOT")
 }
 
 configurations.all {
@@ -64,7 +64,7 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'bistro-examples'
-    version =  '0.8.0'
+    version =  '0.9.0-SNAPSHOT'
 
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
@@ -114,7 +114,7 @@ publishing {
             // Set the base name of the artifacts
             //groupId 'org.conceptoriented'
             artifactId 'bistro-examples'
-            //version '0.8.0'
+            //version '0.9.0-SNAPSHOT'
 
             // Add POM fields required by Sonatype OSS
             customizePom(pom, rootProject)
