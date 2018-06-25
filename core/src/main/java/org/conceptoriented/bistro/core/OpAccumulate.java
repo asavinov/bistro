@@ -22,9 +22,9 @@ class OpAccumulate implements Operation {
         return OperationType.ACCUMULATE;
     }
 
-    List<BistroError> errors = new ArrayList<>();
+    List<BistroException> errors = new ArrayList<>();
     @Override
-    public List<BistroError> getErrors() {
+    public List<BistroException> getErrors() {
         return this.errors;
     }
 
@@ -120,12 +120,12 @@ class OpAccumulate implements Operation {
             try {
                 result = lambda.evaluate(aggregate, paramValues);
             }
-            catch(BistroError e) {
+            catch(BistroException e) {
                 this.errors.add(e);
                 return;
             }
             catch(Exception e) {
-                this.errors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+                this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
                 return;
             }
 

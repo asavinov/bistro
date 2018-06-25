@@ -19,9 +19,9 @@ public class Task implements Runnable {
         for(Action a : this.actions) {
             try {
                 a.evaluate(this.context);
-            } catch (BistroError bistroError) {
+            } catch (BistroException bistroError) {
                 bistroError.printStackTrace();
-                this.context.server.addError(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Error executing action.", bistroError.message));
+                this.context.server.addError(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Error executing action.", bistroError.message));
                 return;
             }
         }

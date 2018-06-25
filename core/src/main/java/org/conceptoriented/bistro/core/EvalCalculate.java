@@ -5,5 +5,5 @@ package org.conceptoriented.bistro.core;
  */
 @FunctionalInterface
 public interface EvalCalculate {
-    public Object evaluate(Object[] params) throws BistroError;
+    public Object evaluate(Object[] params) throws BistroException;
 }

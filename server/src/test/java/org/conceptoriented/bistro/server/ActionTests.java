@@ -1,31 +1,20 @@
 package org.conceptoriented.bistro.server;
 
-import org.conceptoriented.bistro.core.BistroError;
 import org.conceptoriented.bistro.core.Column;
 import org.conceptoriented.bistro.core.Schema;
 import org.conceptoriented.bistro.core.Table;
 import org.conceptoriented.bistro.server.actions.ActionAdd;
-import org.conceptoriented.bistro.server.actions.ActionEval;
 import org.conceptoriented.bistro.server.actions.ActionRemove;
-import org.conceptoriented.bistro.server.connectors.ConnectorSimulator;
-import org.conceptoriented.bistro.server.connectors.ConnectorSimulatorFile;
-import org.conceptoriented.bistro.server.connectors.ConnectorTimer;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class ActionTests {
 
@@ -38,7 +27,7 @@ public class ActionTests {
     }
 
     @Test
-    public void actionAddRemoveTest() throws BistroError, InterruptedException {
+    public void actionAddRemoveTest() throws InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");

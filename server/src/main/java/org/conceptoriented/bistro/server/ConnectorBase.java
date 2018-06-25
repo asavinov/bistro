@@ -1,7 +1,5 @@
 package org.conceptoriented.bistro.server;
 
-import org.conceptoriented.bistro.core.BistroError;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,10 +30,10 @@ public class ConnectorBase implements Connector {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
     }
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
     }
 
     public ConnectorBase(Server server) {

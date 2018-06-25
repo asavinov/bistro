@@ -14,7 +14,7 @@ public class ActionAdd implements Action {
     protected Map<Column, Object> record;
 
     @Override
-    public void evaluate(Context ctx) throws BistroError {
+    public void evaluate(Context ctx) {
         long id = this.table.add();
 
         for (Map.Entry<Column, Object> entry : this.record.entrySet()) {

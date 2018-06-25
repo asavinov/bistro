@@ -13,11 +13,8 @@ public interface Element {
     public List<Element> getDependents();
     public boolean hasDependents(Element element);
 
-    public List<BistroError> getExecutionErrors();
-    public boolean hasExecutionErrorsDeep();
-
-    public List<BistroError> getDefinitionErrors();
-    public boolean hasDefinitionErrorsDeep();
+    public List<BistroException> getErrors();
+    public boolean hasErrorsDeep();
 
     public OperationType getOperationType();
 

@@ -24,7 +24,7 @@ public class Example1 {
 
     public static Schema schema;
 
-    public static void main(String[] args) throws IOException, BistroError {
+    public static void main(String[] args) {
 
         // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 10000;

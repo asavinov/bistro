@@ -29,7 +29,7 @@ public class Example2 {
 
     public static Schema schema;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         // Time for the server to run (after that it will stop so it has to be enough for all events).
         long serverProcessingTime = 20000;
@@ -124,16 +124,11 @@ public class Example2 {
         // Start the server
         //
 
-        try {
-            server.start();
-
-            ExUtils.waitToSecond();
-            simulator.start();
-            timer.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-        }
-        System.out.println("Server started.");
+        server.start();
+        ExUtils.waitToSecond();
+        simulator.start();
+        timer.start();
+        System.out.println("Server and connectors started.");
 
         try {
             Thread.sleep(serverProcessingTime);
@@ -142,15 +137,11 @@ public class Example2 {
         }
 
         // All connectors have to be stopped.
-        try {
-            timer.stop();
-            simulator.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-        }
+        timer.stop();
+        simulator.stop();
+        server.stop();
         System.out.println("");
-        System.out.println("Server stopped.");
+        System.out.println("Server and connectors stopped.");
 
 
         if(myAction.alerts.size() != 16) System.out.println(">>> UNEXPECTED RESULT.");
@@ -182,7 +173,7 @@ class MyAction2 implements Action {
     public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
-    public void evaluate(Context ctx) throws BistroError {
+    public void evaluate(Context ctx) {
 
         long end = this.table.getIdRange().end;
 

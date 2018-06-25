@@ -37,10 +37,6 @@ public class Topology {
 
                 if(done.contains(elem)) continue;
 
-                // Do not add to done so dependents are also excluded from the graph.
-                // It is important for avoiding cycles (same element in different layers) because elements in cycles are supposed to have operation error.
-                if(!elem.getDefinitionErrors().isEmpty()) continue;
-
                 boolean isNext = true;
                 for(Element dep : elem.getDependencies()) {
                     if(!done.contains(dep)) { isNext = false; break; }
@@ -73,8 +69,6 @@ public class Topology {
                 for(Element dep : elem.getDependencies()){
 
                     if(layer.contains(dep)) continue;
-
-                    if(!elem.getDefinitionErrors().isEmpty()) continue;
 
                     layer.add(dep);
                 }

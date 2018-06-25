@@ -29,7 +29,7 @@ public class Example4 {
 
     public static Schema schema;
 
-    public static void main(String[] args) throws IOException, BistroError {
+    public static void main(String[] args) {
 
         Schema schema = new Schema("Example 5");
 
@@ -239,14 +239,14 @@ class ClickSimulator extends ConnectorBase implements Runnable {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
         this.columns = this.table.getColumns();
         this.thread = new Thread(this, "ClickSimulator Thread");
         this.thread.start();
     }
 
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
         // Stop streaming
         if(this.thread != null) {
             this.thread.interrupt();

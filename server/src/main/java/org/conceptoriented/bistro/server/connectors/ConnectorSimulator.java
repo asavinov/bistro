@@ -102,7 +102,7 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
         this.thread = new Thread(this, "Bistro ConnectorSimulator Thread");
         this.thread.start();
 
@@ -110,7 +110,7 @@ public class ConnectorSimulator extends ConnectorBase implements Runnable {
     }
 
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
         // Stop streaming
         if(this.thread != null) {
             this.thread.interrupt();

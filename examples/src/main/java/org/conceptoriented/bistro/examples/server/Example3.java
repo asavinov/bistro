@@ -47,7 +47,7 @@ public class Example3 {
 
     public static Schema schema;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         // 46549 events for 1 month. We want to play them for 1 minute, which is approximately 775 events per second
         double acceleration = 31*24*60;
@@ -184,16 +184,11 @@ public class Example3 {
         // Start the server
         //
 
-        try {
-            server.start();
-
-            ExUtils.waitToSecond();
-            simulator.start();
-            timer.start();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-        }
-        System.out.println("Server started.");
+        server.start();
+        ExUtils.waitToSecond();
+        simulator.start();
+        timer.start();
+        System.out.println("Server and connectors started.");
 
         try {
             Thread.sleep(serverProcessingTime);
@@ -202,15 +197,11 @@ public class Example3 {
         }
 
         // All connectors have to be stopped.
-        try {
-            timer.stop();
-            simulator.stop();
-            server.stop();
-        } catch (BistroError bistroError) {
-            bistroError.printStackTrace();
-        }
+        timer.stop();
+        simulator.stop();
+        server.stop();
         System.out.println("");
-        System.out.println("Server stopped.");
+        System.out.println("Server and connectors stopped.");
 
         // Note that currently the simulated data feed is not synchronized and not deterministically
         // mapped (projected) to time intervals of fixed length. Therefore, we cannot produce
@@ -232,7 +223,7 @@ class MyAction3 implements Action {
     public List<List<Object>> alerts = new ArrayList<>();
 
     @Override
-    public void evaluate(Context ctx) throws BistroError {
+    public void evaluate(Context ctx) {
 
         // Note that we skip the last interval because it is not complete yet
         // We check conditions only on complete intervals

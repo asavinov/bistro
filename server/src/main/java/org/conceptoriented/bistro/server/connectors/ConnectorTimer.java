@@ -23,7 +23,7 @@ public class ConnectorTimer extends ConnectorBase {
     long period;
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
 
         // This task will be submitted to the server for each timer event
         List<Action> actions = new ArrayList<>();
@@ -55,7 +55,7 @@ public class ConnectorTimer extends ConnectorBase {
     }
 
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
         this.timer.cancel();
 
         this.logger.info("Bistro ConnectorTimer stopped.");

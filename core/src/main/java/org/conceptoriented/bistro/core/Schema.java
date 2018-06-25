@@ -153,11 +153,8 @@ public class Schema {
                 //
                 // Check possibility to evaluate
                 //
-                elem.getExecutionErrors().clear();
-                if(elem.hasExecutionErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
-                    continue;
-                }
-                if(elem.hasDefinitionErrorsDeep()) { // Columns with operation errors cannot evaluated (including cycles)
+                elem.getErrors().clear();
+                if(elem.hasErrorsDeep()) { // Columns with evaluation errors (might appear during previous pass) cannot be evaluated and remain dirty
                     continue;
                 }
 

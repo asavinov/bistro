@@ -68,7 +68,7 @@ public class Tests {
 
 
     @Test
-    public void timerTest() throws BistroError, InterruptedException {
+    public void timerTest() throws InterruptedException {
         // Create schema
         Schema schema = new Schema("My Schema");
         Table table = schema.createTable("T");
@@ -108,7 +108,7 @@ public class Tests {
     }
 
     @Test
-    public void simulatorTest() throws BistroError, InterruptedException {
+    public void simulatorTest() throws InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -169,7 +169,7 @@ public class Tests {
     }
 
     @Test
-    public void simulatorFileTest() throws BistroError, InterruptedException {
+    public void simulatorFileTest() throws InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -229,7 +229,7 @@ public class Tests {
     }
 
     @Test
-    public void customProducerTest() throws BistroError, InterruptedException {
+    public void customProducerTest() throws InterruptedException {
         // Create schema
         Schema s = new Schema("My Schema");
         Table t = s.createTable("T");
@@ -316,7 +316,7 @@ class ProducingConnector extends ConnectorBase implements Runnable {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
         // Start a thread which will emit one action with certain frequency
         new Thread(this).start();
     }

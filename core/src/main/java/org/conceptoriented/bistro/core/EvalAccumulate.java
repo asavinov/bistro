@@ -5,5 +5,5 @@ package org.conceptoriented.bistro.core;
  */
 @FunctionalInterface
 public interface EvalAccumulate {
-    public Object evaluate(Object aggregate, Object[] params) throws BistroError;
+    public Object evaluate(Object aggregate, Object[] params) throws BistroException;
 }

@@ -1,6 +1,5 @@
 package org.conceptoriented.bistro.examples.server;
 
-import org.conceptoriented.bistro.core.BistroError;
 import org.conceptoriented.bistro.core.Column;
 import org.conceptoriented.bistro.core.Schema;
 import org.conceptoriented.bistro.core.Table;
@@ -45,7 +44,7 @@ public class Example5 {
 
     public static Schema schema;
 
-    public static void main(String[] args) throws IOException, BistroError {
+    public static void main(String[] args) {
 
         Schema schema = new Schema("Example 5");
 
@@ -255,14 +254,14 @@ class SensorSimulator extends ConnectorBase implements Runnable {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
         this.columns = this.table.getColumns();
         this.thread = new Thread(this, "SensorSimulator Thread");
         this.thread.start();
     }
 
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
         // Stop streaming
         if(this.thread != null) {
             this.thread.interrupt();

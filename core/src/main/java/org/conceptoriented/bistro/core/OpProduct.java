@@ -8,7 +8,7 @@ class OpProduct implements Operation {
 
     Table table;
 
-    List<BistroError> errors = new ArrayList<>();
+    List<BistroException> errors = new ArrayList<>();
 
     @Override
     public OperationType getOperationType() {
@@ -16,7 +16,7 @@ class OpProduct implements Operation {
     }
 
     @Override
-    public List<BistroError> getErrors() {
+    public List<BistroException> getErrors() {
         return this.errors;
     }
 
@@ -84,8 +84,8 @@ class OpProduct implements Operation {
                 // Check if this record satisfies the where condition
                 //
                 boolean whereTrue = this.table.isWhereTrue(record, keyColumns);
-                if(this.table.getExecutionErrors().size() > 0) {
-                    this.errors.addAll(this.table.getExecutionErrors());
+                if(this.table.getErrors().size() > 0) {
+                    this.errors.addAll(this.table.getErrors());
                     return;
                 }
 

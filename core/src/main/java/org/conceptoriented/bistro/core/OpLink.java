@@ -19,9 +19,9 @@ class OpLink implements Operation {
         return OperationType.LINK;
     }
 
-    List<BistroError> errors = new ArrayList<>();
+    List<BistroException> errors = new ArrayList<>();
     @Override
-    public List<BistroError> getErrors() {
+    public List<BistroException> getErrors() {
         return this.errors;
     }
 

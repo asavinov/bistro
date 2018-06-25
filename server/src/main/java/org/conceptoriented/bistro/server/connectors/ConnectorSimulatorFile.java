@@ -29,19 +29,19 @@ public class ConnectorSimulatorFile extends ConnectorSimulator {
     }
 
     @Override
-    public void start() throws BistroError {
+    public void start() {
         // Load data from CSV file into the base class data structures
         try {
             this.load(this.path, this.timestampColumn);
         } catch (FileNotFoundException e) {
-            throw new BistroError(BistroErrorCode.CONNECTOR_ERROR, "Error loading file.", e.getMessage());
+            throw new BistroException(BistroErrorCode.CONNECTOR_ERROR, "Error loading file.", e.getMessage());
         }
 
         super.start();
     }
 
     @Override
-    public void stop() throws BistroError {
+    public void stop() {
         super.stop();
 
         this.data = null;

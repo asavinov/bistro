@@ -24,11 +24,11 @@ public class Server {
 
     ReentrantLock schemaLock = new ReentrantLock();
 
-    protected List<BistroError> errors = new ArrayList<>();
-    public List<BistroError> getErrors() {
+    protected List<BistroException> errors = new ArrayList<>();
+    public List<BistroException> getErrors() {
         return this.errors;
     }
-    public void addError(BistroError error) {
+    public void addError(BistroException error) {
         this.errors.add(error);
     }
 
@@ -39,7 +39,7 @@ public class Server {
     BlockingQueue<Runnable> queue;
     ExecutorService executor;
 
-    public void start() throws BistroError {
+    public void start() {
 
         this.errors.clear();
 
@@ -55,7 +55,7 @@ public class Server {
         this.logger.info("Bistro Server started.");
     }
 
-    public void stop() throws BistroError {
+    public void stop() {
         if(this.executor != null) {
             try {
                 this.executor.shutdown();

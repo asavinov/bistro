@@ -18,6 +18,6 @@ public interface Connector {
     public void addActions(List<Action> actions);
     public List<Action> getActions();
 
-    public void start() throws BistroError;
-    public void stop() throws BistroError;
+    public void start();
+    public void stop();
 }

@@ -249,44 +249,19 @@ public class Table implements Element {
         return false;
     }
 
-    private List<BistroError> definitionErrors = new ArrayList<>();
+    private List<BistroException> errors = new ArrayList<>();
     @Override
-    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        List<BistroError> ret = new ArrayList<>();
-        ret.addAll(this.definitionErrors);
-
-        if(this.operation != null) {
-            ret.addAll(this.operation.getErrors());
-        }
-
-        return ret;
+    public List<BistroException> getErrors() { // Empty list in the case of no errors
+        return this.errors;
     }
 
     @Override
-    public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this element
+    public boolean hasErrorsDeep() {
+        if(errors.size() > 0) return true; // Check this element
 
         // Otherwise check errors in dependencies (recursively)
         for(Element dep : this.getDependencies()) {
-            if(dep.hasDefinitionErrorsDeep()) return true;
-        }
-
-        return false;
-    }
-
-    private List<BistroError> executionErrors = new ArrayList<>();
-    @Override
-    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
-        return this.executionErrors;
-    }
-
-    @Override
-    public boolean hasExecutionErrorsDeep() {
-        if(executionErrors.size() > 0) return true; // Check this element
-
-        // Otherwise check errors in dependencies (recursively)
-        for(Element dep : this.getDependencies()) {
-            if(dep.hasExecutionErrorsDeep()) return true;
+            if(dep.hasErrorsDeep()) return true;
         }
 
         return false;
@@ -308,15 +283,10 @@ public class Table implements Element {
         // Check can evaluate
         //
 
-        this.executionErrors.clear();
+        this.errors.clear();
 
-        if(this.hasExecutionErrorsDeep()) {
+        if(this.hasErrorsDeep()) {
             // TODO: Add error: cannot evaluate because of execution error in a dependency
-            return;
-        }
-
-        if(this.hasDefinitionErrorsDeep()) {
-            // TODO: Add error: cannot evaluate because of operation error in a dependency
             return;
         }
 
@@ -351,7 +321,7 @@ public class Table implements Element {
         // Else populate it using its own operation
         else {
             this.operation.evaluate();
-            this.executionErrors.addAll(this.operation.getErrors());
+            this.errors.addAll(this.operation.getErrors());
         }
 
     }
@@ -386,8 +356,7 @@ public class Table implements Element {
     //
 
     public void noop() {
-        this.definitionErrors.clear();
-        this.executionErrors.clear();
+        this.errors.clear();
 
         this.whereLambda = null;
         this.whereParameterPaths.clear();
@@ -410,7 +379,8 @@ public class Table implements Element {
         this.operation = new OpProduct(this); // Create operation
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop();
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -430,8 +400,8 @@ public class Table implements Element {
         this.whereParameterPaths = Arrays.asList(paths);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-            return;
+            this.noop();
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -446,8 +416,8 @@ public class Table implements Element {
         }
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-            return;
+            this.noop();
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -485,12 +455,12 @@ public class Table implements Element {
         try {
             result = (boolean) this.whereLambda.evaluate(paramValues);
         }
-        catch(BistroError e) {
-            this.executionErrors.add(e);
+        catch(BistroException e) {
+            this.errors.add(e);
             return false;
         }
         catch(Exception e) {
-            this.executionErrors.add( new BistroError(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+            this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
             return false;
         }
 
@@ -507,7 +477,8 @@ public class Table implements Element {
         this.operation = new OpRange(this, origin, period, length); // Create operation
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop();
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 

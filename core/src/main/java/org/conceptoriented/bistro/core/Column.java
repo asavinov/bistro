@@ -195,44 +195,19 @@ public class Column implements Element {
         return false;
     }
 
-    private List<BistroError> definitionErrors = new ArrayList<>();
+    private List<BistroException> errors = new ArrayList<>();
     @Override
-    public List<BistroError> getDefinitionErrors() { // Empty list in the case of no errors
-        List<BistroError> ret = new ArrayList<>();
-        ret.addAll(this.definitionErrors);
-
-        if(this.operation != null) {
-            ret.addAll(this.operation.getErrors());
-        }
-
-        return ret;
+    public List<BistroException> getErrors() { // Empty list in the case of no errors
+        return this.errors;
     }
 
     @Override
-    public boolean hasDefinitionErrorsDeep() { // Recursively
-        if(this.definitionErrors.size() > 0) return true; // Check this element
+    public boolean hasErrorsDeep() {
+        if(errors.size() > 0) return true; // Check this element
 
         // Otherwise check errors in dependencies (recursively)
         for(Element dep : this.getDependencies()) {
-            if(dep.hasDefinitionErrorsDeep()) return true;
-        }
-
-        return false;
-    }
-
-    private List<BistroError> executionErrors = new ArrayList<>();
-    @Override
-    public List<BistroError> getExecutionErrors() { // Empty list in the case of no errors
-        return this.executionErrors;
-    }
-
-    @Override
-    public boolean hasExecutionErrorsDeep() {
-        if(executionErrors.size() > 0) return true; // Check this element
-
-        // Otherwise check errors in dependencies (recursively)
-        for(Element dep : this.getDependencies()) {
-            if(dep.hasExecutionErrorsDeep()) return true;
+            if(dep.hasErrorsDeep()) return true;
         }
 
         return false;
@@ -250,15 +225,10 @@ public class Column implements Element {
         // Check can evaluate
         //
 
-        this.executionErrors.clear();
+        this.errors.clear();
 
-        if(this.hasExecutionErrorsDeep()) {
+        if(this.hasErrorsDeep()) {
             // TODO: Add error: cannot evaluate because of execution error in a dependency
-            return;
-        }
-
-        if(this.hasDefinitionErrorsDeep()) {
-            // TODO: Add error: cannot evaluate because of operation error in a dependency
             return;
         }
 
@@ -280,7 +250,7 @@ public class Column implements Element {
         //
 
         this.operation.evaluate();
-        this.executionErrors.addAll(this.operation.getErrors());
+        this.errors.addAll(this.operation.getErrors());
     }
 
     //
@@ -319,9 +289,7 @@ public class Column implements Element {
     }
 
     public void noop(boolean isKey) {
-
-        this.definitionErrors.clear();
-        this.executionErrors.clear();
+        this.errors.clear();
 
         this.operation = null;
         this.definitionChangedAt = System.nanoTime();
@@ -341,8 +309,8 @@ public class Column implements Element {
         this.operation = new OpCalculate(this, lambda, paths);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-            return;
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -352,8 +320,8 @@ public class Column implements Element {
         this.operation = new OpCalculate(this, lambda, columns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
-            return;
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -367,7 +335,8 @@ public class Column implements Element {
         this.operation = new OpLink(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -377,7 +346,8 @@ public class Column implements Element {
         this.operation = new OpLink(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -387,7 +357,8 @@ public class Column implements Element {
         this.operation = new OpLink(this, valuePath);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -401,7 +372,8 @@ public class Column implements Element {
         this.operation = new OpProject(this, valuePaths, keyColumns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -411,7 +383,8 @@ public class Column implements Element {
         this.operation = new OpProject(this, valueColumns, keyColumns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -425,7 +398,8 @@ public class Column implements Element {
         this.operation = new OpProject(this, valuePath);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -435,7 +409,8 @@ public class Column implements Element {
         this.operation = new OpProject(this, new ColumnPath(valueColumn));
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -449,7 +424,8 @@ public class Column implements Element {
         this.operation = new OpAccumulate(this, groupPath, adder, remover, paths);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -459,7 +435,8 @@ public class Column implements Element {
         this.operation = new OpAccumulate(this, groupColumn, adder, remover, columns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -473,7 +450,8 @@ public class Column implements Element {
         this.operation = new OpRoll(this, null, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -483,7 +461,8 @@ public class Column implements Element {
         this.operation = new OpRoll(this, null, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -493,7 +472,8 @@ public class Column implements Element {
         this.operation = new OpRoll(this, distancePath, sizePast, sizeFuture, lambda, paths);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
@@ -503,7 +483,8 @@ public class Column implements Element {
         this.operation = new OpRoll(this, distanceColumn, sizePast, sizeFuture, lambda, columns);
 
         if(this.hasDependency(this)) {
-            this.definitionErrors.add(new BistroError(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly."));
+            this.noop(false);
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
     }
 
