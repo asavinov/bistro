@@ -48,7 +48,7 @@ public class AccumulateTests {
 
         Column t2id = schema.createColumn("Id", t2);
 
-        // Define group link column: G: T2 -> T (where T2:Id = T:Id)
+        // Define group link column: G: T2 -> T (product T2:Id = T:Id)
         Column t2g = schema.createColumn("G", t2, t);
         t2g.link(
                 new Column[] { t2id }, // Values: Id from T2

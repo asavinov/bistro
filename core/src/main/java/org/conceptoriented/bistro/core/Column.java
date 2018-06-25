@@ -257,7 +257,7 @@ public class Column implements Element {
     // Column (operation) kind
     //
 
-    Operation operation; // It is instantiated by calculate-link-accumulate methods (or operation errors are added)
+    Operation operation;
 
     @Override
     public OperationType getOperationType() {

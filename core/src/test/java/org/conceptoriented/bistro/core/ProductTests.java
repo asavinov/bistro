@@ -52,7 +52,7 @@ public class ProductTests {
         Column c31 = t3.getColumn("C31");
         Column c32 = t3.getColumn("C32");
 
-        t3.where(
+        t3.product(
                 p -> p[0] == "v1" || p[1] == "v1",
                 new ColumnPath(c31, s.getTable("T1").getColumn("C11")), new ColumnPath(c32, s.getTable("T2").getColumn("C21"))
         );
@@ -126,7 +126,7 @@ public class ProductTests {
 
         Table t4 = s.getTable("T4");
 
-        // Projection without where
+        // Projection without product
         s.evaluate();
 
         // Result size
@@ -141,7 +141,7 @@ public class ProductTests {
         assertEquals(2L, c32.getValue(2));
 
         // Add filter
-        t3.where(
+        t3.product(
                 p -> p[0] == "v1" || p[1] == "v1",
                 new ColumnPath(c31, s.getTable("T1").getColumn("C11")),
                 new ColumnPath(c32, s.getTable("T2").getColumn("C21"))

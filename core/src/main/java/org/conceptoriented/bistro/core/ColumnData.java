@@ -28,7 +28,7 @@ public class ColumnData {
     public Object getDefaultValue() { return this.defaultValue; }
     public void setDefaultValue(Object value) { this.defaultValue = value; }
 
-    private int startIdOffset = 0; // Cell of the array where the start id is stored
+    private int startIdOffset = 0; // Cell of the array product the start id is stored
 
     private int id2offset(long id) {
         return this.startIdOffset + ((int) (id - this.idRange.start));

@@ -33,7 +33,7 @@ class OpLink implements Operation {
 
         if(this.isProj) {
             // Project column will itself populate the output table and hence does not depend on it
-            // Project column however depends on the output table operation (e.g., where predicate could change) - therefore we add it as a workaround
+            // Project column however depends on the output table operation (e.g., product predicate could change) - therefore we add it as a workaround
             deps.add(this.column.getOutput());
         }
         else {
@@ -177,7 +177,7 @@ class OpLink implements Operation {
             }
 
             // Find element in the type table which corresponds to these expression results
-            // In it is not found and needs to be added and can be really added (satisfies where conditions) then it is appended as a new element
+            // In it is not found and needs to be added and can be really added (satisfies product conditions) then it is appended as a new element
             Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
 
             // Update output

@@ -216,11 +216,11 @@ public class Table implements Element {
             deps = this.operation.getDependencies();
         }
 
-        // Add what evaluation of where condition requires (except for this table columns)
+        // Add what evaluation of product condition requires (except for this table columns)
         if(this.whereLambda != null && this.whereParameterPaths != null) {
             List<Column> cols = ColumnPath.getColumns(this.whereParameterPaths);
             for(Column col : cols) {
-                if(col.getInput() == this) continue; // This table columns will be evaluated during population and hence during where evaluation, so we exclude them
+                if(col.getInput() == this) continue; // This table columns will be evaluated during population and hence during product evaluation, so we exclude them
                 deps.add(col);
             }
         }
@@ -330,7 +330,7 @@ public class Table implements Element {
     // Table (operation) kind
     //
 
-    Operation operation; // It is instantiated by product-product methods (or operation errors are added)
+    Operation operation;
 
     @Override
     public OperationType getOperationType() {
@@ -359,7 +359,7 @@ public class Table implements Element {
         this.errors.clear();
 
         this.whereLambda = null;
-        this.whereParameterPaths.clear();
+        this.whereParameterPaths = new ArrayList<>();
 
         this.operation = null;
         this.definitionChangedAt = System.nanoTime();
@@ -373,10 +373,16 @@ public class Table implements Element {
     // Product table
     //
 
+    EvalCalculate whereLambda;
+    List<ColumnPath> whereParameterPaths = new ArrayList<>();
+
     public void product() {
         this.noop();
 
         this.operation = new OpProduct(this); // Create operation
+
+        this.whereLambda = null;
+        this.whereParameterPaths = null;
 
         if(this.hasDependency(this)) {
             this.noop();
@@ -384,14 +390,7 @@ public class Table implements Element {
         }
     }
 
-    //
-    // Where
-    //
-
-    EvalCalculate whereLambda;
-    List<ColumnPath> whereParameterPaths = new ArrayList<>();
-
-    public void where(EvalCalculate lambda, ColumnPath... paths) {
+    public void product(EvalCalculate lambda, ColumnPath... paths) {
         this.noop();
 
         this.operation = new OpProduct(this); // Create operation
@@ -405,7 +404,7 @@ public class Table implements Element {
         }
     }
 
-    public void where(EvalCalculate lambda, Column... columns) {
+    public void product(EvalCalculate lambda, Column... columns) {
         this.noop(); // Reset operation
 
         this.operation = new OpProduct(this); // Create operation
@@ -421,7 +420,7 @@ public class Table implements Element {
         }
     }
 
-    // Check whether the specified record (which is not in the table yet) satisfies the where condition
+    // Check whether the specified record (which is not in the table yet) satisfies the product condition
     // The record provides output values for the specified columns of this table
     protected boolean isWhereTrue(List<Object> record, List<Column> columns) {
         if(this.whereLambda == null || this.whereParameterPaths == null) return true;
@@ -528,7 +527,7 @@ public class Table implements Element {
         // If not found then add if requested
         if(index < 0 && append) {
 
-            // Check if this record satisfies the where condition and we really can add it
+            // Check if this record satisfies the product condition and we really can add it
             boolean whereTrue = this.isWhereTrue(values, columns);
             if(whereTrue) {
                 // Really add

@@ -65,7 +65,7 @@ class OpAccumulate implements Operation {
         //
         // Update group elements by data from added/removed facts
         //
-        Table mainTable = this.groupPath.getInput(); // Loop/scan table - fact table (not the table where this column is defined)
+        Table mainTable = this.groupPath.getInput(); // Loop/scan table - fact table (not the table product this column is defined)
 
         if(this.remover != null) {
             Range removedRange = mainTable.getRemovedRange();

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A sequence of keyColumns where each next column starts from the data type (table) of the previous column.
+ * A sequence of keyColumns product each next column starts from the data type (table) of the previous column.
  */
 public class ColumnPath {
 

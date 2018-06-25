@@ -66,7 +66,7 @@ class OpProduct implements Operation {
         long[] lengths = new long[colCount]; // Length of each dimension (how many ids in each dimension)
         for (int i = 0; i < colCount; i++) lengths[i] = keyColumns.get(i).getOutput().getLength();
 
-        int top = -1; // The current level/top where we change the offset. Depth of recursion.
+        int top = -1; // The current level/top product we change the offset. Depth of recursion.
         do ++top; while (top < colCount && lengths[top] == 0);
 
         // Alternative recursive iteration: http://stackoverflow.com/questions/13655299/c-sharp-most-efficient-way-to-iterate-through-multiple-arrays-list
@@ -81,7 +81,7 @@ class OpProduct implements Operation {
                 }
 
                 //
-                // Check if this record satisfies the where condition
+                // Check if this record satisfies the product condition
                 //
                 boolean whereTrue = this.table.isWhereTrue(record, keyColumns);
                 if(this.table.getErrors().size() > 0) {
