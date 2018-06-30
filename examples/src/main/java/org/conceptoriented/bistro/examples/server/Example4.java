@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.*;
 
 /**
+ * Article: https://dzone.com/articles/understanding-bistro-streams-counting-clicks-by-re
  *
  * <pre>
  * CLICKS - USERS - REGIONS
@@ -31,7 +32,7 @@ public class Example4 {
 
     public static void main(String[] args) {
 
-        Schema schema = new Schema("Example 5");
+        Schema schema = new Schema("Example 4");
 
         //
         // Create regions table
