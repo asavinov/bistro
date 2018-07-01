@@ -14,16 +14,9 @@ class OpCalculate implements Operation {
     EvalCalculate lambda;
     List<ColumnPath> parameterPaths = new ArrayList<>();
 
-    List<BistroException> errors = new ArrayList<>();
-
     @Override
     public OperationType getOperationType() {
         return OperationType.CALCULATE;
-    }
-
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
     }
 
     @Override
@@ -43,8 +36,6 @@ class OpCalculate implements Operation {
             this.column.setValue(); // Reset
             return;
         }
-
-        errors.clear(); // Clear state
 
         Table mainTable = this.column.getInput(); // Loop/scan table
 
@@ -93,17 +84,17 @@ class OpCalculate implements Operation {
                 paramValues[p] = paramPaths.get(p).getValue(i);
             }
 
-            // Evaluate
+            //
+            // Call user-defined function
+            //
             try {
                 result = this.lambda.evaluate(paramValues);
             }
             catch(BistroException e) {
-                this.errors.add(e);
-                return;
+                throw(e);
             }
             catch(Exception e) {
-                this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
-                return;
+                throw( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error executing user-defined function.") );
             }
 
             // Update output

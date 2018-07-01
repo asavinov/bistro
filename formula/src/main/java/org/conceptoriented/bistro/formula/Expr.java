@@ -20,7 +20,7 @@ public class Expr implements Expression {
     @Override public List<ColumnPath> getParameterPaths() { return parameterPaths; }
 
     EvalCalculate evaluateLambda;
-    @Override public Object evaluate(Object[] params) throws BistroError {
+    @Override public Object evaluate(Object[] params) throws BistroException {
         return evaluateLambda.evaluate(params);
     }
 

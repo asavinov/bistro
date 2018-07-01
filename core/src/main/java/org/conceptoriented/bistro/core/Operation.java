@@ -9,7 +9,6 @@ import java.util.List;
  */
 public interface Operation {
     public OperationType getOperationType();
-    public List<BistroException> getErrors();
     public List<Element> getDependencies();
     public void evaluate();
 }

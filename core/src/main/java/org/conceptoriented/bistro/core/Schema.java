@@ -5,12 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Schema {
-
-    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final UUID id;
     public UUID getId() {
@@ -198,8 +193,6 @@ public class Schema {
 
         // Create primitive tables
         Table objectType = createTable("Object");
-
-        this.logger.info("Bistro Schema created.");
     }
 
 }

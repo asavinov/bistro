@@ -22,12 +22,6 @@ class OpAccumulate implements Operation {
         return OperationType.ACCUMULATE;
     }
 
-    List<BistroException> errors = new ArrayList<>();
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
-    }
-
     @Override
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
@@ -54,8 +48,6 @@ class OpAccumulate implements Operation {
 
     @Override
     public void evaluate() {
-
-        errors.clear(); // Clear state
 
         //
         // Initialize new elements
@@ -116,17 +108,17 @@ class OpAccumulate implements Operation {
             // Read current out value
             aggregate = this.column.getValue(g);
 
-            // Evaluate
+            //
+            // Call user-defined function
+            //
             try {
                 result = lambda.evaluate(aggregate, paramValues);
             }
             catch(BistroException e) {
-                this.errors.add(e);
-                return;
+                throw(e);
             }
             catch(Exception e) {
-                this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
-                return;
+                throw(new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error executing user-defined function."));
             }
 
             // Update output

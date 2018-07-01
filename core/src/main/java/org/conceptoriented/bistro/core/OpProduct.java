@@ -8,16 +8,9 @@ class OpProduct implements Operation {
 
     Table table;
 
-    List<BistroException> errors = new ArrayList<>();
-
     @Override
     public OperationType getOperationType() {
         return OperationType.PRODUCT;
-    }
-
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
     }
 
     @Override
@@ -83,10 +76,15 @@ class OpProduct implements Operation {
                 //
                 // Check if this record satisfies the product condition
                 //
-                boolean whereTrue = this.table.isWhereTrue(record, keyColumns);
-                if(this.table.getErrors().size() > 0) {
-                    this.errors.addAll(this.table.getErrors());
-                    return;
+                boolean whereTrue = true;
+                try {
+                    whereTrue = this.table.isWhereTrue(record, keyColumns);
+                }
+                catch(BistroException e) {
+                    throw(e);
+                }
+                catch(Exception e) {
+                    throw( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error checking where condition.") );
                 }
 
                 //

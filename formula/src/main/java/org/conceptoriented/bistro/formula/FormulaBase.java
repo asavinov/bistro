@@ -51,7 +51,7 @@ public class FormulaBase implements Formula {
 	public EvalCalculate getEvaluator() { return this; }
 
 	@Override
-	public Object evaluate(Object[] params) throws BistroError {
+	public Object evaluate(Object[] params) throws BistroException {
 
 		// Set all parameters in native expressions
 		for(int p=0; p<this.exprDependencies.size(); p++) {
@@ -69,7 +69,7 @@ public class FormulaBase implements Formula {
 						value = Double.valueOf((String) value);
 					}
 					catch(NumberFormatException e){
-						throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error converting string to double. " + e.getMessage(), e);
+						throw new BistroException(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error converting string to double. " + e.getMessage(), e);
 					}
 			}
 
@@ -87,7 +87,7 @@ public class FormulaBase implements Formula {
 				}
 			}
 			catch(Exception e) {
-				throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
+				throw new BistroException(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 		}
 
@@ -107,7 +107,7 @@ public class FormulaBase implements Formula {
 				}
 			}
 			catch(Exception e) {
-				throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
+				throw new BistroException(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error setting parameter values. " + e.getMessage(), e);
 			}
 		}
 
@@ -125,7 +125,7 @@ public class FormulaBase implements Formula {
 			}
 		}
 		catch(Exception e) {
-			throw new BistroError(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error evaluating expression. " + e.getMessage(), e);
+			throw new BistroException(BistroErrorCode.EVALUATION_ERROR, "Evaluate error", "Error evaluating expression. " + e.getMessage(), e);
 		}
 
 		return ret;
@@ -135,7 +135,7 @@ public class FormulaBase implements Formula {
 	// Translate
 	//
 
-	private BistroError translateError;
+	private BistroException translateError;
 	public void translate(String formula) {
 		this.translateError = null;
 		this.formula = formula;
@@ -146,7 +146,7 @@ public class FormulaBase implements Formula {
 		}
 		catch(Exception err) {
 			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Parse error", "Cannot parse the formula.", err);
+				this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Parse error", "Cannot parse the formula.", err);
 			}
 			return;
 		}
@@ -157,7 +157,7 @@ public class FormulaBase implements Formula {
 		}
 		catch(Exception err) {
 			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve symbols.", err);
+				this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve symbols.", err);
 			}
 			return;
 		}
@@ -168,7 +168,7 @@ public class FormulaBase implements Formula {
 		}
 		catch(Exception err) {
 			if(this.translateError == null) { // Status has not been set by the failed method
-				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Build error", "Cannot build evaluator object.", err);
+				this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Build error", "Cannot build evaluator object.", err);
 			}
 			return;
 		}
@@ -291,7 +291,7 @@ public class FormulaBase implements Formula {
 		for(ExprDependency dep : this.exprDependencies) {
 			dep.columns = dep.qname.resolveColumns(this.table);
 			if(dep.columns == null || dep.columns.size() < dep.qname.names.size()) {
-				this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve column path " + dep.pathName);
+				this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Bind error", "Cannot resolve column path " + dep.pathName);
 				return;
 			}
 		}
@@ -348,7 +348,7 @@ public class FormulaBase implements Formula {
 			exp = builder.build(); // Here we get parsing exceptions which might need be caught and processed
 		}
 		catch(Exception e) {
-			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expr error.", e.getMessage(), e);
+			this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Expr error.", e.getMessage(), e);
 			return null;
 		}
 
@@ -358,7 +358,7 @@ public class FormulaBase implements Formula {
 		exp.setVariables(vals); // Validation requires variables to be set
 		net.objecthunter.exp4j.ValidationResult res = exp.validate(); // Boolean argument can be used to ignore unknown variables
 		if(!res.isValid()) {
-			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expr error.", res.getErrors() != null && res.getErrors().size() > 0 ? res.getErrors().get(0) : "");
+			this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Expr error.", res.getErrors() != null && res.getErrors().size() > 0 ? res.getErrors().get(0) : "");
 			return null;
 		}
 
@@ -396,7 +396,7 @@ public class FormulaBase implements Formula {
 			exp = new com.udojava.evalex.Expression(transformedFormula);
 		}
 		catch(Exception e) {
-			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expr error.", e.getMessage(), e);
+			this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Expr error.", e.getMessage(), e);
 			return null;
 		}
 
@@ -408,7 +408,7 @@ public class FormulaBase implements Formula {
 			exp.toRPN(); // Generates prefixed representation but can be used to check errors (variables have to be set in order to correctly determine parse errors)
 		}
 		catch(com.udojava.evalex.Expression.ExpressionException ee) {
-			this.translateError = new BistroError(BistroErrorCode.DEFINITION_ERROR, "Expr error.", ee.getMessage(), ee);
+			this.translateError = new BistroException(BistroErrorCode.DEFINITION_ERROR, "Expr error.", ee.getMessage(), ee);
 			return null;
 		}
 
@@ -437,7 +437,7 @@ public class FormulaBase implements Formula {
 		return buf.toString();
 	}
 
-	public static FormulaBase createInstance(String clazz, String formula, Table table) throws BistroError {
+	public static FormulaBase createInstance(String clazz, String formula, Table table) throws BistroException {
 
 		FormulaBase ude = null;
 

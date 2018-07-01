@@ -11,7 +11,7 @@ class OpProject extends OpLink {
 
         // Output table must be product-table (cannot be noop-table). It could be a warning because it does not prevent from evaluating/populating.
         if(this.column.getOutput().getOperationType() == OperationType.NOOP) {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Column operation error.", "Proj-column must have product-table as type. Change to either link-column or product-table."));
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Column operation error.", "Proj-column must have product-table as type. Change to either link-column or product-table.") );
         }
 
         // Check that all specified keys are really key columns of the type table
@@ -23,7 +23,7 @@ class OpProject extends OpLink {
             }
         }
         if(nonKeyColumn != null) {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Column operation error.", "All keys in the project-column operation must be key columns of the output product-table."));
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Column operation error.", "All keys in the project-column operation must be key columns of the output product-table.")) ;
         }
     }
 

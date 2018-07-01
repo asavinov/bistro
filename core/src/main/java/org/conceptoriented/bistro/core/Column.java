@@ -248,9 +248,16 @@ public class Column implements Element {
         //
         // Really evaluate
         //
+        try {
+            this.operation.evaluate();
+        }
+        catch(BistroException e) {
+            this.errors.add(e);
+        }
+        catch(Exception e) {
+            this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error evaluating column.") );
+        }
 
-        this.operation.evaluate();
-        this.errors.addAll(this.operation.getErrors());
     }
 
     //

@@ -19,12 +19,6 @@ class OpLink implements Operation {
         return OperationType.LINK;
     }
 
-    List<BistroException> errors = new ArrayList<>();
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
-    }
-
     @Override
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
@@ -68,8 +62,6 @@ class OpLink implements Operation {
 
     protected void evalRange() {
 
-        errors.clear(); // Clear state
-
         Table typeTable = this.column.getOutput();
         OpRange rangeZableDef = (OpRange)typeTable.operation;
 
@@ -101,8 +93,6 @@ class OpLink implements Operation {
     }
 
     protected void evalPaths() {
-
-        errors.clear(); // Clear state
 
         Table typeTable = this.column.getOutput();
 

@@ -165,33 +165,23 @@ class OpRange implements Operation {
 
         // At least one numeric column is needed to store the range values
         if(this.rangeColumn == null) {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A range table must have at least one noop column for storing range values."));
-            return;
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A range table must have at least one noop column for storing range values.")) ;
         }
 
         // This columns must be primitive one
         if(!this.rangeColumn.getOutput().isPrimitive()) {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A column for storing range values must be a primitive column."));
-            return;
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A column for storing range values must be a primitive column.")) ;
         }
 
         // This column has to be noop
         if(this.rangeColumn.getOperationType() != OperationType.NOOP) {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A column for storing range values must be NOOP column."));
-            return;
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "A column for storing range values must be NOOP column.")) ;
         }
     }
-
-    List<BistroException> errors = new ArrayList<>();
 
     @Override
     public OperationType getOperationType() {
         return OperationType.RANGE;
-    }
-
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
     }
 
     @Override
@@ -383,7 +373,7 @@ class OpRange implements Operation {
             this.period = (Period)period;
         }
         else {
-            this.errors.add(new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "Cannot determine range data type. Use appropriate data types in parameters."));
+            throw( new BistroException(BistroErrorCode.DEFINITION_ERROR, "Table operation error.", "Cannot determine range data type. Use appropriate data types in parameters.")) ;
         }
 
         this.start = (Long) 0L;

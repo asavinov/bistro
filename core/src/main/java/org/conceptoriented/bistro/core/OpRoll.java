@@ -40,12 +40,6 @@ class OpRoll implements Operation {
         return OperationType.ROLL;
     }
 
-    List<BistroException> errors = new ArrayList<>();
-    @Override
-    public List<BistroException> getErrors() {
-        return this.errors;
-    }
-
     @Override
     public List<Element> getDependencies() {
         List<Element> deps = new ArrayList<>();
@@ -71,8 +65,6 @@ class OpRoll implements Operation {
 
     @Override
     public void evaluate() {
-
-        errors.clear(); // Clear state
 
         this.column.setValue(); // Initialize to default value
 
@@ -133,12 +125,10 @@ class OpRoll implements Operation {
                     aggregate = this.lambda.evaluate(aggregate, distance, paramValues);
                 }
                 catch(BistroException e) {
-                    this.errors.add(e);
-                    return;
+                    throw(e);
                 }
                 catch(Exception e) {
-                    this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
-                    return;
+                    throw( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error executing user-defined function.") );
                 }
 
             }

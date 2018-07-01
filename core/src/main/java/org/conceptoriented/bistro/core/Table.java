@@ -304,26 +304,36 @@ public class Table implements Element {
         }
 
         //
-        // Really evaluate
+        // Check if it is a project table (if it is populated by some incoming project column)
         //
 
-        // If there exists (incoming) project-columns then its is a project-table - skip full population
         boolean isProj = false;
         for(Column col : this.schema.getColumns()) {
             if(col.getOperationType() != OperationType.PROJECT) continue;
             isProj = true;
             break;
         }
+
         if(isProj) {
             // Only reset to initial state (empty). Population will be performed by project columns
             this.reset();
-        }
-        // Else populate it using its own operation
-        else {
-            this.operation.evaluate();
-            this.errors.addAll(this.operation.getErrors());
+            return;
         }
 
+
+        //
+        // Populate using own definition
+        //
+
+        try {
+            this.operation.evaluate();
+        }
+        catch(BistroException e) {
+            this.errors.add(e);
+        }
+        catch(Exception e) {
+            this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "Error populating table.") );
+        }
     }
 
     //
