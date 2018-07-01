@@ -1,4 +1,0 @@
-About Bistro Engine
-===================
-
-TBD

@@ -1,20 +1,4 @@
-```
-  ____  _     _
- | __ )(_)___| |_ _ __ ___  ___________________________
- |  _ \| / __| __| '__/ _ \ 
- | |_) | \__ \ |_| | | (_) |  C O L U M N S  F I R S T
- |____/|_|___/\__|_|  \___/ ___________________________
-```
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/asavinov/bistro/blob/master/LICENSE)
-
-## About Bistro project
-
-The goal of this project is to implement a novel general-purpose data modeling and data processing technology which radically differs from most of the existing approaches. Shortly, it can be viewed as a major alternative to set-orientation like SQL or MapReduce. The project consists of the following sub-projects:
-
-* [**Bistro Engine**](./core) - a general-purpose data processing library - it is an alternative to MapReduce
-* [**Bistro Streams**](./server) - a library for stream analytics (for IoT and edge computing) - it is an alternative to Kafka Streams
-* [**Examples**](./examples) - examples of how to use Bistro Engine and Bistro Streams
+# FAQ
 
 ## What is Bistro intended for?
 
@@ -36,12 +20,16 @@ We can distinguish between two big approaches:
 
 The following table shows some typical technologies and how they are positioned along the two dimensions:
 
-|  | Column-oriented | Set-oriented
---- | --- | ---
-Data models (logical) | Functional, ODM, Concept-oriented model | Relational model
-Data stores (physical) | Vertica, SAP HANA etc. | Classical DBMSs
-Data processing (batch) | **Bistro Engine** | MapReduce, SQL
-Stream processing | **Bistro Streams** | Kafka Streams, Spark Streaming, Flink etc.
+```
+=======================|========================================|======================================
+                       | Column-oriented                        | Set-oriented
+=======================|========================================|======================================
+Data models (logical)  | Functional, ODM, Concept-oriented model| Relational model
+Data stores (physical) | Vertica, SAP HANA etc.                 | Classical DBMSs
+Data processing (batch)| **Bistro Engine**                      | MapReduce, SQL
+Stream processing      | **Bistro Streams**                     | Kafka Streams, Spark Streaming, Flink
+=======================|========================================|======================================
+```
 
 Notes:
 * This table is a very rough representation because many technologies have significant overlaps 
@@ -81,7 +69,3 @@ The same formal basis has been also used in these projects:
 ## Who has been developing Bistro?
 
 Bistro and the underlying concept-oriented model of data has been developed by Alexandr Savinov: http://conceptoriented.org
-
-# License
-
-See LICENSE file in the project directory: https://github.com/asavinov/bistro/blob/master/LICENSE

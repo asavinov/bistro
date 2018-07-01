@@ -29,5 +29,5 @@ Bistro is bla-bla
    :maxdepth: 2
    :caption: Bistro Streams
 
-   bistro_engine/about
+   bistro_streams/about
    bistro_streams/getting_started
