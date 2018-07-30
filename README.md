@@ -8,7 +8,7 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/conceptoriented/Lobby)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/asavinov/bistro/blob/master/LICENSE)
 
-## About Bistro project
+# About Bistro project
 
 The goal of this project is to implement a novel general-purpose data modeling and data processing technology which radically differs from most of the existing approaches. Shortly, it can be viewed as a major alternative to set-orientation like SQL or MapReduce. The project consists of the following sub-projects:
 
@@ -16,19 +16,82 @@ The goal of this project is to implement a novel general-purpose data modeling a
 * [**Bistro Streams**](./server) - a library for stream analytics (for IoT and edge computing) - it is an alternative to Kafka Streams
 * [**Examples**](./examples) - examples of how to use Bistro Engine and Bistro Streams
 
+# Contents
+
+* [Why column-orientation?](#Why-column-orientation)
+  * [Calculating data](#Calculating-data)
+  * [Linking data](#Linking-data)
+  * [Aggregating data](#Aggregating-data)
+
+* [Frequently asked questions](#Frequently-asked-questions)
+  * [What is Bistro intended for?](#What-is-Bistro-intended-for)
+  * [What kind of data can Bistro process?](#What-kind-of-data-can-Bistro-process)
+  * [How does Bistro process data?](#How-does-Bistro-process-data)
+  * [How is Bistro positioned among other data processing technologies?](#How-is-Bistro-positioned-among-other-data-processing-technologies)
+  * [Does Bistro have a query language?](#Does-Bistro-have-a-query-language)
+  * [What are unique features of Bistro?](#What-are-unique-features-of-Bistro)
+  * [What are benefits of column-orientation?](#What-are-benefits-of-column-orientation)
+  * [What is the formal basis of Bistro?](#What-is-the-formal-basis-of-Bistro)
+  * [What are other implementation of this approach to data processing?](#What-are-other-implementation-of-this-approach-to-data-processing)
+  * [Who has been developing Bistro?](#Who-has-been-developing-Bistro)
+
+# Why column-orientation?
+
+## Calculating data
+
+One of the simplest data processing operations is computing a new attribute using already existing attributes. For example, if we have a table with order `Items` each characterized by `Quantity` and `Price` then we could compute a new attribute `Amount` as their arithmetic product:
+
+```sql
+SELECT *, Quantity * Price AS Amount FROM Items
+```
+
+Although this wide spread data processing pattern may seem very natural and almost trivial it does have one significant flaw: the task was to compute a new attribute while the query produces a new table. Although the result table does contain the required attribute, the question is why not to do exactly what has been requested? Why is it necessary to produce a new table if we actually want to compute only an attribute?
+
+The same problem exists in MapReduce. If our goal is to compute a new field then we apply the map operation which will emit completely new objects each having this new field. Here again the same problem: our intention was not to create a new collection with new objects – we wanted to add a new computed property to already existing objects. However, the data processing framework forces us to describe this task in terms of operations with collections.
+
+The reason is that we do not have any choice because these data models provides only sets and set operations and the only way to add a new attribute is to produce a set with this attribute. An alternative approach consists in using column operations for data transformations and then we could do exactly what is requested: adding (calculated) attributes to existing tables.
+
+## Linking data
+
+Another wide spread task consists in computing links or references between different tables: given an element of one table, how can I access attributes in a related table? For example, assume that `Price` is not an attribute of the `Items` table as in the above example but rather it is an attribute of a `Products` table. Here we have two tables, `Items` and ``Products, with attributes `ProductId` and `Id`, respectively, which relate their records. If now we want to compute the amount for each item then the price needs to be retrieved from the related Products table. The standard solution is to copy the necessary attributes into a *new* table by using the relational (left) join operation for matching the records:
+
+```sql
+SELECT item.*, product.Price FROM Items item
+JOIN Products product ON item.ProductId = product.Id
+```
+
+This new result table can be now used for computing amount precisely as we described above because it has the necessary attributes copied from the two source tables. Let us again compare this solution with the problem formulation. Do we really need a new table? No. Our goal is to have a possibility to access attributes from the second Products table (while computing a new attribute in the first table). Hence it again can be viewed as a workaround where a new set is produced just because there is no possibility not to produce it.
+
+A principled solution to this problem is a data model which uses column operations for data processing so that a link can be defined as a new column in an existing table.
+
+## Aggregating data
+
+Assume that for each product, we want to compute the total number of items ordered. This task can be solved using group-by operation:
+
+```sql
+SELECT ProductId, COUNT(ProductID) AS TotalQuantity
+FROM Items GROUP BY ProductId
+```
+
+Here we again get a *new* table although the goal is to produce a new (aggregated) attribute in an existing table. Indeed, what we want is to add a new attribute to the `Products` table which would be equivalent to all other attributes (like product `Price` used in the previous example). This `TotalQuantity` could be then used to compute some other properties of products. Of course, this also can be done using set operations in SQL but then we will have to again use join to combine the group-by result with the original `Products` table followed by producing yet another table with new calculated attributes. It is apparently not how it should work in an ideal data model because the task formulation does not mention and does not actually require any new tables - only attributes. Thus we see that the use of set operations in this and above cases is a problem-solution mismatch.
+
+A solution to this problem again is provided by a column oriented data model where aggregated columns can be defined without adding new tables.
+
+# Frequently asked questions
+
 ## What is Bistro intended for?
 
 The main general goal of Bistro is *data processing*. By data processing we mean deriving new data from existing data.
 
-## What kind of data Bistro can process?
+## What kind of data can Bistro process?
 
 Bistro assumes that data is represented as a number of *sets* of elements. Each *element* is a tuple which is a combination of column values. A *value* can be any (Java) object.
 
-## How Bistro processes data?
+## How does Bistro process data?
 
 Tables and columns in Bistro may have *definitions*. A table definition specifies how elements of this set are produced (inferred or derived) from elements of other sets. A column definition specifies how the values of this column are computed from the values of other columns (in this or other tables). Table and column definitions in Bistro are analogous to queries in conventional DBMS.
 
-## How Bistro is positioned among other data processing technologies?
+## How is Bistro positioned among other data processing technologies?
 
 We can distinguish between two big approaches:
 * set-oriented or set theoretic approaches rely on sets for representing data and set operations for manipulating data (inference)
@@ -47,7 +110,7 @@ Notes:
 * This table is a very rough representation because many technologies have significant overlaps 
 * Bistro and the concept-oriented model do support set operations. They simply shift priority from set operations to column operations
 
-## Does Bistro have queries?
+## Does Bistro have a query language?
 
 No, Bistro does not provide any query language. Instead, Bistro uses definitions which are *evaluated* against the data as opposed to executing a query. These definitions (in contrast to queries) are integral part of the database. A table or column with a definition is treated equally to all other tables and columns. It is similar to defining views in a database which can be updated if some data changes.
 
@@ -57,7 +120,7 @@ Bistro has a sub-project called bistro-formula which is intended for supporting 
 
 Bistro relies on column definitions and much less uses table definitions. In contrast, most traditional approaches (including SQL and, map-reduce) use set operations for data transformations.
 
-## What are the benefits of column-orientation (at logical level)?
+## What are benefits of column-orientation?
 
 Describing data processing logic using column operations can be much more natural and simpler in many scenarios (for the same reason why spreadsheets are). In particular, Bistro does not use joins and group-by which are known to be difficult to understand and use but which are very hard to get rid of. Logical column operations are also naturally mapped to physical column operations.
 
