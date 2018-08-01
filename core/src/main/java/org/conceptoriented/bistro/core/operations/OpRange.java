@@ -1,11 +1,13 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class OpRange implements Operation {
+import org.conceptoriented.bistro.core.*;
+
+public class OpRange implements Operation {
 
     Table table; // Used only if materialized as a table
 

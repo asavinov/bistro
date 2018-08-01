@@ -1,6 +1,8 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
-class OpProject extends OpLink {
+import org.conceptoriented.bistro.core.*;
+
+public class OpProject extends OpLink {
 
     @Override
     public OperationType getOperationType() {

@@ -1,10 +1,12 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class OpProduct implements Operation {
+import org.conceptoriented.bistro.core.*;
+
+public class OpProduct implements Operation {
 
     Table table;
 

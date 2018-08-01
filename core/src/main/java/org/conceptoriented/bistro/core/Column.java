@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.conceptoriented.bistro.core.operations.*;
+
 public class Column implements Element {
 
     private Schema schema;
@@ -131,8 +133,12 @@ public class Column implements Element {
         this.isChanged = true;
     }
 
-    protected long findSorted(Object value) { return this.data.findSorted(value); }
-    protected long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
+    //
+    // Search etc.
+    //
+
+    public long findSorted(Object value) { return this.data.findSorted(value); }
+    public long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
 
     //
     // Element interface
@@ -265,6 +271,10 @@ public class Column implements Element {
     //
 
     Operation operation;
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
 
     @Override
     public OperationType getOperationType() {

@@ -1,10 +1,12 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class OpLink implements Operation {
+import org.conceptoriented.bistro.core.*;
+
+public class OpLink implements Operation {
 
     Column column;
 
@@ -63,7 +65,7 @@ class OpLink implements Operation {
     protected void evalRange() {
 
         Table typeTable = this.column.getOutput();
-        OpRange rangeZableDef = (OpRange)typeTable.operation;
+        OpRange rangeZableDef = (OpRange)typeTable.getOperation();
 
         Table mainTable = this.column.getInput();
 

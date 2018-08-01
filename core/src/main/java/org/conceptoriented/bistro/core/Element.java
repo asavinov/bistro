@@ -16,6 +16,7 @@ public interface Element {
     public List<BistroException> getErrors();
     public boolean hasErrorsDeep();
 
+    public Operation getOperation();
     public OperationType getOperationType();
 
     // Having changed flag means that there have been SOME changes in this element

@@ -1,13 +1,15 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.conceptoriented.bistro.core.*;
+
 /**
  * The logic of evaluation of calculate columns.
  */
-class OpCalculate implements Operation {
+public class OpCalculate implements Operation {
 
     Column column;
 

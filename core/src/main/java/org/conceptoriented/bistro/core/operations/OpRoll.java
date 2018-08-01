@@ -1,12 +1,14 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.conceptoriented.bistro.core.*;
+
 /**
  * The logic of evaluation of rolling columns.
  */
-class OpRoll implements Operation {
+public class OpRoll implements Operation {
 
     Column column;
 

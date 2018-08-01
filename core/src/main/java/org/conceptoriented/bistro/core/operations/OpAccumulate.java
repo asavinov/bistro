@@ -1,12 +1,14 @@
-package org.conceptoriented.bistro.core;
+package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.conceptoriented.bistro.core.*;
+
 /**
  * The logic of evaluation of accumulate columns.
  */
-class OpAccumulate implements Operation {
+public class OpAccumulate implements Operation {
 
     Column column;
 

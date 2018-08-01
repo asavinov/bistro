@@ -1,5 +1,8 @@
 package org.conceptoriented.bistro.core;
 
+import org.conceptoriented.bistro.core.operations.OpProduct;
+import org.conceptoriented.bistro.core.operations.OpRange;
+
 import java.util.*;
 
 public class Table implements Element {
@@ -341,6 +344,10 @@ public class Table implements Element {
     //
 
     Operation operation;
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
 
     @Override
     public OperationType getOperationType() {
@@ -432,7 +439,7 @@ public class Table implements Element {
 
     // Check whether the specified record (which is not in the table yet) satisfies the product condition
     // The record provides output values for the specified columns of this table
-    protected boolean isWhereTrue(List<Object> record, List<Column> columns) {
+    public boolean isWhereTrue(List<Object> record, List<Column> columns) {
         if(this.whereLambda == null || this.whereParameterPaths == null) return true;
 
         List<ColumnPath> paramPaths =  this.whereParameterPaths;
@@ -549,7 +556,7 @@ public class Table implements Element {
         return index;
     }
 
-    protected List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
+    public List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getColumns()) {
             if(!col.isKey()) continue; // Skip non-key columns
@@ -558,7 +565,7 @@ public class Table implements Element {
         return ret;
     }
 
-    protected List<Column> getProjColumns() { // Get all incoming project-columns
+    public List<Column> getProjColumns() { // Get all incoming project-columns
         List<Column> ret = new ArrayList<>();
         for(Column col : this.getSchema().getColumns()) {
             if(col.getOutput() != this) continue;
