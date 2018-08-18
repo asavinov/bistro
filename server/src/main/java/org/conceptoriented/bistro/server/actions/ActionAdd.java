@@ -18,7 +18,7 @@ public class ActionAdd implements Action {
         long id = this.table.add();
 
         for (Map.Entry<Column, Object> entry : this.record.entrySet()) {
-            entry.getKey().setValue(id, entry.getValue());
+            entry.getKey().getData().setValue(id, entry.getValue());
         }
     }
 

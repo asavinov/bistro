@@ -61,7 +61,7 @@ public class Example2 {
 
         // Moving average of the weighted price
         Column avg10 = schema.createColumn("Avg10", quotes);
-        avg10.setDefaultValue(0.0); // It will be used as an initial value
+        avg10.getData().setDefaultValue(0.0); // It will be used as an initial value
         avg10.roll(
                 10, 0, // Window definition: 10 previous records
                 (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 10.0), // This accumulate function will be called for each element in the window
@@ -70,7 +70,7 @@ public class Example2 {
 
         // Moving average of the weighted price
         Column avg50 = schema.createColumn("Avg50", quotes);
-        avg50.setDefaultValue(0.0); // It will be used as an initial value
+        avg50.getData().setDefaultValue(0.0); // It will be used as an initial value
         avg50.roll(
                 50, 0, // Window definition: 50 previous records
                 (a,d,p) -> (double)a + (Double.valueOf((String)p[0]) / 50.0), // This accumulate function will be called for each element in the window
@@ -179,8 +179,8 @@ class MyAction2 implements Action {
 
         for( ; lastEnd < end; lastEnd++) {
 
-            double fast = (double)this.column1.getValue(lastEnd);
-            double slow = (double)this.column2.getValue(lastEnd);
+            double fast = (double)this.column1.getData().getValue(lastEnd);
+            double slow = (double)this.column2.getData().getValue(lastEnd);
 
             if(fast < (1.0 - deviation)*slow) {
                 System.out.print(">>> " + lastEnd + ": " + fast + " - " + slow + "\n");

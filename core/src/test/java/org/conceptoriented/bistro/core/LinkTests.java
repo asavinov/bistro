@@ -43,8 +43,8 @@ public class LinkTests {
         assertTrue(t2c_deps.contains(t2.getColumn("A")));
         assertTrue(t2c_deps.contains(t2.getColumn("B")));
 
-        assertEquals(0L, t2c.getValue(0)); // Existing
-        assertEquals(-1L, t2c.getValue(1)); // Not found
+        assertEquals(0L, t2c.getData().getValue(0)); // Existing
+        assertEquals(-1L, t2c.getData().getValue(1)); // Not found
     }
 
     Schema createSchema() {
@@ -63,8 +63,8 @@ public class LinkTests {
 
         // Add one record to link to
         t1.add();
-        t1a.setValue(0, 5.0);
-        t1b.setValue(0, "bbb");
+        t1a.getData().setValue(0, 5.0);
+        t1b.getData().setValue(0, "bbb");
 
         //
         // Table 2 (referencing table to link records from)
@@ -78,11 +78,11 @@ public class LinkTests {
 
         // Add two records to link from
         t2.add();
-        t2a.setValue(0, 5.0);
-        t2b.setValue(0, "bbb");
+        t2a.getData().setValue(0, 5.0);
+        t2b.getData().setValue(0, "bbb");
         t2.add();
-        t2a.setValue(1, 10.0);
-        t2b.setValue(1, "ccc");
+        t2a.getData().setValue(1, 10.0);
+        t2b.getData().setValue(1, "ccc");
 
         return s;
     }
@@ -118,14 +118,14 @@ public class LinkTests {
         assertEquals(5L, t.getLength());
 
         // Check links
-        assertEquals(-1L, f_b.getValue(0));
-        assertEquals(0L, f_b.getValue(1));
-        assertEquals(0L, f_b.getValue(2));
-        assertEquals(1L, f_b.getValue(3));
-        assertEquals(4L, f_b.getValue(4));
-        assertEquals(4L, f_b.getValue(5));
-        assertEquals(-1L, f_b.getValue(6));
-        assertEquals(-1L, f_b.getValue(7));
+        assertEquals(-1L, f_b.getData().getValue(0));
+        assertEquals(0L, f_b.getData().getValue(1));
+        assertEquals(0L, f_b.getData().getValue(2));
+        assertEquals(1L, f_b.getData().getValue(3));
+        assertEquals(4L, f_b.getData().getValue(4));
+        assertEquals(4L, f_b.getData().getValue(5));
+        assertEquals(-1L, f_b.getData().getValue(6));
+        assertEquals(-1L, f_b.getData().getValue(7));
     }
 
     @Test
@@ -143,10 +143,10 @@ public class LinkTests {
 
         // Add more facts to be mapped to non-existing intervals
         Column f_a = f.getColumn("A");
-        f_a.setValue(6, 110.0); // 1 interval has to be added [110,130)
-        f_a.setValue(7, 160.0); // 2 intervals have to be added [130,150) and [150,170)
+        f_a.getData().setValue(6, 110.0); // 1 interval has to be added [110,130)
+        f_a.getData().setValue(7, 160.0); // 2 intervals have to be added [130,150) and [150,170)
         f.add();
-        f_a.setValue(8, 260.0); // No intervals have to be added because exceeds the maximum count
+        f_a.getData().setValue(8, 260.0); // No intervals have to be added because exceeds the maximum count
 
         //
         // Define project column
@@ -172,9 +172,9 @@ public class LinkTests {
         assertEquals(8L, t.getLength());
 
         // Check links
-        assertEquals(5L, f_b.getValue(6));
-        assertEquals(7L, f_b.getValue(7));
-        assertEquals(-1L, f_b.getValue(8));
+        assertEquals(5L, f_b.getData().getValue(6));
+        assertEquals(7L, f_b.getData().getValue(7));
+        assertEquals(-1L, f_b.getData().getValue(8));
     }
 
     Schema createSchemaNumber() { // For links to range table
@@ -205,14 +205,14 @@ public class LinkTests {
 
         // Add two records to link from
         f.add(8);
-        f_a.setValue(0, -200.0); // Too low
-        f_a.setValue(1, 10.0); // Exactly very first point
-        f_a.setValue(2, 20.0); // Between first and second points
-        f_a.setValue(3, 30.0); // Second point
-        f_a.setValue(4, 90.0); // Last point
-        f_a.setValue(5, 100.0); // After last point but within the last interval
-        f_a.setValue(6, 200.0); // Too high
-        f_a.setValue(7, Double.NaN); // NaN
+        f_a.getData().setValue(0, -200.0); // Too low
+        f_a.getData().setValue(1, 10.0); // Exactly very first point
+        f_a.getData().setValue(2, 20.0); // Between first and second points
+        f_a.getData().setValue(3, 30.0); // Second point
+        f_a.getData().setValue(4, 90.0); // Last point
+        f_a.getData().setValue(5, 100.0); // After last point but within the last interval
+        f_a.getData().setValue(6, 200.0); // Too high
+        f_a.getData().setValue(7, Double.NaN); // NaN
 
         Column f_b = s.createColumn("B", f, t);
 
@@ -250,14 +250,14 @@ public class LinkTests {
         assertEquals(2L, t.getLength());
 
         // Check links
-        assertEquals(-1L, f_b.getValue(0));
-        assertEquals(0L, f_b.getValue(1));
-        assertEquals(0L, f_b.getValue(2));
-        assertEquals(1L, f_b.getValue(3));
-        assertEquals(1L, f_b.getValue(4));
-        assertEquals(1L, f_b.getValue(5));
-        assertEquals(-1L, f_b.getValue(6));
-        assertEquals(-1L, f_b.getValue(7));
+        assertEquals(-1L, f_b.getData().getValue(0));
+        assertEquals(0L, f_b.getData().getValue(1));
+        assertEquals(0L, f_b.getData().getValue(2));
+        assertEquals(1L, f_b.getData().getValue(3));
+        assertEquals(1L, f_b.getData().getValue(4));
+        assertEquals(1L, f_b.getData().getValue(5));
+        assertEquals(-1L, f_b.getData().getValue(6));
+        assertEquals(-1L, f_b.getData().getValue(7));
     }
 
     @Test
@@ -275,10 +275,10 @@ public class LinkTests {
 
         // Add more facts to be mapped to non-existing intervals
         Column f_a = f.getColumn("A");
-        f_a.setValue(6, Instant.parse("2018-01-01T04:45:00.00Z")); // 1 interval has to be added
-        f_a.setValue(7, Instant.parse("2018-01-01T09:45:00.00Z")); // 2 intervals have to be added
+        f_a.getData().setValue(6, Instant.parse("2018-01-01T04:45:00.00Z")); // 1 interval has to be added
+        f_a.getData().setValue(7, Instant.parse("2018-01-01T09:45:00.00Z")); // 2 intervals have to be added
         f.add();
-        f_a.setValue(8, Instant.parse("2018-01-01T12:45:00.00Z")); // No intervals have to be added because exceeds the maximum count
+        f_a.getData().setValue(8, Instant.parse("2018-01-01T12:45:00.00Z")); // No intervals have to be added because exceeds the maximum count
 
         //
         // Define project column
@@ -304,9 +304,9 @@ public class LinkTests {
         assertEquals(5L, t.getLength());
 
         // Check links
-        assertEquals(2L, f_b.getValue(6));
-        assertEquals(4L, f_b.getValue(7));
-        assertEquals(-1L, f_b.getValue(8));
+        assertEquals(2L, f_b.getData().getValue(6));
+        assertEquals(4L, f_b.getData().getValue(7));
+        assertEquals(-1L, f_b.getData().getValue(8));
     }
 
     Schema createSchemaDuration() { // For links to range table
@@ -337,14 +337,14 @@ public class LinkTests {
 
         // Add two records to link from
         f.add(8);
-        f_a.setValue(0, Instant.parse("2017-01-01T00:00:00.00Z")); // Too low
-        f_a.setValue(1, Instant.parse("2018-01-01T00:45:00.00Z")); // Exactly very first point
-        f_a.setValue(2, Instant.parse("2018-01-01T01:46:00.00Z")); // Between first and second points
-        f_a.setValue(3, Instant.parse("2018-01-01T02:45:00.00Z")); // Second and last point
-        f_a.setValue(4, Instant.parse("2018-01-01T02:45:00.00Z")); // Last point
-        f_a.setValue(5, Instant.parse("2018-01-01T03:45:00.00Z")); // After last point but within the last interval
-        f_a.setValue(6, Instant.parse("2019-01-01T00:00:00.00Z")); // Too high
-        f_a.setValue(7, null); // null
+        f_a.getData().setValue(0, Instant.parse("2017-01-01T00:00:00.00Z")); // Too low
+        f_a.getData().setValue(1, Instant.parse("2018-01-01T00:45:00.00Z")); // Exactly very first point
+        f_a.getData().setValue(2, Instant.parse("2018-01-01T01:46:00.00Z")); // Between first and second points
+        f_a.getData().setValue(3, Instant.parse("2018-01-01T02:45:00.00Z")); // Second and last point
+        f_a.getData().setValue(4, Instant.parse("2018-01-01T02:45:00.00Z")); // Last point
+        f_a.getData().setValue(5, Instant.parse("2018-01-01T03:45:00.00Z")); // After last point but within the last interval
+        f_a.getData().setValue(6, Instant.parse("2019-01-01T00:00:00.00Z")); // Too high
+        f_a.getData().setValue(7, null); // null
 
         Column f_b = s.createColumn("B", f, t);
 

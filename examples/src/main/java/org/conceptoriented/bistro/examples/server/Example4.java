@@ -66,8 +66,8 @@ public class Example4 {
             users.add();
             String n = ClickSimulator.names.get(i);
             String r = ClickSimulator.users2regions.get(n);
-            userName.setValue(i, n);
-            userRegion.setValue(i, r);
+            userName.getData().setValue(i, n);
+            userRegion.getData().setValue(i, r);
         }
 
         //
@@ -90,7 +90,7 @@ public class Example4 {
         // Define accumulate column
         //
 
-        regionClicks.setDefaultValue(0.0);
+        regionClicks.getData().setDefaultValue(0.0);
         regionClicks.accumulate(
                 new ColumnPath(clickUserLink, userRegionLink),
                 (a,p) -> (double)a + (double)p[0], // Add the clicks when an event is received
@@ -136,8 +136,8 @@ public class Example4 {
 
                     Range range = regions.getIdRange();
                     for(long i=range.start; i<range.end; i++) {
-                        String name = (String) regionName.getValue(i);
-                        Double count = (Double) regionClicks.getValue(i);
+                        String name = (String) regionName.getData().getValue(i);
+                        Double count = (Double) regionClicks.getData().getValue(i);
 
                         System.out.print(name + " - " + count + " clicks; ");
                     }

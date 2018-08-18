@@ -33,9 +33,9 @@ public class CalculateTests {
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
-        assertEquals(11.0, (Double) tb.getValue(0), Double.MIN_VALUE);
-        assertEquals(Double.NaN, tb.getValue(1));
-        assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
+        assertEquals(11.0, (Double) tb.getData().getValue(0), Double.MIN_VALUE);
+        assertEquals(Double.NaN, tb.getData().getValue(1));
+        assertEquals(13.0, (Double) tb.getData().getValue(2), Double.MIN_VALUE);
     }
 
     Schema createSchema() {
@@ -47,9 +47,9 @@ public class CalculateTests {
         t.add();
         t.add();
         t.add();
-        ta.setValue(0, 5.0);
-        ta.setValue(1, null);
-        ta.setValue(2, 6.0);
+        ta.getData().setValue(0, 5.0);
+        ta.getData().setValue(1, null);
+        ta.getData().setValue(2, 6.0);
 
         return s;
     }

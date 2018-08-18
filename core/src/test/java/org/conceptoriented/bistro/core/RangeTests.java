@@ -47,12 +47,12 @@ public class RangeTests {
         assertEquals(5, t.getLength());
 
         // c11 = {111222}
-        assertEquals(10.0, c11.getValue(0));
-        assertEquals(90.0, c11.getValue(4));
+        assertEquals(10.0, c11.getData().getValue(0));
+        assertEquals(90.0, c11.getData().getValue(4));
 
         // c12 = {123123}
-        assertEquals(0L, c12.getValue(0));
-        assertEquals(4L, c12.getValue(4));
+        assertEquals(0L, c12.getData().getValue(0));
+        assertEquals(4L, c12.getData().getValue(4));
     }
 
     @Test
@@ -82,12 +82,12 @@ public class RangeTests {
         assertEquals(5, t.getLength());
 
         // c11 = {111222}
-        assertEquals(Instant.parse("2018-01-01T00:00:10.00Z"), c11.getValue(0));
-        assertEquals(Instant.parse("2018-01-01T00:01:30.00Z"), c11.getValue(4));
+        assertEquals(Instant.parse("2018-01-01T00:00:10.00Z"), c11.getData().getValue(0));
+        assertEquals(Instant.parse("2018-01-01T00:01:30.00Z"), c11.getData().getValue(4));
 
         // c12 = {123123}
-        assertEquals(0L, c12.getValue(0));
-        assertEquals(4L, c12.getValue(4));
+        assertEquals(0L, c12.getData().getValue(0));
+        assertEquals(4L, c12.getData().getValue(4));
     }
 
     @Test
@@ -117,12 +117,12 @@ public class RangeTests {
         assertEquals(5, t.getLength());
 
         // c11 = {111222}
-        assertEquals(LocalDate.of(2018, Month.JANUARY, 10), c11.getValue(0));
-        assertEquals(LocalDate.of(2018, Month.MAY, 10), c11.getValue(4));
+        assertEquals(LocalDate.of(2018, Month.JANUARY, 10), c11.getData().getValue(0));
+        assertEquals(LocalDate.of(2018, Month.MAY, 10), c11.getData().getValue(4));
 
         // c12 = {123123}
-        assertEquals(0L, c12.getValue(0));
-        assertEquals(4L, c12.getValue(4));
+        assertEquals(0L, c12.getData().getValue(0));
+        assertEquals(4L, c12.getData().getValue(4));
     }
 
     Schema createSchema() {

@@ -47,7 +47,7 @@ public class Example5 {
 
         // [Quotes].[SpanWeekly] = ROLL_SUM_(7 days) [Quotes].[Span]
         Column spanWeekly = schema.createColumn("SpanWeekly", quotes);
-        spanWeekly.setDefaultValue(0.0); // It will be used as an initial value
+        spanWeekly.getData().setDefaultValue(0.0); // It will be used as an initial value
         spanWeekly.roll(
                 7, 0,
                 (a,d,p) -> (double)a + ((double)p[0] / 7.0), // [out] + [Span]. Equal weights for all 7 constituents
@@ -56,7 +56,7 @@ public class Example5 {
 
         // [Quotes].[spanWeeklyExp] = ROLL_SUM_(7 days exp) [Quotes].[Span]
         Column spanWeeklyExp = schema.createColumn("SpanWeeklyExp", quotes);
-        spanWeeklyExp.setDefaultValue(0.0); // It will be used as an initial value
+        spanWeeklyExp.getData().setDefaultValue(0.0); // It will be used as an initial value
         spanWeeklyExp.roll(
                 7, 0,
                 (a,d,p) -> (double)a + ((double)p[0] / Math.exp(d)) / sumExpWeightsFinal, // [out] + ([Span] / e^d).
@@ -71,25 +71,25 @@ public class Example5 {
 
         Object value;
 
-        value = spanDaily.getValue(0); // value = 1.9550342130987395
-        value = spanDaily.getValue(1); // value = 1.8682399213372616
-        value = spanDaily.getValue(6); // value = 1.860920666013707
-        value = spanDaily.getValue(7); // value = 2.514506769825934
-        value = spanDaily.getValue(99); // value = 24.29761718053468
+        value = spanDaily.getData().getValue(0); // value = 1.9550342130987395
+        value = spanDaily.getData().getValue(1); // value = 1.8682399213372616
+        value = spanDaily.getData().getValue(6); // value = 1.860920666013707
+        value = spanDaily.getData().getValue(7); // value = 2.514506769825934
+        value = spanDaily.getData().getValue(99); // value = 24.29761718053468
         if(Math.abs((double)value - 24.29761718053468) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = spanWeekly.getValue(0); // value = 0.2792906018712485
-        value = spanWeekly.getValue(1); // value = 0.546182019205143
-        value = spanWeekly.getValue(6); // value = 1.6796769410665702
-        value = spanWeekly.getValue(7); // value = 1.7596015920275978
-        value = spanWeekly.getValue(99); // value = 16.36032122029923
+        value = spanWeekly.getData().getValue(0); // value = 0.2792906018712485
+        value = spanWeekly.getData().getValue(1); // value = 0.546182019205143
+        value = spanWeekly.getData().getValue(6); // value = 1.6796769410665702
+        value = spanWeekly.getData().getValue(7); // value = 1.7596015920275978
+        value = spanWeekly.getData().getValue(99); // value = 16.36032122029923
         if(Math.abs((double)value - 16.36032122029923) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = spanWeeklyExp.getValue(0); // value = 1.23694526739464
-        value = spanWeeklyExp.getValue(1); // value = 1.6370774693408667
-        value = spanWeeklyExp.getValue(6); // value = 1.6303675306364669
-        value = spanWeeklyExp.getValue(7); // value = 2.1895729057377022
-        value = spanWeeklyExp.getValue(99); // value = 20.678198203000097
+        value = spanWeeklyExp.getData().getValue(0); // value = 1.23694526739464
+        value = spanWeeklyExp.getData().getValue(1); // value = 1.6370774693408667
+        value = spanWeeklyExp.getData().getValue(6); // value = 1.6303675306364669
+        value = spanWeeklyExp.getData().getValue(7); // value = 2.1895729057377022
+        value = spanWeeklyExp.getData().getValue(99); // value = 20.678198203000097
         if(Math.abs((double)value - 20.678198203000097) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 

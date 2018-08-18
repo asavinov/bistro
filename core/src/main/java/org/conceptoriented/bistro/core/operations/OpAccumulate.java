@@ -79,7 +79,7 @@ public class OpAccumulate implements Operation {
         Table mainTable = this.column.getInput();
         if(mainTable.isChanged()) {
             Range addedRange = mainTable.getAddedRange();
-            this.column.setValue(addedRange);
+            this.column.getData().setValue(addedRange);
         }
     }
 
@@ -108,7 +108,7 @@ public class OpAccumulate implements Operation {
             }
 
             // Read current out value
-            aggregate = this.column.getValue(g);
+            aggregate = this.column.getData().getValue(g);
 
             //
             // Call user-defined function
@@ -124,7 +124,7 @@ public class OpAccumulate implements Operation {
             }
 
             // Update output
-            this.column.setValue(g, result);
+            this.column.getData().setValue(g, result);
         }
     }
 

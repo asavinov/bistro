@@ -55,7 +55,7 @@ public class Example2 {
 
         // [Products].[Total Amount] = SUM [OrderItems].[Amount]
         Column productsAmount = schema.createColumn("Total Amount", products);
-        productsAmount.setDefaultValue(0.0); // It will be used as an initial value
+        productsAmount.getData().setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
@@ -71,15 +71,15 @@ public class Example2 {
 
         Object value;
 
-        value = itemsAmount.getValue(5); // value = 270.0 = 15 * 18
+        value = itemsAmount.getData().getValue(5); // value = 270.0 = 15 * 18
         if(Math.abs((double)value - 270.0) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
-        value = itemsAmount.getValue(21); // value = 450.0 = 25 * 18
+        value = itemsAmount.getData().getValue(21); // value = 450.0 = 25 * 18
         if(Math.abs((double)value - 450.0) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = itemsProduct.getValue(5); // value = 0
-        value = itemsProduct.getValue(21); // value = 0
+        value = itemsProduct.getData().getValue(5); // value = 0
+        value = itemsProduct.getData().getValue(21); // value = 0
 
-        value = productsAmount.getValue(0); // value = 720.0 = 270.0 + 450.0
+        value = productsAmount.getData().getValue(0); // value = 720.0 = 270.0 + 450.0
         if(Math.abs((double)value - 720.0) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 

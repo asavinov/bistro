@@ -39,89 +39,46 @@ public class Column implements Element {
     public Table getOutput() {
         return this.output;
     }
-    public void setOutput(Table table) { this.output = table; this.setValue(null); }
-
-    //
-    // Change status
-    //
-
-    protected long changedAt; // Time of latest change
-    @Override
-    public long getChangedAt() {
-        return this.changedAt;
-    }
-
-    private boolean isChanged = false;
-    @Override
-    public boolean isChanged() {
-        return this.isChanged;
-    }
-
-    @Override
-    public void setChanged() {
-        this.isChanged = true;
-        this.changedAt = System.nanoTime();
-    }
-
-    @Override
-    public void resetChanged() { // Forget about the change status/scope (reset change delta)
-        this.isChanged = false;
-    }
-
-    @Override
-    public boolean isDirty() {
-
-        // Definition has changed
-        if(this.operation != null) {
-            if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
-        }
-
-        // One of its dependencies has changes or is dirty
-        for(Element dep : this.getDependencies()) {
-            if(dep.getChangedAt() > this.getChangedAt()) return true;
-            if(dep.isDirty()) return true; // Recursion
-        }
-
-        return false;
-    }
+    public void setOutput(Table table) { this.output = table; this.getData().setValue(null); }
 
     //
     // Data (public)
     //
 
     private ColumnData data;
+    public ColumnData getData() { return this.data; }
+    public void setData(ColumnData data) { this.data = data; }
 
-    public Object getValue(long id) { return this.data.getValue(id); }
 
-    // Note: we do not set the change flag by assuming that only newly added records are changed - if it is not so then it has to be set manually
-    // Note: methods are not safe - they do not check the validity of arguments (ids, values etc.)
 
-    // One id
-    public void setValue(long id, Object value) { this.data.setValue(id, value); }
 
-    // Range of ids
-    public void setValue(Range range, Object value) { this.data.setValue(range, value); }
-    public void setValue(Range range) { this.data.setValue(range); } // Default value
+    //public Object getValue(long id) { return this.data.getValue(id); }
+
+    //public void setValue(long id, Object value) { this.data.setValue(id, value); }
+
+    //public void setValue(Range range, Object value) { this.data.setValue(range, value); }
+    //public void setValue(Range range) { this.data.setValue(range); } // Default value
 
     // All ids
-    public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
-    public void setValue() { this.data.setValue(); this.setChanged(); } // Default value
+    //public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
+    //public void setValue() { this.data.setValue(); this.setChanged(); } // Default value
 
     // Default value
-    public Object getDefaultValue() { return this.data.getDefaultValue(); }
-    public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.setChanged(); }
+    //public Object getDefaultValue() { return this.data.getDefaultValue(); }
+    //public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.setChanged(); }
 
     //
     // Data (protected). They are used from Table only and determine physically existing mapping from a range of ids to output values.
     //
 
-    protected void add() { this.data.add(); this.isChanged = true; }
-    protected void add(long count) { this.data.add(count); this.isChanged = true; }
+    //protected void add() { this.data.add(); this.isChanged = true; }
+    //protected void add(long count) { this.data.add(count); this.isChanged = true; }
 
-    protected void remove() { this.data.remove(1); this.isChanged = true; }
-    protected void remove(long count) { this.data.remove(count); this.isChanged = true; } // Remove the specified number of oldest records
-    protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
+    //protected void remove() { this.data.remove(1); this.isChanged = true; }
+    //protected void remove(long count) { this.data.remove(count); this.isChanged = true; } // Remove the specified number of oldest records
+    //protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
 
+/*
     protected void reset() {
         Table table = this.getInput();
         if(table != null) {
@@ -132,13 +89,10 @@ public class Column implements Element {
         }
         this.isChanged = true;
     }
+*/
 
-    //
-    // Search etc.
-    //
-
-    public long findSorted(Object value) { return this.data.findSorted(value); }
-    public long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
+    //public long findSorted(Object value) { return this.data.findSorted(value); }
+    //public long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
 
     //
     // Element interface
@@ -214,6 +168,31 @@ public class Column implements Element {
         // Otherwise check errors in dependencies (recursively)
         for(Element dep : this.getDependencies()) {
             if(dep.hasErrorsDeep()) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isDirty() {
+
+        // Definition has changed
+        if(this.operation != null) {
+            if(this.getDefinitionChangedAt() > this.getData().getChangedAt()) return true;
+        }
+
+        // One of its dependencies has changes or is dirty
+        long thisChangedAt = this.getData().getChangedAt();
+        for(Element dep : this.getDependencies()) {
+
+            if(dep instanceof Column) {
+                if(((Column)dep).getData().getChangedAt()  > thisChangedAt) return true;
+            }
+            else if(dep instanceof Table) {
+                if(((Table)dep).getChangedAt()  > thisChangedAt) return true;
+            }
+
+            if(dep.isDirty()) return true; // Recursion
         }
 
         return false;
@@ -536,6 +515,6 @@ public class Column implements Element {
         // Where its output values are stored
         this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
 
-        this.changedAt = 0; // Very old - need to be evaluated
+        this.getData().setChangedAt(0); // Very old - need to be evaluated
     }
 }

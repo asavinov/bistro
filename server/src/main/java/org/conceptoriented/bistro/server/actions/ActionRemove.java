@@ -64,7 +64,7 @@ public class ActionRemove implements Action {
         long toRemove = 0;
         Range range = this.table.getIdRange();
         for(long i=range.start; i<range.end; i++) {
-            Instant t = (Instant)this.column.getValue(i);
+            Instant t = (Instant)this.column.getData().getValue(i);
             Duration d = Duration.between(t, now);
 
             if(this.age.compareTo(d) <= 0) { // If it is old, that is, its age is more than the specified

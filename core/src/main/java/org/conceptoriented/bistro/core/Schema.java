@@ -170,7 +170,13 @@ public class Schema {
         // After evaluating, clear the changes in all elements of the graph
         for(List<Element> layer : this.topology.layers) {
             for(Element elem : layer) {
-                elem.resetChanged();
+
+                if(elem instanceof Column) {
+                    ((Column)elem).getData().resetChanged();
+                }
+                else if(elem instanceof Table) {
+                    ((Table)elem).resetChanged();
+                }
             }
         }
     }

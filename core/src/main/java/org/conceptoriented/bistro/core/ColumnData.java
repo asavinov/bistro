@@ -7,7 +7,7 @@ import java.util.UUID;
  * It is responsible for explicit representation of a function, that is, a mapping from input ids to output columnPaths.
  * This representation can be changed by setting outputs for certain inputs. And it is possible to request outputs.
  */
-public class ColumnData {
+public class ColumnData implements ColumnDataInterface {
 
     private final UUID id;
     public UUID getId() {
@@ -24,10 +24,6 @@ public class ColumnData {
     private static int INCREMENT_SIZE = 5;
     private Object[] values; // This array stores the output columnPaths
 
-    private Object defaultValue = null;
-    public Object getDefaultValue() { return this.defaultValue; }
-    public void setDefaultValue(Object value) { this.defaultValue = value; }
-
     private int startIdOffset = 0; // Cell of the array product the start id is stored
 
     private int id2offset(long id) {
@@ -41,13 +37,17 @@ public class ColumnData {
     // Output values
     //
 
-    protected Object getValue(long id) { return this.values[id2offset(id)]; }
+    @Override
+    public Object getValue(long id) { return this.values[id2offset(id)]; }
 
-    // One id
-    protected void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
+    // Note: we do not set the change flag by assuming that only newly added records are changed - if it is not so then it has to be set manually
+    // Note: methods are not safe - they do not check the validity of arguments (ids, values etc.)
 
-    // Range of ids
-    protected void setValue(Range range, Object value) {
+    @Override
+    public void setValue(long id, Object value) { this.values[id2offset(id)] = value; }
+
+    @Override
+    public void setValue(Range range, Object value) {
         Arrays.fill(
                 this.values,
                 this.id2offset(range.start),
@@ -55,29 +55,47 @@ public class ColumnData {
                 value
         );
     }
-    protected void setValue(Range range) { // Default value
+    @Override
+    public void setValue(Range range) { // Default value
         this.setValue(range, this.defaultValue);
     }
 
-    // All ids
-    protected void setValue(Object value) {
+    @Override
+    public void setValue(Object value) {
         Arrays.fill(
                 this.values,
                 this.startIdOffset,
                 (int)(this.startIdOffset + this.idRange.getLength()),
                 value
         );
+        this.setChanged();
     }
-    protected void setValue() { // Default value
+    @Override
+    public void setValue() { // Default value
         this.setValue(this.defaultValue);
+        this.setChanged();
+    }
+
+    private Object defaultValue = null;
+    @Override
+    public Object getDefaultValue() { return this.defaultValue; }
+    @Override
+    public void setDefaultValue(Object value) {
+        this.defaultValue = value;
+        this.setChanged();
     }
 
     //
     // Input range
     //
 
-    protected void add() { this.add(1); }
-    protected void add(long count) { // Remove the oldest records with lowest ids
+    @Override
+    public void add() {
+        this.add(1);
+        this.isChanged = true;
+    }
+    @Override
+    public void add(long count) { // Remove the oldest records with lowest ids
 
         // Check if not enough space and allocate more if necessary
         int additionalSize = (this.startIdOffset + (int)idRange.getLength() + (int)count) - this.values.length;
@@ -95,20 +113,32 @@ public class ColumnData {
         );
 
         this.idRange.end += count;
+
+        this.isChanged = true;
     }
 
-    protected void remove() { this.remove(1); }
-    protected void remove(long count) { // Remove the specified number of oldest records
+    @Override
+    public void remove() {
+        this.remove(1);
+        this.isChanged = true;
+    }
+    @Override
+    public void remove(long count) { // Remove the specified number of oldest records
         this.startIdOffset += count;
         this.idRange.start += count;
 
+        this.isChanged = true;
+
         this.gc();
     }
-    protected void removeAll() {
+    @Override
+    public void removeAll() {
         this.remove(this.idRange.getLength());
+        this.isChanged = true;
     }
 
-    protected void reset(long start, long end) {
+    @Override
+    public void reset(long start, long end) {
         // Allocate memory
         this.values = new Object[INITIAL_SIZE];
 
@@ -120,9 +150,12 @@ public class ColumnData {
         this.add(end - start);
 
         this.setValue(); // Set default values
+
+        this.isChanged = true;
     }
 
-    protected void gc() { // Garbage collection. Free some space if there is enough in the beginning of the array
+    @Override
+    public void gc() { // Garbage collection. Free some space if there is enough in the beginning of the array
         if(this.startIdOffset > INCREMENT_SIZE) {
             // Shift values to the beginning
             System.arraycopy(
@@ -144,6 +177,7 @@ public class ColumnData {
     }
 
     // Return insert index
+    @Override
     public long findSorted(Object value) {
 
         // The data is supposed to be sorted (for example, range table or time stamps)
@@ -160,7 +194,8 @@ public class ColumnData {
         return id;
     }
 
-    protected long findSortedFromStart(Object value) { // Find insertion index with the value strictly less than the specified value
+    @Override
+    public long findSortedFromStart(Object value) { // Find insertion index with the value strictly less than the specified value
 
         // Values must be comparable (implement Comparable interface)
 
@@ -181,6 +216,41 @@ public class ColumnData {
 
         return id;
     }
+
+    //
+    // Tracking changes (delta)
+    //
+
+    private long changedAt; // Time of latest change
+    @Override
+    public long getChangedAt() {
+        return this.changedAt;
+    }
+    @Override
+    public void setChangedAt(long changedAt) {
+        this.changedAt = changedAt;
+    }
+
+    private boolean isChanged = false;
+    @Override
+    public boolean isChanged() {
+        return this.isChanged;
+    }
+
+    @Override
+    public void setChanged() {
+        this.isChanged = true;
+        this.changedAt = System.nanoTime();
+    }
+
+    @Override
+    public void resetChanged() { // Forget about the change status/scope (reset change delta)
+        this.isChanged = false;
+    }
+
+    //
+    // Creation
+    //
 
     public ColumnData(long start, long end) {
         this.id = UUID.randomUUID();

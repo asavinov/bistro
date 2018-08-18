@@ -35,7 +35,7 @@ public class OpCalculate implements Operation {
     @Override
     public void evaluate() {
         if(this.lambda == null) { // Default
-            this.column.setValue(); // Reset
+            this.column.getData().setValue(); // Reset
             return;
         }
 
@@ -50,7 +50,7 @@ public class OpCalculate implements Operation {
         boolean fullScope = false;
 
         if(!fullScope) {
-            if (this.column.getDefinitionChangedAt() > this.column.getChangedAt()) { // Definition has changes
+            if (this.column.getDefinitionChangedAt() > this.column.getData().getChangedAt()) { // Definition has changes
                 fullScope = true;
             }
         }
@@ -59,7 +59,7 @@ public class OpCalculate implements Operation {
             List<Element> deps = this.getDependencies();
             for(Element e : deps) {
                 if(!(e instanceof Column)) continue;
-                if(((Column)e).isChanged()) { // There is a column with some changes
+                if(((Column)e).getData().isChanged()) { // There is a column with some changes
                     fullScope = true;
                     break;
                 }
@@ -100,7 +100,7 @@ public class OpCalculate implements Operation {
             }
 
             // Update output
-            this.column.setValue(i, result);
+            this.column.getData().setValue(i, result);
         }
 
     }

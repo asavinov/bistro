@@ -59,7 +59,7 @@ public class Example3 {
 
         // [Order].[Total Amount] = SUM [OrderItems].[Amount]
         Column ordersAmount = schema.createColumn("Total Amount", orders);
-        ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
+        ordersAmount.getData().setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accumulate(
                 itemsOrder,
                 (a,p) -> (double)p[0] + (double)a, // [Amount] + [out]
@@ -77,7 +77,7 @@ public class Example3 {
 
         Object value;
 
-        value = ordersAmount.getValue(0); // value = 1505.0
+        value = ordersAmount.getData().getValue(0); // value = 1505.0
         if(Math.abs((double)value - 1505.0) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 

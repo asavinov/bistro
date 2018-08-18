@@ -68,7 +68,7 @@ public class OpRoll implements Operation {
     @Override
     public void evaluate() {
 
-        this.column.setValue(); // Initialize to default value
+        this.column.getData().setValue(); // Initialize to default value
 
         Table mainTable = this.column.getInput(); // Loop/scan table
 
@@ -97,7 +97,7 @@ public class OpRoll implements Operation {
             // For all elements in the window [min, max), prepare (aggregate,distance,params) and call roll adder
             //
 
-            Object aggregate = this.column.getValue(i); // Initial aggregate (will be updated)
+            Object aggregate = this.column.getData().getValue(i); // Initial aggregate (will be updated)
             double distance;
             Object[] paramValues = new Object[this.paths.length];
 
@@ -135,7 +135,7 @@ public class OpRoll implements Operation {
 
             }
 
-            this.column.setValue(i, aggregate); // Store final aggregate in the column
+            this.column.getData().setValue(i, aggregate); // Store final aggregate in the column
         }
 
     }

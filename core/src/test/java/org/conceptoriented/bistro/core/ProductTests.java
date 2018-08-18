@@ -37,12 +37,12 @@ public class ProductTests {
         assertEquals(6, t3.getLength());
 
         // c31 = {111222}
-        assertEquals(1L, c31.getValue(0));
-        assertEquals(2L, c31.getValue(4));
+        assertEquals(1L, c31.getData().getValue(0));
+        assertEquals(2L, c31.getData().getValue(4));
 
         // c32 = {123123}
-        assertEquals(1L, c32.getValue(0));
-        assertEquals(1L, c32.getValue(3));
+        assertEquals(1L, c32.getData().getValue(0));
+        assertEquals(1L, c32.getData().getValue(3));
     }
 
     @Test
@@ -63,12 +63,12 @@ public class ProductTests {
         assertEquals(4, t3.getLength());
 
         // c31 = {1112}
-        assertEquals(1L, c31.getValue(0));
-        assertEquals(2L, c31.getValue(3));
+        assertEquals(1L, c31.getData().getValue(0));
+        assertEquals(2L, c31.getData().getValue(3));
 
         // c32 = {1231}
-        assertEquals(2L, c32.getValue(1));
-        assertEquals(3L, c32.getValue(2));
+        assertEquals(2L, c32.getData().getValue(1));
+        assertEquals(3L, c32.getData().getValue(2));
     }
 
     Schema createSchema() {
@@ -85,8 +85,8 @@ public class ProductTests {
         // Add two arbitrary records
         t1.add(3);
         t1.remove();
-        c11.setValue(1, "v1");
-        c11.setValue(2, "v2");
+        c11.getData().setValue(1, "v1");
+        c11.getData().setValue(2, "v2");
 
         //
         // Table 2 (second domain)
@@ -98,9 +98,9 @@ public class ProductTests {
         // Add three arbitrary records
         t2.add(4);
         t2.remove();
-        c21.setValue(1, "v1");
-        c21.setValue(2, "v2");
-        c21.setValue(3, "v3");
+        c21.getData().setValue(1, "v1");
+        c21.getData().setValue(2, "v2");
+        c21.getData().setValue(3, "v3");
 
         //
         // Table 3 (product of the two domain tables)
@@ -133,12 +133,12 @@ public class ProductTests {
         assertEquals(3, t3.getLength());
 
         // c31 = {112}
-        assertEquals(1L, c31.getValue(0));
-        assertEquals(2L, c31.getValue(2));
+        assertEquals(1L, c31.getData().getValue(0));
+        assertEquals(2L, c31.getData().getValue(2));
 
         // c32 = {122}
-        assertEquals(1L, c32.getValue(0));
-        assertEquals(2L, c32.getValue(2));
+        assertEquals(1L, c32.getData().getValue(0));
+        assertEquals(2L, c32.getData().getValue(2));
 
         // Add filter
         t3.product(
@@ -154,12 +154,12 @@ public class ProductTests {
         Range t3range = t3.getIdRange();
 
         // c31 = {11}
-        assertEquals(1L, c31.getValue(t3range.start));
-        assertEquals(1L, c31.getValue(t3range.start+1));
+        assertEquals(1L, c31.getData().getValue(t3range.start));
+        assertEquals(1L, c31.getData().getValue(t3range.start+1));
 
         // c32 = {12}
-        assertEquals(1L, c32.getValue(t3range.start));
-        assertEquals(2L, c32.getValue(t3range.start+1));
+        assertEquals(1L, c32.getData().getValue(t3range.start));
+        assertEquals(2L, c32.getData().getValue(t3range.start+1));
     }
 
     Schema createSchema2() {
@@ -176,10 +176,10 @@ public class ProductTests {
         Column c42 = s.createColumn("C42", t4, s.getTable("T2"));
 
         t4.add(4);
-        c41.setValue(0, 1L); c42.setValue(0, 1L); // v1, v1
-        c41.setValue(1, 1L); c42.setValue(1, 2L); // v1, v2
-        c41.setValue(2, 2L); c42.setValue(2, 2L); // v2, v2
-        c41.setValue(3, 2L); c42.setValue(3, 2L); // v2, v2
+        c41.getData().setValue(0, 1L); c42.getData().setValue(0, 1L); // v1, v1
+        c41.getData().setValue(1, 1L); c42.getData().setValue(1, 2L); // v1, v2
+        c41.getData().setValue(2, 2L); c42.getData().setValue(2, 2L); // v2, v2
+        c41.getData().setValue(3, 2L); c42.getData().setValue(3, 2L); // v2, v2
 
         Column c43 = s.createColumn("C43", t4, t3); // Project column
         c43.project(

@@ -41,13 +41,13 @@ public class Example1 {
         id = things.add(); // id = 1
 
         // Data values are stored in columns as objects
-        thingName.setValue(0, "fridge");
-        thingName.setValue(1, "oven");
+        thingName.getData().setValue(0, "fridge");
+        thingName.getData().setValue(1, "oven");
 
         // Values are read from columns as objects given their id
         Object value;
-        value = thingName.getValue(0); // value = "fridge"
-        value = thingName.getValue(1); // value = "oven"
+        value = thingName.getData().getValue(0); // value = "fridge"
+        value = thingName.getData().getValue(1); // value = "oven"
 
         //
         // Calculate column
@@ -66,9 +66,9 @@ public class Example1 {
 
         // Add some event data to aggregate
         events.add(3);
-        eventThingName.setValue(0, "oven");
-        eventThingName.setValue(1, "fridge");
-        eventThingName.setValue(2, "oven");
+        eventThingName.getData().setValue(0, "oven");
+        eventThingName.getData().setValue(1, "fridge");
+        eventThingName.getData().setValue(2, "oven");
 
         // Link column finds its output in the output table
         Column link = schema.createColumn("Thing", events, things);
@@ -88,7 +88,7 @@ public class Example1 {
                 null
                 // Nothing to aggregate from facts except for counting
         );
-        counts.setDefaultValue(0.0); // It will be used as an initial value
+        counts.getData().setDefaultValue(0.0); // It will be used as an initial value
 
         //
         // Evaluate and read values
@@ -97,19 +97,19 @@ public class Example1 {
         schema.evaluate(); // All 3 derived columns will be evaluated
 
         // Calculate column
-        value = calc.getValue(0); // value = 6
-        value = calc.getValue(1); // value = 4
+        value = calc.getData().getValue(0); // value = 6
+        value = calc.getData().getValue(1); // value = 4
         if(((Number)value).longValue() != 4) System.out.println(">>> UNEXPECTED RESULT.");
 
         // Link column
-        value = link.getValue(0); // value = 1 (id of fridge)
-        value = link.getValue(1); // value = 0 (id of oven)
-        value = link.getValue(2); // value = 1 (id of fridge)
+        value = link.getData().getValue(0); // value = 1 (id of fridge)
+        value = link.getData().getValue(1); // value = 0 (id of oven)
+        value = link.getData().getValue(2); // value = 1 (id of fridge)
         if(((Number)value).longValue() != 1) System.out.println(">>> UNEXPECTED RESULT.");
 
         // Accu column
-        value = counts.getValue(0); // 1 event from fridge
-        value = counts.getValue(1); // 2 events from oven
+        value = counts.getData().getValue(0); // 1 event from fridge
+        value = counts.getData().getValue(1); // 2 events from oven
         if(((Number)value).longValue() != 2) System.out.println(">>> UNEXPECTED RESULT.");
     }
 }

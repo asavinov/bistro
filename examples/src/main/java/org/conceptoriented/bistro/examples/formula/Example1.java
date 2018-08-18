@@ -74,7 +74,7 @@ public class Example1
 
         // [Products].[Total Amount] = SUM [OrderDetails].[Amount]
         Column productsAmount = schema.createColumn("Total Amount", products, columnType);
-        productsAmount.setDefaultValue(0.0); // It will be used as an initial value
+        productsAmount.getData().setDefaultValue(0.0); // It will be used as an initial value
         productsAmount.accumulate(
                 itemsProduct,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items)
@@ -84,7 +84,7 @@ public class Example1
 
         // [Order].[Total Amount] = SUM [OrderDetails].[Amount]
         Column ordersAmount = schema.createColumn("Total Amount", orders, columnType);
-        ordersAmount.setDefaultValue(0.0); // It will be used as an initial value
+        ordersAmount.getData().setDefaultValue(0.0); // It will be used as an initial value
         ordersAmount.accumulate(
                 itemsOrder,
                 (a,p) -> (double)a + (double)p[0], // new FormulaExp4j("[out] + [Amount]", items),

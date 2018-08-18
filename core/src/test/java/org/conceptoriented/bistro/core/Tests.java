@@ -51,13 +51,13 @@ public class Tests {
         long id = t.add();
         assertEquals(0, id);
         long id2 = t.add();
-        c1.setValue(id2, 1.0);
-        assertEquals(1.0, (double) c1.getValue(id2), Double.MIN_VALUE);
+        c1.getData().setValue(id2, 1.0);
+        assertEquals(1.0, (double) c1.getData().getValue(id2), Double.MIN_VALUE);
 
         Column c2 = s.createColumn("My Column 2", t);
         long id3 = t.add();
-        c2.setValue(id3, "StringValue");
-        assertEquals("StringValue", (String) c2.getValue(id3));
+        c2.getData().setValue(id3, "StringValue");
+        assertEquals("StringValue", (String) c2.getData().getValue(id3));
 
         assertEquals(0, t.getIdRange().start);
         assertEquals(3, t.getIdRange().end);
@@ -68,8 +68,8 @@ public class Tests {
         List<Column> cols = Arrays.asList(c1, c2);
         List<Object> vals = Arrays.asList(2.0, "StringValue 2");
         t.setValues(id4, cols, vals);
-        assertEquals(2.0, (double) c1.getValue(id4), Double.MIN_VALUE);
-        assertEquals("StringValue 2", (String) c2.getValue(id4));
+        assertEquals(2.0, (double) c1.getData().getValue(id4), Double.MIN_VALUE);
+        assertEquals("StringValue 2", (String) c2.getData().getValue(id4));
 
         // Record search
         vals = Arrays.asList(2.0, "StringValue 2");

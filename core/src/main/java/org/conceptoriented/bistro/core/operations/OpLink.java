@@ -90,7 +90,7 @@ public class OpLink implements Operation {
             Object out = rangeZableDef.findRange(rhsResult, this.isProj);
 
             // Update output
-            this.column.setValue(i, out);
+            this.column.getData().setValue(i, out);
         }
     }
 
@@ -113,7 +113,7 @@ public class OpLink implements Operation {
         }
 
         if(!fullScope) {
-            if(this.column.getDefinitionChangedAt() > this.column.getChangedAt()) { // Definition has changes
+            if(this.column.getDefinitionChangedAt() > this.column.getData().getChangedAt()) { // Definition has changes
                 fullScope = true;
             }
         }
@@ -122,7 +122,7 @@ public class OpLink implements Operation {
             List<Element> deps = this.getDependencies();
             for(Element e : deps) {
                 if(!(e instanceof Column)) continue;
-                if(((Column)e).isChanged()) { // There is a column with some changes
+                if(((Column)e).getData().isChanged()) { // There is a column with some changes
                     fullScope = true;
                     break;
                 }
@@ -130,7 +130,7 @@ public class OpLink implements Operation {
         }
 
         if(!fullScope) {
-            if(typeTable.getDefinitionChangedAt() > this.column.getChangedAt()) { // Type table operation has changed
+            if(typeTable.getDefinitionChangedAt() > this.column.getData().getChangedAt()) { // Type table operation has changed
                 fullScope = true;
             }
         }
@@ -173,7 +173,7 @@ public class OpLink implements Operation {
             Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
 
             // Update output
-            this.column.setValue(i, out);
+            this.column.getData().setValue(i, out);
         }
     }
 

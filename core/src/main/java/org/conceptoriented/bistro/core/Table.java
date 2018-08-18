@@ -37,86 +37,25 @@ public class Table implements Element {
     }
 
     //
-    // Change status is delta between previous state and current state (as a number of added and removed records)
-    //
-
-    protected Range addedRange = new Range(); // Newly added ids
-    public Range getAddedRange() {
-        return this.addedRange;
-    }
-
-    protected Range removedRange = new Range(); // Removed ids
-    public Range getRemovedRange() {
-        return this.removedRange;
-    }
-
-    public Range getIdRange() {
-        return new Range(this.removedRange.end, this.addedRange.end); // Derived from added and removed
-    }
-
-    public long getLength() {
-        return this.addedRange.end - this.removedRange.end; // All non-removed records
-    }
-
-    protected long changedAt; // Time of latest change
-    @Override
-    public long getChangedAt() {
-        return this.changedAt;
-    }
-
-    @Override
-    public boolean isChanged() { // Changes in a table are made by adding and removing records
-        if(this.addedRange.getLength() != 0) return true;
-        if(this.removedRange.getLength() != 0) return true;
-        return false;
-    }
-
-    @Override
-    public void setChanged() {
-        this.changedAt = System.nanoTime();
-    }
-
-    @Override
-    public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
-        this.addedRange.start = this.addedRange.end;
-        this.removedRange.start = this.removedRange.end;
-    }
-
-    @Override
-    public boolean isDirty() {
-
-        // Definition has changed
-        if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
-
-        // One of its dependencies has changes or is dirty
-        for(Element dep : this.getDependencies()) {
-            if(dep.getChangedAt() > this.getChangedAt()) return true;
-            if(dep.isDirty()) return true; // Recursion
-        }
-
-        return false;
-    }
-
-    //
     // Operations with table population
     //
 
     public long add() { // Add new elements with the next largest id. The created id is returned
-        this.getColumns().forEach( x -> x.add() );
+        this.getColumns().forEach( x -> x.getData().add() );
         this.addedRange.end++; // Grows along with valid ids
         this.changedAt = System.nanoTime();
         return this.addedRange.end - 1; // Return id of the added element
     }
 
     public Range add(long count) {
-        this.getColumns().forEach( x -> x.add(count) );
+        this.getColumns().forEach( x -> x.getData().add(count) );
         this.addedRange.end += count; // Grows along with valid ids
         this.changedAt = System.nanoTime();
         return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
     }
 
     public long remove() { // Remove oldest elements with smallest ids. The removed id is returned.
-        this.getColumns().forEach( x -> x.remove() );
+        this.getColumns().forEach( x -> x.getData().remove() );
         if(this.getLength() > 0) { this.removedRange.end++; this.changedAt = System.nanoTime(); }
         return this.removedRange.end - 1; // Id of the removed record (this id is not valid anymore)
     }
@@ -132,7 +71,7 @@ public class Table implements Element {
     }
 
     public long remove(Column column, Object value) { // Remove old records with smallest values - less than the specified threshold (think of it as date of birth or id or timestamp)
-        long insertId = column.findSortedFromStart(value); // It can be in any range: deleted, existing, added
+        long insertId = column.getData().findSortedFromStart(value); // It can be in any range: deleted, existing, added
         long toRemove = insertId - this.removedRange.end; // Records which are still not marked as removed
         if(toRemove > 0) {
             toRemove = Math.min(toRemove, this.getLength());
@@ -158,6 +97,53 @@ public class Table implements Element {
     }
 
     //
+    // Tracking changes.
+    // Change status is delta between previous state and current state (as a number of added and removed records)
+    //
+
+    protected Range addedRange = new Range(); // Newly added ids
+    public Range getAddedRange() {
+        return this.addedRange;
+    }
+
+    protected Range removedRange = new Range(); // Removed ids
+    public Range getRemovedRange() {
+        return this.removedRange;
+    }
+
+    public Range getIdRange() {
+        return new Range(this.removedRange.end, this.addedRange.end); // Derived from added and removed
+    }
+
+    public long getLength() {
+        return this.addedRange.end - this.removedRange.end; // All non-removed records
+    }
+
+    protected long changedAt; // Time of latest change
+    //@Override
+    public long getChangedAt() {
+        return this.changedAt;
+    }
+
+    //@Override
+    public boolean isChanged() { // Changes in a table are made by adding and removing records
+        if(this.addedRange.getLength() != 0) return true;
+        if(this.removedRange.getLength() != 0) return true;
+        return false;
+    }
+
+    //@Override
+    public void setChanged() {
+        this.changedAt = System.nanoTime();
+    }
+
+    //@Override
+    public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
+        this.addedRange.start = this.addedRange.end;
+        this.removedRange.start = this.removedRange.end;
+    }
+
+    //
     // Operations with data stored in columns (convenience methods)
     //
 
@@ -165,14 +151,14 @@ public class Table implements Element {
         for (Map.Entry<String, Object> field : record.entrySet()) {
             String name = field.getKey();
             Column col = this.getColumn(name);
-            Object value = col.getValue(id);
+            Object value = col.getData().getValue(id);
             field.setValue(value);
         }
     }
     public void getValues(long id, List<Column> columns, List<Object> values) {
         for (int i = 0; i < columns.size(); i++) {
             Column col = columns.get(i);
-            Object value = col.getValue(id);
+            Object value = col.getData().getValue(id);
             values.add(value);
         }
     }
@@ -182,14 +168,14 @@ public class Table implements Element {
             String name = field.getKey();
             Column col = this.getColumn(name);
             Object value = field.getValue();
-            col.setValue(id, value);
+            col.getData().setValue(id, value);
         }
     }
     public void setValues(long id, List<Column> columns, List<Object> values) {
         for (int i = 0; i < columns.size(); i++) {
             Column col = columns.get(i);
             Object value = values.get(i);
-            col.setValue(id, value);
+            col.getData().setValue(id, value);
         }
     }
 
@@ -265,6 +251,28 @@ public class Table implements Element {
         // Otherwise check errors in dependencies (recursively)
         for(Element dep : this.getDependencies()) {
             if(dep.hasErrorsDeep()) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isDirty() {
+
+        // Definition has changed
+        if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
+
+        // One of its dependencies has changes or is dirty
+        long thisChangedAt = this.getChangedAt();
+        for(Element dep : this.getDependencies()) {
+            if(dep instanceof Column) {
+                if(((Column)dep).getData().getChangedAt()  > thisChangedAt) return true;
+            }
+            else if(dep instanceof Table) {
+                if(((Table)dep).getChangedAt()  > thisChangedAt) return true;
+            }
+
+            if(dep.isDirty()) return true; // Recursion
         }
 
         return false;
@@ -518,7 +526,7 @@ public class Table implements Element {
             boolean found = true;
             for(int j=0; j<columns.size(); j++) {
                 Object recordValue = values.get(j);
-                Object columnValue = columns.get(j).getValue(i);
+                Object columnValue = columns.get(j).getData().getValue(i);
 
                 // PROBLEM: The same number in Double and Integer will not be equal.
                 //   SOLUTION 1: cast to some common type before comparison. It can be done in-line here or we can use utility methods.

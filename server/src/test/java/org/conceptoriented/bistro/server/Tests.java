@@ -86,7 +86,7 @@ public class Tests {
         timer.addAction(
                 x -> {
                     long id = table.add();
-                    c.setValue(id, message);
+                    c.getData().setValue(id, message);
                 }
         );
 
@@ -104,7 +104,7 @@ public class Tests {
         server.stop();
 
         assertEquals(2L, table.getLength() );
-        assertEquals(message, c.getValue(0));
+        assertEquals(message, c.getData().getValue(0));
     }
 
     @Test
@@ -163,9 +163,9 @@ public class Tests {
 
         assertEquals(4L, t.getLength() );
 
-        assertEquals(3.0, tc.getValue(0));
-        assertEquals(7.0, tc.getValue(1));
-        assertEquals(11.0, tc.getValue(2));
+        assertEquals(3.0, tc.getData().getValue(0));
+        assertEquals(7.0, tc.getData().getValue(1));
+        assertEquals(11.0, tc.getData().getValue(2));
     }
 
     @Test
@@ -222,10 +222,10 @@ public class Tests {
 
         assertEquals(21L, t.getLength() );
 
-        assertEquals(9.9999991221206, tc.getValue(0));
-        assertEquals(3.9708022, tc.getValue(1));
-        assertEquals(197.61398, tc.getValue(19));
-        assertEquals(633.6320000000001, tc.getValue(20));
+        assertEquals(9.9999991221206, tc.getData().getValue(0));
+        assertEquals(3.9708022, tc.getData().getValue(1));
+        assertEquals(197.61398, tc.getData().getValue(19));
+        assertEquals(633.6320000000001, tc.getData().getValue(20));
     }
 
     @Test
@@ -257,8 +257,8 @@ public class Tests {
 
         assertEquals(2L, t.getLength() );
 
-        assertEquals(7.0, tc.getValue(1));
-        assertEquals(11.0, tc.getValue(2));
+        assertEquals(7.0, tc.getData().getValue(1));
+        assertEquals(11.0, tc.getData().getValue(2));
     }
 
 }

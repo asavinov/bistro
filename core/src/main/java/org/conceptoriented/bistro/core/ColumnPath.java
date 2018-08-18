@@ -16,7 +16,7 @@ public class ColumnPath {
         Object out = id;
         for(int i = 0; i < len; i++) {
             Column col = this.columns.get(i);
-            out = col.getValue((long)out); // Previously obtained id is supposed to be valid
+            out = col.getData().getValue((long)out); // Previously obtained id is supposed to be valid
 
             if(i == len - 1) { // Do not check the output for the very last segment (return as is)
                 break;
@@ -36,7 +36,7 @@ public class ColumnPath {
         if(len > 1) {
             for(int i = 1; i < len; i++) {
                 Column col = this.columns.get(i);
-                out = col.getValue((long)out);
+                out = col.getData().getValue((long)out);
 
                 if(i == len - 1) { // Do not check the output for the very last segment (return as is)
                     break;

@@ -98,7 +98,7 @@ public class Example3 {
         //
 
         Column volumeSum = schema.createColumn("Volume Sum", intervals);
-        volumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        volumeSum.getData().setDefaultValue(0.0); // It will be used as an initial value
         volumeSum.accumulate(
                 interval, // Link: Event time stamp -> Interval
                 (a,p) -> (double)a + Double.valueOf((String)p[0]),
@@ -107,7 +107,7 @@ public class Example3 {
         );
 
         Column quoteCount = schema.createColumn("Quote Count", intervals);
-        quoteCount.setDefaultValue(0.0); // It will be used as an initial value
+        quoteCount.getData().setDefaultValue(0.0); // It will be used as an initial value
         quoteCount.accumulate(
                 interval, // Link: Event time stamp -> Interval
                 (a,p) -> (double)a + 1.0,
@@ -125,7 +125,7 @@ public class Example3 {
         //
 
         Column avgVolumeIncrease = schema.createColumn("Average Volume Increase", intervals);
-        avgVolumeIncrease.setDefaultValue(0.0); // It will be used as an initial value
+        avgVolumeIncrease.getData().setDefaultValue(0.0); // It will be used as an initial value
         avgVolumeIncrease.roll(
                 2, 0, // Window size: 2 records - this one and the previous one (to compute difference)
                 (a,d,p) -> {
@@ -231,7 +231,7 @@ class MyAction3 implements Action {
 
         for( ; lastEnd < end; lastEnd++) {
 
-            double value = (double)this.column.getValue(lastEnd);
+            double value = (double)this.column.getData().getValue(lastEnd);
 
             if(Math.abs(value) > deviation) {
                 System.out.print(">>> " + lastEnd + ": " + value + "\n");

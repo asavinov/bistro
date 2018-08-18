@@ -40,7 +40,7 @@ public class Example6 {
         //
 
         Column priceVolumeSum = schema.createColumn("PriceSum", quotes);
-        priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        priceVolumeSum.getData().setDefaultValue(0.0); // It will be used as an initial value
         priceVolumeSum.roll(
                 time_seconds, // Time stamp
                 60, 0, // 3600 seconds moving average
@@ -49,7 +49,7 @@ public class Example6 {
         );
 
         Column volumeSum = schema.createColumn("VolumneSum", quotes);
-        volumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        volumeSum.getData().setDefaultValue(0.0); // It will be used as an initial value
         volumeSum.roll(
                 time_seconds, // Time stamp
                 60, 0, // 3600 seconds moving average
@@ -71,13 +71,13 @@ public class Example6 {
 
         Object value;
 
-        value = volumeSum.getValue(3); // value = 0,54029262 (3 elements including this one)
+        value = volumeSum.getData().getValue(3); // value = 0,54029262 (3 elements including this one)
         if(Math.abs((double)value - 0.54029262) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = priceVolumeSum.getValue(3); // value = 214,430001602
+        value = priceVolumeSum.getData().getValue(3); // value = 214,430001602
         if(Math.abs((double)value - 214.430001602) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = VWAP.getValue(3); // value = 396,87753203440017374288769667074
+        value = VWAP.getData().getValue(3); // value = 396,87753203440017374288769667074
         if(Math.abs((double)value - 396.87753203440017374288769667074) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 }

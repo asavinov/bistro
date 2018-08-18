@@ -36,9 +36,9 @@ public class Tests {
 
         assertTrue(tb.getDependencies().contains(ta)); // Check correctness of dependencies
 
-        assertEquals(11.0, (Double) tb.getValue(0), Double.MIN_VALUE);
-        assertEquals(Double.NaN, tb.getValue(1));
-        assertEquals(13.0, (Double) tb.getValue(2), Double.MIN_VALUE);
+        assertEquals(11.0, (Double) tb.getData().getValue(0), Double.MIN_VALUE);
+        assertEquals(Double.NaN, tb.getData().getValue(1));
+        assertEquals(13.0, (Double) tb.getData().getValue(2), Double.MIN_VALUE);
     }
 
     Schema createCalcSchema() {
@@ -50,9 +50,9 @@ public class Tests {
         t.add();
         t.add();
         t.add();
-        ta.setValue(0, 5.0);
-        ta.setValue(1, null);
-        ta.setValue(2, 6.0);
+        ta.getData().setValue(0, 5.0);
+        ta.getData().setValue(1, null);
+        ta.getData().setValue(2, 6.0);
 
         return s;
     }
@@ -104,8 +104,8 @@ public class Tests {
 
         // Add one record to link to
         t1.add();
-        t1a.setValue(0, 5.0);
-        t1b.setValue(0, "bbb");
+        t1a.getData().setValue(0, 5.0);
+        t1b.getData().setValue(0, "bbb");
 
         //
         // Table 2 (referencing table to link records from)
@@ -119,11 +119,11 @@ public class Tests {
 
         // Add two records to link from
         t2.add();
-        t2a.setValue(0, 5.0);
-        t2b.setValue(0, "bbb");
+        t2a.getData().setValue(0, 5.0);
+        t2b.getData().setValue(0, "bbb");
         t2.add();
-        t2a.setValue(1, 10.0);
-        t2b.setValue(1, "ccc");
+        t2a.getData().setValue(1, 10.0);
+        t2b.getData().setValue(1, "ccc");
 
         return s;
     }
@@ -140,7 +140,7 @@ public class Tests {
 
         t2g.evaluate();
 
-        ta.setDefaultValue(0.0);
+        ta.getData().setDefaultValue(0.0);
 
         // Accu expression translated from a formula
         Expression expr = new FormulaExp4j(" [out] + 2.0 * [Id] ", s.getTable("T2"));
@@ -158,15 +158,15 @@ public class Tests {
         assertTrue(ta_deps.contains(s.getColumn("T2", "Id"))); // Used in formula
         assertTrue(ta_deps.contains(s.getColumn("T2", "G"))); // Group path
 
-        assertEquals(20.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
+        assertEquals(20.0, ta.getData().getValue(0));
+        assertEquals(20.0, ta.getData().getValue(1));
+        assertEquals(0.0, ta.getData().getValue(2));
 
         // Test how dirty status is propagated through dependencies
-        t2.getColumn("Id").setValue(2, 5.0); // Change (make dirty) non-derived column
+        t2.getColumn("Id").getData().setValue(2, 5.0); // Change (make dirty) non-derived column
         s.evaluate(); // Both t2g and ta have to be evaluated
 
-        assertEquals(30.0, ta.getValue(0));
+        assertEquals(30.0, ta.getData().getValue(0));
     }
 
     Schema createAccuSchema() {
@@ -186,9 +186,9 @@ public class Tests {
         t1.add();
         t1.add();
         t1.add();
-        tid.setValue(0, 5.0);
-        tid.setValue(1, 10.0);
-        tid.setValue(2, 15.0);
+        tid.getData().setValue(0, 5.0);
+        tid.getData().setValue(1, 10.0);
+        tid.getData().setValue(2, 15.0);
 
         //
         // Table 2 (fact table)
@@ -209,10 +209,10 @@ public class Tests {
         t2.add();
         t2.add();
         t2.add();
-        t2id.setValue(0, 5.0);
-        t2id.setValue(1, 5.0);
-        t2id.setValue(2, 10.0);
-        t2id.setValue(3, 20.0);
+        t2id.getData().setValue(0, 5.0);
+        t2id.getData().setValue(1, 5.0);
+        t2id.getData().setValue(2, 10.0);
+        t2id.getData().setValue(3, 20.0);
 
         return schema;
     }

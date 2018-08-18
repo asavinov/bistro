@@ -37,9 +37,9 @@ public class AccumulateTests {
         t.add();
         t.add();
         t.add();
-        tid.setValue(0, 5);
-        tid.setValue(1, 10);
-        tid.setValue(2, 15);
+        tid.getData().setValue(0, 5);
+        tid.getData().setValue(1, 10);
+        tid.getData().setValue(2, 15);
 
         //
         // Table 2 (fact table)
@@ -59,10 +59,10 @@ public class AccumulateTests {
         t2.add();
         t2.add();
         t2.add();
-        t2id.setValue(0, 5);
-        t2id.setValue(1, 5);
-        t2id.setValue(2, 10);
-        t2id.setValue(3, 20);
+        t2id.getData().setValue(0, 5);
+        t2id.getData().setValue(1, 5);
+        t2id.getData().setValue(2, 10);
+        t2id.getData().setValue(3, 20);
 
         return schema;
     }
@@ -80,7 +80,7 @@ public class AccumulateTests {
         // Accumulate column
         // Lambda for accumulation " [out] + [Id] "
         Column ta = t.getColumn("A");
-        ta.setDefaultValue(0.0);
+        ta.getData().setDefaultValue(0.0);
         ta.accumulate(
                 t2g,
                 (a,p) -> ((Number)a).doubleValue() + ((Number)p[0]).doubleValue(),
@@ -95,49 +95,49 @@ public class AccumulateTests {
         assertTrue(ta_deps.contains(t2.getColumn("Id"))); // Used in formula
         assertTrue(ta_deps.contains(t2.getColumn("G"))); // Group path
 
-        assertEquals(10.0, ta.getValue(0));
-        assertEquals(10.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
+        assertEquals(10.0, ta.getData().getValue(0));
+        assertEquals(10.0, ta.getData().getValue(1));
+        assertEquals(0.0, ta.getData().getValue(2));
 
         //
         // Test incremental evaluation using adder
         //
 
         t2.add();
-        t2id.setValue(4, 10);
+        t2id.getData().setValue(4, 10);
 
         s.evaluate();
 
-        assertEquals(10.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
+        assertEquals(10.0, ta.getData().getValue(0));
+        assertEquals(20.0, ta.getData().getValue(1));
+        assertEquals(0.0, ta.getData().getValue(2));
 
         t2.remove();
 
         s.evaluate();
 
-        assertEquals(5.0, ta.getValue(0));
-        assertEquals(20.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
+        assertEquals(5.0, ta.getData().getValue(0));
+        assertEquals(20.0, ta.getData().getValue(1));
+        assertEquals(0.0, ta.getData().getValue(2));
 
         t2.remove();
         t2.remove();
         t2.add();
-        t2id.setValue(5, 15);
+        t2id.getData().setValue(5, 15);
 
         s.evaluate();
 
-        assertEquals(0.0, ta.getValue(0));
-        assertEquals(10.0, ta.getValue(1));
-        assertEquals(15.0, ta.getValue(2));
+        assertEquals(0.0, ta.getData().getValue(0));
+        assertEquals(10.0, ta.getData().getValue(1));
+        assertEquals(15.0, ta.getData().getValue(2));
 
         t2.remove(3);
 
         s.evaluate();
 
-        assertEquals(0.0, ta.getValue(0));
-        assertEquals(0.0, ta.getValue(1));
-        assertEquals(0.0, ta.getValue(2));
+        assertEquals(0.0, ta.getData().getValue(0));
+        assertEquals(0.0, ta.getData().getValue(1));
+        assertEquals(0.0, ta.getData().getValue(2));
     }
 
 }

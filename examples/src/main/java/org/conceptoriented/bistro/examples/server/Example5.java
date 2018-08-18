@@ -87,15 +87,15 @@ public class Example5 {
         //
 
         Column axSum = schema.createColumn("AX Sum", intervals);
-        axSum.setDefaultValue(0.0);
+        axSum.getData().setDefaultValue(0.0);
         axSum.accumulate(ai, (a,p) -> (double)a + (double)p[0], null, ax);
 
         Column aySum = schema.createColumn("AY Sum", intervals);
-        aySum.setDefaultValue(0.0);
+        aySum.getData().setDefaultValue(0.0);
         aySum.accumulate(ai, (a,p) -> (double)a + (double)p[0], null, ay);
 
         Column aCount = schema.createColumn("A Count", intervals);
-        aCount.setDefaultValue(0.0);
+        aCount.getData().setDefaultValue(0.0);
         aCount.accumulate(ai, (a,p) -> (double)a + 1.0, null);
 
         Column axAvg = schema.createColumn("AX Average", intervals);
@@ -109,7 +109,7 @@ public class Example5 {
         //
 
         Column axSmoothed = schema.createColumn("AX Smoothed", intervals);
-        axSmoothed.setDefaultValue(0.0);
+        axSmoothed.getData().setDefaultValue(0.0);
         axSmoothed.roll(
                 6, 0, // Window size
                 (a,d,p) -> p[0] != null ? (double)a + (double)p[0] / 6.0 : 0.0,
@@ -117,7 +117,7 @@ public class Example5 {
         );
 
         Column aySmoothed = schema.createColumn("AY Smoothed", intervals);
-        aySmoothed.setDefaultValue(0.0);
+        aySmoothed.getData().setDefaultValue(0.0);
         aySmoothed.roll(
                 6, 0, // Window size
                 (a,d,p) -> p[0] != null ? (double)a + (double)p[0] / 6.0 : 0.0,
@@ -161,7 +161,7 @@ public class Example5 {
                     long len = intervals.getIdRange().end;
                     if(len < 2) return;
                     // Latest complete deviation
-                    double deviation = (double) xyDeviation.getValue(len - 2);
+                    double deviation = (double) xyDeviation.getData().getValue(len - 2);
                     System.out.print("o " + len + ": ");
                     if(deviation > 2.0) {
                         System.out.print(">>> Anomaly detected. Deviation is too large: " + deviation + "\n");

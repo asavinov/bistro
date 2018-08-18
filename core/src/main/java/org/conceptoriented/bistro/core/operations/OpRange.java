@@ -216,9 +216,9 @@ public class OpRange implements Operation {
 
             // Append a new interval to the table
             long id = this.table.add();
-            this.rangeColumn.setValue(id, intervalValue);
+            this.rangeColumn.getData().setValue(id, intervalValue);
             if(this.intervalColumn != null) {
-                this.intervalColumn.setValue(id, intervalNo);
+                this.intervalColumn.getData().setValue(id, intervalNo);
             }
 
             intervalValue = this.getNext(intervalValue); // Iterate the value
@@ -246,9 +246,9 @@ public class OpRange implements Operation {
             if(intervalNo >= 0 && intervalNo < intervalCount) {
                 // Append a new interval to the table
                 id = this.table.add();
-                this.rangeColumn.setValue(id, intervalValue);
+                this.rangeColumn.getData().setValue(id, intervalValue);
                 if(this.intervalColumn != null) {
-                    this.intervalColumn.setValue(id, intervalNo);
+                    this.intervalColumn.getData().setValue(id, intervalNo);
                 }
             }
         }
@@ -257,10 +257,10 @@ public class OpRange implements Operation {
             // Find initial (previous) interval
             id = this.table.getIdRange().end - 1;
             if(this.intervalColumn != null) {
-                intervalNo = (long) this.intervalColumn.getValue(id);
+                intervalNo = (long) this.intervalColumn.getData().getValue(id);
             }
 
-            intervalValue = this.rangeColumn.getValue(id);
+            intervalValue = this.rangeColumn.getData().getValue(id);
             if(this.beforeInterval(value, intervalValue)) { // This may happen if an old time is appended - we cannot append older intervals
                 return id;
             }
@@ -279,9 +279,9 @@ public class OpRange implements Operation {
                 if(intervalNo >= 0 && intervalNo < intervalCount) {
                     // Append a new interval to the table
                     id = this.table.add();
-                    this.rangeColumn.setValue(id, intervalValue);
+                    this.rangeColumn.getData().setValue(id, intervalValue);
                     if(this.intervalColumn != null) {
-                        this.intervalColumn.setValue(id, intervalNo);
+                        this.intervalColumn.getData().setValue(id, intervalNo);
                     }
                 }
                 else {
@@ -305,7 +305,7 @@ public class OpRange implements Operation {
 
         Range idRange = this.table.getIdRange();
 
-        long index = this.rangeColumn.findSorted(value); // Data in a range table is supposed to be sorted
+        long index = this.rangeColumn.getData().findSorted(value); // Data in a range table is supposed to be sorted
 
         if(index >= 0) { // If positive, then it is id of the found value
             ;
@@ -327,7 +327,7 @@ public class OpRange implements Operation {
             }
             else if(index >= idRange.end) { // After last element
 
-                Object lastValue = this.rangeColumn.getValue(idRange.end-1);
+                Object lastValue = this.rangeColumn.getData().getValue(idRange.end-1);
 
                 boolean inInterval = this.inInterval(value, lastValue);
                 if(inInterval) {

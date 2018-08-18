@@ -27,7 +27,7 @@ public class ExUtils {
         for(int i=0; i<lines.size()-1; i++) {
             table.add();
             for(int j=0; j<columns.length; j++) {
-                columns[j].setValue(i, lines.get(i+1)[j]);
+                columns[j].getData().setValue(i, lines.get(i+1)[j]);
             }
         }
     }

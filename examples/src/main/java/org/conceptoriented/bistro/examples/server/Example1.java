@@ -52,8 +52,8 @@ public class Example1 {
                 x -> {
                     long id = table.add();
                     double value = ThreadLocalRandom.current().nextDouble(30.0, 40.0);
-                    column1.setValue(id, "Hello Bistro Streams!");
-                    column2.setValue(id, value);
+                    column1.getData().setValue(id, "Hello Bistro Streams!");
+                    column2.getData().setValue(id, value);
                 }
         );
 

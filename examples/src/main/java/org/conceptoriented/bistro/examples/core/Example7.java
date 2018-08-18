@@ -69,7 +69,7 @@ public class Example7 {
         //
 
         Column priceVolumeSum = schema.createColumn("Price Volume Sum", hourlyQuotes);
-        priceVolumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        priceVolumeSum.getData().setDefaultValue(0.0); // It will be used as an initial value
         priceVolumeSum.accumulate(
                 timestamp2hour,
                 (a,p) -> Double.valueOf((String)p[0]) * Double.valueOf((String)p[1]) + (double)a, // [Price] * [Amount] + [out]
@@ -78,7 +78,7 @@ public class Example7 {
         );
 
         Column volumeSum = schema.createColumn("Volumne Sum", hourlyQuotes);
-        volumeSum.setDefaultValue(0.0); // It will be used as an initial value
+        volumeSum.getData().setDefaultValue(0.0); // It will be used as an initial value
         volumeSum.accumulate(
                 timestamp2hour, // Time stamp
                 (a,p) -> Double.valueOf((String)p[0]) + (double)a, // [Amount] + [out]
@@ -103,18 +103,18 @@ public class Example7 {
         value = hourlyQuotes.getLength();
         if(((Number)value).longValue() != 288) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = timestamp2hour.getValue(20);
+        value = timestamp2hour.getData().getValue(20);
         if(((Number)value).longValue() != 0) System.out.println(">>> UNEXPECTED RESULT.");
-        value = timestamp2hour.getValue(21);
+        value = timestamp2hour.getData().getValue(21);
         if(((Number)value).longValue() != 1) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = volumeSum.getValue(0);
+        value = volumeSum.getData().getValue(0);
         if(Math.abs((double)value - 7.0947694) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = priceVolumeSum.getValue(3);
+        value = priceVolumeSum.getData().getValue(3);
         if(Math.abs((double)value - 48473.09601907268) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
 
-        value = VWAP.getValue(5);
+        value = VWAP.getData().getValue(5);
         if(Math.abs((double)value - 400.61719044972426) > 1e-10) System.out.println(">>> UNEXPECTED RESULT.");
     }
 }

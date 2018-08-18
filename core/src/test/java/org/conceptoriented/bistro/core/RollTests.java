@@ -27,7 +27,7 @@ public class RollTests {
 
         // Create roll column
         Column t_r = s.createColumn("R", t);
-        t_r.setDefaultValue(0.0);
+        t_r.getData().setDefaultValue(0.0);
 
         // Lambda for rolling accumulation " [out] + [M] / (distance + 1) "
         t_r.roll(
@@ -37,11 +37,11 @@ public class RollTests {
         );
         t_r.evaluate();
 
-        assertEquals(1.0, t_r.getValue(0));
-        assertEquals(2.5, t_r.getValue(1));
-        assertEquals(4.0, t_r.getValue(2));
-        assertEquals(3.5, t_r.getValue(3));
-        assertEquals(2.0, t_r.getValue(4));
+        assertEquals(1.0, t_r.getData().getValue(0));
+        assertEquals(2.5, t_r.getData().getValue(1));
+        assertEquals(4.0, t_r.getData().getValue(2));
+        assertEquals(3.5, t_r.getData().getValue(3));
+        assertEquals(2.0, t_r.getData().getValue(4));
     }
 
     @Test
@@ -57,7 +57,7 @@ public class RollTests {
 
         // Create roll column
         Column t_r = s.createColumn("R", t);
-        t_r.setDefaultValue(0.0);
+        t_r.getData().setDefaultValue(0.0);
 
         // Lambda for rolling accumulation " [out] + [M] / (distance + 1) "
         t_r.roll(
@@ -68,11 +68,11 @@ public class RollTests {
         );
         t_r.evaluate();
 
-        assertEquals(1.0, t_r.getValue(0));
-        assertEquals(2.0, t_r.getValue(1));
-        assertEquals(5.0, t_r.getValue(2));
-        assertEquals(7.0, t_r.getValue(3));
-        assertEquals(6.0, t_r.getValue(4));
+        assertEquals(1.0, t_r.getData().getValue(0));
+        assertEquals(2.0, t_r.getData().getValue(1));
+        assertEquals(5.0, t_r.getData().getValue(2));
+        assertEquals(7.0, t_r.getData().getValue(3));
+        assertEquals(6.0, t_r.getData().getValue(4));
     }
 
     Schema createSchema() {
@@ -91,19 +91,19 @@ public class RollTests {
 
         // Create measure to be aggregated
         Column tf_m = schema.createColumn("M", tf);
-        tf_m.setValue(0, 1.0);
-        tf_m.setValue(1, 2.0);
-        tf_m.setValue(2, 3.0);
-        tf_m.setValue(3, 2.0);
-        tf_m.setValue(4, 1.0);
+        tf_m.getData().setValue(0, 1.0);
+        tf_m.getData().setValue(1, 2.0);
+        tf_m.getData().setValue(2, 3.0);
+        tf_m.getData().setValue(3, 2.0);
+        tf_m.getData().setValue(4, 1.0);
 
         // Create column to be used as a distance between rows, e.g., storing timestamp as milliseconds
         Column tf_d = schema.createColumn("D", tf);
-        tf_d.setValue(0, 1514761200000L); // 2018-01-01 00:00:00
-        tf_d.setValue(1, 1514761200000L + 1000L); // 1 second later
-        tf_d.setValue(2, 1514761200000L + 1100L);
-        tf_d.setValue(3, 1514761200000L + 1200L);
-        tf_d.setValue(4, 1514761200000L + 2000L); // 2 seconds later
+        tf_d.getData().setValue(0, 1514761200000L); // 2018-01-01 00:00:00
+        tf_d.getData().setValue(1, 1514761200000L + 1000L); // 1 second later
+        tf_d.getData().setValue(2, 1514761200000L + 1100L);
+        tf_d.getData().setValue(3, 1514761200000L + 1200L);
+        tf_d.getData().setValue(4, 1514761200000L + 2000L); // 2 seconds later
 
         return schema;
     }
