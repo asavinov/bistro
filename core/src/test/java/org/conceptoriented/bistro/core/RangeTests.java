@@ -44,7 +44,7 @@ public class RangeTests {
         assertEquals(0, t_deps.size());
 
         // Result size
-        assertEquals(5, t.getLength());
+        assertEquals(5, t.getData().getLength());
 
         // c11 = {111222}
         assertEquals(10.0, c11.getData().getValue(0));
@@ -79,7 +79,7 @@ public class RangeTests {
         assertEquals(0, t_deps.size());
 
         // Result size
-        assertEquals(5, t.getLength());
+        assertEquals(5, t.getData().getLength());
 
         // c11 = {111222}
         assertEquals(Instant.parse("2018-01-01T00:00:10.00Z"), c11.getData().getValue(0));
@@ -114,7 +114,7 @@ public class RangeTests {
         assertEquals(0, t_deps.size());
 
         // Result size
-        assertEquals(5, t.getLength());
+        assertEquals(5, t.getData().getLength());
 
         // c11 = {111222}
         assertEquals(LocalDate.of(2018, Month.JANUARY, 10), c11.getData().getValue(0));

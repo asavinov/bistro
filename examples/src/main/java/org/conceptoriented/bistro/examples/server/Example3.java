@@ -171,7 +171,7 @@ public class Example3 {
 
         timer.addAction( // Print some status info
                 x -> {
-                    long len = quotes.getIdRange().end;
+                    long len = quotes.getData().getIdRange().end;
                     System.out.print("o " + len + "\n");
                 }
         );
@@ -227,7 +227,7 @@ class MyAction3 implements Action {
 
         // Note that we skip the last interval because it is not complete yet
         // We check conditions only on complete intervals
-        long end = this.table.getIdRange().end - 1;
+        long end = this.table.getData().getIdRange().end - 1;
 
         for( ; lastEnd < end; lastEnd++) {
 

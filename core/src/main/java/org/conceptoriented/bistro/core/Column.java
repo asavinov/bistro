@@ -144,7 +144,7 @@ public class Column implements Element {
                 if(((Column)dep).getData().getChangedAt()  > thisChangedAt) return true;
             }
             else if(dep instanceof Table) {
-                if(((Table)dep).getChangedAt()  > thisChangedAt) return true;
+                if(((Table)dep).getData().getChangedAt()  > thisChangedAt) return true;
             }
 
             if(dep.isDirty()) return true; // Recursion
@@ -468,8 +468,6 @@ public class Column implements Element {
         this.output = output;
 
         // Where its output values are stored
-        this.data = new org.conceptoriented.bistro.core.data.ColumnDataImpl(this.input.getIdRange().start, this.input.getIdRange().end);
-
-        this.getData().setChangedAt(0); // Very old - need to be evaluated
+        this.data = new org.conceptoriented.bistro.core.data.ColumnDataImpl(this.input.getData().getIdRange().start, this.input.getData().getIdRange().end);
     }
 }

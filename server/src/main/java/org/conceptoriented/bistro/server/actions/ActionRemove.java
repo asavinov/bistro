@@ -32,28 +32,28 @@ public class ActionRemove implements Action {
 
     // Ensure that the table has count elements or less
     protected void removeCount() {
-        long toRemove = table.getLength() - this.size;
+        long toRemove = table.getData().getLength() - this.size;
 
         if(toRemove > 0) {
-            this.table.remove(toRemove);
+            this.table.getData().remove(toRemove);
         }
     }
 
     // Ensure that the table has only elements with specified age or younger
     protected void removeDuration() {
 
-        if(this.table.getLength() == 0) return;
+        if(this.table.getData().getLength() == 0) return;
 
         // Measure age relative to the current time
         Instant now = Instant.now();
         Instant oldest = now.minus(this.age);
 
-        this.table.remove(this.column, oldest); // Remove all records older than the specified time
+        this.table.getData().remove(this.column, oldest); // Remove all records older than the specified time
     }
 
     protected void removeDurationManually() { // Same as previous method but manually remove records
 
-        if(this.table.getLength() == 0) return;
+        if(this.table.getData().getLength() == 0) return;
 
         // Measure age relative to the youngest record
         //Instant now = (Instant)this.column.getValue(range.end);
@@ -62,7 +62,7 @@ public class ActionRemove implements Action {
 
         // Iterate starting from the oldest elements and moving to the youngest element
         long toRemove = 0;
-        Range range = this.table.getIdRange();
+        Range range = this.table.getData().getIdRange();
         for(long i=range.start; i<range.end; i++) {
             Instant t = (Instant)this.column.getData().getValue(i);
             Duration d = Duration.between(t, now);
@@ -76,7 +76,7 @@ public class ActionRemove implements Action {
         }
 
         if(toRemove > 0) {
-            this.table.remove(toRemove);
+            this.table.getData().remove(toRemove);
         }
     }
 

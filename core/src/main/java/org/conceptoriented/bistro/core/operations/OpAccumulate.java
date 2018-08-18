@@ -62,11 +62,11 @@ public class OpAccumulate implements Operation {
         Table mainTable = this.groupPath.getInput(); // Loop/scan table - fact table (not the table product this column is defined)
 
         if(this.remover != null) {
-            Range removedRange = mainTable.getRemovedRange();
+            Range removedRange = mainTable.getData().getRemovedRange();
             this.evalUpdater(removedRange, this.remover);
         }
         if(this.adder != null) {
-            Range addedRange = mainTable.getAddedRange();
+            Range addedRange = mainTable.getData().getAddedRange();
             this.evalUpdater(addedRange, this.adder);
         }
 
@@ -77,8 +77,8 @@ public class OpAccumulate implements Operation {
 
     protected void evalInitialier() {
         Table mainTable = this.column.getInput();
-        if(mainTable.isChanged()) {
-            Range addedRange = mainTable.getAddedRange();
+        if(mainTable.getData().isChanged()) {
+            Range addedRange = mainTable.getData().getAddedRange();
             this.column.getData().setValue(addedRange);
         }
     }

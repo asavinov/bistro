@@ -56,10 +56,10 @@ public class OpProduct implements Operation {
         for (int i = 0; i < colCount; i++) offsets[i] = -1;
 
         long[] starts = new long[colCount]; // Start ids for each dimension
-        for (int i = 0; i < colCount; i++) starts[i] = keyColumns.get(i).getOutput().getIdRange().start;
+        for (int i = 0; i < colCount; i++) starts[i] = keyColumns.get(i).getOutput().getData().getIdRange().start;
 
         long[] lengths = new long[colCount]; // Length of each dimension (how many ids in each dimension)
-        for (int i = 0; i < colCount; i++) lengths[i] = keyColumns.get(i).getOutput().getLength();
+        for (int i = 0; i < colCount; i++) lengths[i] = keyColumns.get(i).getOutput().getData().getLength();
 
         int top = -1; // The current level/top product we change the offset. Depth of recursion.
         do ++top; while (top < colCount && lengths[top] == 0);
@@ -93,7 +93,7 @@ public class OpProduct implements Operation {
                 // Append a new record if necessary
                 //
                 if(whereTrue == true) {
-                    long input = this.table.add();
+                    long input = this.table.getData().add();
                     this.table.setValues(input, keyColumns, record);
                 }
 

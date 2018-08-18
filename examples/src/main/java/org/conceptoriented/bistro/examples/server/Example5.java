@@ -158,7 +158,7 @@ public class Example5 {
 
         timer.addAction( // Print some status info
                 x -> {
-                    long len = intervals.getIdRange().end;
+                    long len = intervals.getData().getIdRange().end;
                     if(len < 2) return;
                     // Latest complete deviation
                     double deviation = (double) xyDeviation.getData().getValue(len - 2);

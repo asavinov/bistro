@@ -50,7 +50,7 @@ public class Example1 {
 
         timer.addAction( // Add one record
                 x -> {
-                    long id = table.add();
+                    long id = table.getData().add();
                     double value = ThreadLocalRandom.current().nextDouble(30.0, 40.0);
                     column1.getData().setValue(id, "Hello Bistro Streams!");
                     column2.getData().setValue(id, value);
@@ -63,7 +63,7 @@ public class Example1 {
 
         timer.addAction( // Print something
                 x -> {
-                    System.out.println("Number of events: " + table.getLength());
+                    System.out.println("Number of events: " + table.getData().getLength());
                 }
         );
 

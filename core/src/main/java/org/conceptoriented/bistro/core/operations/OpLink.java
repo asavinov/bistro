@@ -70,7 +70,7 @@ public class OpLink implements Operation {
         Table mainTable = this.column.getInput();
 
         // Currently we make full scan by re-evaluating all existing input ids
-        Range mainRange = this.column.getInput().getIdRange();
+        Range mainRange = this.column.getInput().getData().getIdRange();
 
         //
         // Prepare value paths/exprs for search/find
@@ -104,7 +104,7 @@ public class OpLink implements Operation {
         // Determine the scope of dirtiness
         //
 
-        Range mainRange = mainTable.getIdRange();
+        Range mainRange = mainTable.getData().getIdRange();
 
         boolean fullScope = false;
 
@@ -136,7 +136,7 @@ public class OpLink implements Operation {
         }
 
         if(!fullScope) {
-            mainRange = mainTable.getAddedRange();
+            mainRange = mainTable.getData().getAddedRange();
         }
 
         //

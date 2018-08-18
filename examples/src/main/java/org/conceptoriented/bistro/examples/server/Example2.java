@@ -115,7 +115,7 @@ public class Example2 {
         ConnectorTimer timer = new ConnectorTimer(server,1000);
         timer.addAction(
                 x -> {
-                    long len = quotes.getIdRange().end;
+                    long len = quotes.getData().getIdRange().end;
                     System.out.print("o " + len + "\n");
                 }
         );
@@ -175,7 +175,7 @@ class MyAction2 implements Action {
     @Override
     public void evaluate(Context ctx) {
 
-        long end = this.table.getIdRange().end;
+        long end = this.table.getData().getIdRange().end;
 
         for( ; lastEnd < end; lastEnd++) {
 

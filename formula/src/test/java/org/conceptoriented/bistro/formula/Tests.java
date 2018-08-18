@@ -47,9 +47,9 @@ public class Tests {
         Column ta = s.createColumn("A", t);
         Column tb = s.createColumn("B", t);
 
-        t.add();
-        t.add();
-        t.add();
+        t.getData().add();
+        t.getData().add();
+        t.getData().add();
         ta.getData().setValue(0, 5.0);
         ta.getData().setValue(1, null);
         ta.getData().setValue(2, 6.0);
@@ -103,7 +103,7 @@ public class Tests {
         Column t1b = s.createColumn("B", t1);
 
         // Add one record to link to
-        t1.add();
+        t1.getData().add();
         t1a.getData().setValue(0, 5.0);
         t1b.getData().setValue(0, "bbb");
 
@@ -118,10 +118,10 @@ public class Tests {
         Column t2c = s.createColumn("C", t2, t1);
 
         // Add two records to link from
-        t2.add();
+        t2.getData().add();
         t2a.getData().setValue(0, 5.0);
         t2b.getData().setValue(0, "bbb");
-        t2.add();
+        t2.getData().add();
         t2a.getData().setValue(1, 10.0);
         t2b.getData().setValue(1, "ccc");
 
@@ -183,9 +183,9 @@ public class Tests {
         // Define accu column
         Column ta = schema.createColumn("A", t1);
 
-        t1.add();
-        t1.add();
-        t1.add();
+        t1.getData().add();
+        t1.getData().add();
+        t1.getData().add();
         tid.getData().setValue(0, 5.0);
         tid.getData().setValue(1, 10.0);
         tid.getData().setValue(2, 15.0);
@@ -205,10 +205,10 @@ public class Tests {
                 t1.getColumn("Id")
         );
 
-        t2.add();
-        t2.add();
-        t2.add();
-        t2.add();
+        t2.getData().add();
+        t2.getData().add();
+        t2.getData().add();
+        t2.getData().add();
         t2id.getData().setValue(0, 5.0);
         t2id.getData().setValue(1, 5.0);
         t2id.getData().setValue(2, 10.0);

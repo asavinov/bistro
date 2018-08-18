@@ -25,7 +25,7 @@ public class ExUtils {
 
     private static void importData(Table table, Column[] columns, List<String[]> lines) {
         for(int i=0; i<lines.size()-1; i++) {
-            table.add();
+            table.getData().add();
             for(int j=0; j<columns.length; j++) {
                 columns[j].getData().setValue(i, lines.get(i+1)[j]);
             }

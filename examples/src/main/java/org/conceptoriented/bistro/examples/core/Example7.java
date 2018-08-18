@@ -100,7 +100,7 @@ public class Example7 {
 
         Object value;
 
-        value = hourlyQuotes.getLength();
+        value = hourlyQuotes.getData().getLength();
         if(((Number)value).longValue() != 288) System.out.println(">>> UNEXPECTED RESULT.");
 
         value = timestamp2hour.getData().getValue(20);

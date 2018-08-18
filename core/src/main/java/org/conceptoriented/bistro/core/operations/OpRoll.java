@@ -72,7 +72,7 @@ public class OpRoll implements Operation {
 
         Table mainTable = this.column.getInput(); // Loop/scan table
 
-        Range mainRange = mainTable.getIdRange();
+        Range mainRange = mainTable.getData().getIdRange();
 
         long min_id = mainRange.start;
         long max_id = mainRange.start;

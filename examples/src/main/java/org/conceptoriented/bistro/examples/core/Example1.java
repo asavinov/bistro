@@ -37,8 +37,8 @@ public class Example1 {
 
         // Elements are appended to tables and are identified by an id
         long id;
-        id = things.add(); // id = 0
-        id = things.add(); // id = 1
+        id = things.getData().add(); // id = 0
+        id = things.getData().add(); // id = 1
 
         // Data values are stored in columns as objects
         thingName.getData().setValue(0, "fridge");
@@ -65,7 +65,7 @@ public class Example1 {
         //
 
         // Add some event data to aggregate
-        events.add(3);
+        events.getData().add(3);
         eventThingName.getData().setValue(0, "oven");
         eventThingName.getData().setValue(1, "fridge");
         eventThingName.getData().setValue(2, "oven");

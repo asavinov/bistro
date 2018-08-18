@@ -37,114 +37,19 @@ public class Table implements Element {
     }
 
     //
-    // Operations with table population
+    // Data
     //
 
-    public long add() { // Add new elements with the next largest id. The created id is returned
-        this.getColumns().forEach( x -> x.getData().add() );
-        this.addedRange.end++; // Grows along with valid ids
-        this.changedAt = System.nanoTime();
-        return this.addedRange.end - 1; // Return id of the added element
+    private TableData data;
+    public TableData getData() {
+        return this.data;
     }
-
-    public Range add(long count) {
-        this.getColumns().forEach( x -> x.getData().add(count) );
-        this.addedRange.end += count; // Grows along with valid ids
-        this.changedAt = System.nanoTime();
-        return new Range(this.addedRange.end - count, this.addedRange.end); // Return ids of added elements
-    }
-
-    public long remove() { // Remove oldest elements with smallest ids. The removed id is returned.
-        this.getColumns().forEach( x -> x.getData().remove() );
-        if(this.getLength() > 0) { this.removedRange.end++; this.changedAt = System.nanoTime(); }
-        return this.removedRange.end - 1; // Id of the removed record (this id is not valid anymore)
-    }
-
-    public Range remove(long count) {
-        long toRemove = Math.min(count, this.getLength());
-        if(toRemove > 0) { this.removedRange.end += toRemove; this.changedAt = System.nanoTime(); }
-        return new Range(this.removedRange.end - toRemove, this.removedRange.end);
-    }
-
-    public void removeAll() {
-        if(this.getLength() > 0) { this.removedRange.end = this.addedRange.end; this.changedAt = System.nanoTime(); }
-    }
-
-    public long remove(Column column, Object value) { // Remove old records with smallest values - less than the specified threshold (think of it as date of birth or id or timestamp)
-        long insertId = column.getData().findSortedFromStart(value); // It can be in any range: deleted, existing, added
-        long toRemove = insertId - this.removedRange.end; // Records which are still not marked as removed
-        if(toRemove > 0) {
-            toRemove = Math.min(toRemove, this.getLength());
-            this.remove(toRemove);
-        }
-        else {
-            toRemove = 0;
-        }
-        return toRemove;
-    }
-
-    // Initialize to default state (e.g., empty set) by also forgetting change history
-    // It is important to propagate this operation to all dependents as reset (not simply emptying) because some of them (like accumulation) have to forget/reset history and ids/references might become invalid
-    // TODO: This propagation can be done manually or we can introduce a special method or it a special reset flag can be introduced which is then inherited and executed by all dependents during evaluation.
-    public void reset() {
-        long initialId = 0;
-        this.addedRange.end = initialId;
-        this.addedRange.start = initialId;
-        this.removedRange.end = initialId;
-        this.removedRange.start = initialId;
-
-        this.changedAt = System.nanoTime();
+    public void setData(TableData data) {
+        this.data = data;
     }
 
     //
-    // Tracking changes.
-    // Change status is delta between previous state and current state (as a number of added and removed records)
-    //
-
-    protected Range addedRange = new Range(); // Newly added ids
-    public Range getAddedRange() {
-        return this.addedRange;
-    }
-
-    protected Range removedRange = new Range(); // Removed ids
-    public Range getRemovedRange() {
-        return this.removedRange;
-    }
-
-    public Range getIdRange() {
-        return new Range(this.removedRange.end, this.addedRange.end); // Derived from added and removed
-    }
-
-    public long getLength() {
-        return this.addedRange.end - this.removedRange.end; // All non-removed records
-    }
-
-    protected long changedAt; // Time of latest change
-    //@Override
-    public long getChangedAt() {
-        return this.changedAt;
-    }
-
-    //@Override
-    public boolean isChanged() { // Changes in a table are made by adding and removing records
-        if(this.addedRange.getLength() != 0) return true;
-        if(this.removedRange.getLength() != 0) return true;
-        return false;
-    }
-
-    //@Override
-    public void setChanged() {
-        this.changedAt = System.nanoTime();
-    }
-
-    //@Override
-    public void resetChanged() { // Forget about the change status/scope/delta without changing the valid data currently in the tables
-        this.addedRange.start = this.addedRange.end;
-        this.removedRange.start = this.removedRange.end;
-    }
-
-    //
-    // Operations with data stored in columns (convenience methods)
+    // Convenience methods: operations with records (data stored in columns)
     //
 
     public void getValues(long id, Map<String,Object> record) {
@@ -260,16 +165,16 @@ public class Table implements Element {
     public boolean isDirty() {
 
         // Definition has changed
-        if(this.getDefinitionChangedAt() > this.getChangedAt()) return true;
+        if(this.getDefinitionChangedAt() > this.getData().getChangedAt()) return true;
 
         // One of its dependencies has changes or is dirty
-        long thisChangedAt = this.getChangedAt();
+        long thisChangedAt = this.getData().getChangedAt();
         for(Element dep : this.getDependencies()) {
             if(dep instanceof Column) {
                 if(((Column)dep).getData().getChangedAt()  > thisChangedAt) return true;
             }
             else if(dep instanceof Table) {
-                if(((Table)dep).getChangedAt()  > thisChangedAt) return true;
+                if(((Table)dep).getData().getChangedAt()  > thisChangedAt) return true;
             }
 
             if(dep.isDirty()) return true; // Recursion
@@ -327,10 +232,9 @@ public class Table implements Element {
 
         if(isProj) {
             // Only reset to initial state (empty). Population will be performed by project columns
-            this.reset();
+            this.getData().reset();
             return;
         }
-
 
         //
         // Populate using own definition
@@ -518,7 +422,7 @@ public class Table implements Element {
         //List<Object> valuePaths = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());
         //List<Column> keyColumns = names.stream().map(x -> this.getSchema().getColumn(this.getName(), x)).collect(Collectors.<Column>toList());
 
-        Range searchRange = this.getIdRange();
+        Range searchRange = this.getData().getIdRange();
         long index = -1;
         for(long i=searchRange.start; i<searchRange.end; i++) { // Scan all records and compare
             // OPTIMIZATION: We could create or use an index and then binary search
@@ -556,7 +460,7 @@ public class Table implements Element {
             boolean whereTrue = this.isWhereTrue(values, columns);
             if(whereTrue) {
                 // Really add
-                index = this.add();
+                index = this.getData().add();
                 this.setValues(index, columns, values);
             }
         }
@@ -609,8 +513,6 @@ public class Table implements Element {
         this.id = UUID.randomUUID();
         this.name = name;
 
-        this.reset();
-
-        this.changedAt = 0; // Very old - need to be evaluated
+        this.data = new org.conceptoriented.bistro.core.data.TableDataImpl(this);
     }
 }

@@ -64,27 +64,27 @@ public class ActionTests {
 
         Thread.sleep(50); // Give some time to the server to process actions
 
-        assertEquals(4, t.getLength());
+        assertEquals(4, t.getData().getLength());
 
         aRemove = new ActionRemove(t, 10); // Ensure that there are 10 records or less
         server.submit(aRemove);
 
         Thread.sleep(50); // Give some time to the server to process actions
 
-        assertEquals(4, t.getLength());
+        assertEquals(4, t.getData().getLength());
 
         aRemove = new ActionRemove(t, tb, Duration.ofHours(1)); // Ensure that all records are maximum 1 hour old
         server.submit(aRemove);
 
         Thread.sleep(50); // Give some time to the server to process actions
 
-        assertEquals(4, t.getLength());
+        assertEquals(4, t.getData().getLength());
 
         aRemove = new ActionRemove(t, tb, Duration.ofMinutes(2)); // Ensure that all records are maximum 3 minutes old
         server.submit(aRemove);
 
         Thread.sleep(50); // Give some time to the server to process actions
 
-        assertEquals(2, t.getLength()); // Two record was deleted
+        assertEquals(2, t.getData().getLength()); // Two record was deleted
     }
 }

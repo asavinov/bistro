@@ -63,7 +63,7 @@ public class Example4 {
 
         // Populate
         for(int i=0; i< ClickSimulator.names.size(); i++) {
-            users.add();
+            users.getData().add();
             String n = ClickSimulator.names.get(i);
             String r = ClickSimulator.users2regions.get(n);
             userName.getData().setValue(i, n);
@@ -134,7 +134,7 @@ public class Example4 {
                 x -> {
                     System.out.print("=== Totals for the last " + Example4.windowLengthSeconds + " seconds: ");
 
-                    Range range = regions.getIdRange();
+                    Range range = regions.getData().getIdRange();
                     for(long i=range.start; i<range.end; i++) {
                         String name = (String) regionName.getData().getValue(i);
                         Double count = (Double) regionClicks.getData().getValue(i);

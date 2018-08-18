@@ -15,7 +15,7 @@ public class ActionAdd implements Action {
 
     @Override
     public void evaluate(Context ctx) {
-        long id = this.table.add();
+        long id = this.table.getData().add();
 
         for (Map.Entry<Column, Object> entry : this.record.entrySet()) {
             entry.getKey().getData().setValue(id, entry.getValue());

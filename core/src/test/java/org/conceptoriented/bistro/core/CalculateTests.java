@@ -44,9 +44,9 @@ public class CalculateTests {
         Column ta = s.createColumn("A", t);
         Column tb = s.createColumn("B", t);
 
-        t.add();
-        t.add();
-        t.add();
+        t.getData().add();
+        t.getData().add();
+        t.getData().add();
         ta.getData().setValue(0, 5.0);
         ta.getData().setValue(1, null);
         ta.getData().setValue(2, 6.0);

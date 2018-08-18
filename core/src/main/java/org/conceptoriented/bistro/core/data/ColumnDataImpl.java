@@ -259,5 +259,6 @@ public class ColumnDataImpl implements ColumnData {
         this.id = UUID.randomUUID();
 
         this.reset(start, end);
+        this.setChangedAt(0); // Very old - need to be evaluated
     }
 }

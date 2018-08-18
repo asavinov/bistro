@@ -34,7 +34,7 @@ public class ProductTests {
         assertTrue(t3_deps.contains(c32.getOutput()));
 
         // Result size
-        assertEquals(6, t3.getLength());
+        assertEquals(6, t3.getData().getLength());
 
         // c31 = {111222}
         assertEquals(1L, c31.getData().getValue(0));
@@ -60,7 +60,7 @@ public class ProductTests {
         s.evaluate();
 
         // Result size
-        assertEquals(4, t3.getLength());
+        assertEquals(4, t3.getData().getLength());
 
         // c31 = {1112}
         assertEquals(1L, c31.getData().getValue(0));
@@ -83,8 +83,8 @@ public class ProductTests {
         Column c11 = s.createColumn("C11", t1);
 
         // Add two arbitrary records
-        t1.add(3);
-        t1.remove();
+        t1.getData().add(3);
+        t1.getData().remove();
         c11.getData().setValue(1, "v1");
         c11.getData().setValue(2, "v2");
 
@@ -96,8 +96,8 @@ public class ProductTests {
         Column c21 = s.createColumn("C21", t2);
 
         // Add three arbitrary records
-        t2.add(4);
-        t2.remove();
+        t2.getData().add(4);
+        t2.getData().remove();
         c21.getData().setValue(1, "v1");
         c21.getData().setValue(2, "v2");
         c21.getData().setValue(3, "v3");
@@ -130,7 +130,7 @@ public class ProductTests {
         s.evaluate();
 
         // Result size
-        assertEquals(3, t3.getLength());
+        assertEquals(3, t3.getData().getLength());
 
         // c31 = {112}
         assertEquals(1L, c31.getData().getValue(0));
@@ -150,8 +150,8 @@ public class ProductTests {
         s.evaluate();
 
         // Result size
-        assertEquals(2, t3.getLength());
-        Range t3range = t3.getIdRange();
+        assertEquals(2, t3.getData().getLength());
+        Range t3range = t3.getData().getIdRange();
 
         // c31 = {11}
         assertEquals(1L, c31.getData().getValue(t3range.start));
@@ -175,7 +175,7 @@ public class ProductTests {
         Column c41 = s.createColumn("C41", t4, s.getTable("T1"));
         Column c42 = s.createColumn("C42", t4, s.getTable("T2"));
 
-        t4.add(4);
+        t4.getData().add(4);
         c41.getData().setValue(0, 1L); c42.getData().setValue(0, 1L); // v1, v1
         c41.getData().setValue(1, 1L); c42.getData().setValue(1, 2L); // v1, v2
         c41.getData().setValue(2, 2L); c42.getData().setValue(2, 2L); // v2, v2

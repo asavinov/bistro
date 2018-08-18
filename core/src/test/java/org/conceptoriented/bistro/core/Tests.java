@@ -48,23 +48,23 @@ public class Tests {
         Table t = s.createTable("My Table");
         Column c1 = s.createColumn("My Column", t);
 
-        long id = t.add();
+        long id = t.getData().add();
         assertEquals(0, id);
-        long id2 = t.add();
+        long id2 = t.getData().add();
         c1.getData().setValue(id2, 1.0);
         assertEquals(1.0, (double) c1.getData().getValue(id2), Double.MIN_VALUE);
 
         Column c2 = s.createColumn("My Column 2", t);
-        long id3 = t.add();
+        long id3 = t.getData().add();
         c2.getData().setValue(id3, "StringValue");
         assertEquals("StringValue", (String) c2.getData().getValue(id3));
 
-        assertEquals(0, t.getIdRange().start);
-        assertEquals(3, t.getIdRange().end);
+        assertEquals(0, t.getData().getIdRange().start);
+        assertEquals(3, t.getData().getIdRange().end);
 
         // Records.
         // Working with multiple keyColumns (records)
-        long id4 = t.add();
+        long id4 = t.getData().add();
         List<Column> cols = Arrays.asList(c1, c2);
         List<Object> vals = Arrays.asList(2.0, "StringValue 2");
         t.setValues(id4, cols, vals);
@@ -101,7 +101,7 @@ public class Tests {
         long id;
         long count;
 
-        t.add(5);
+        t.getData().add(5);
         t.setValues(0, cols, Arrays.asList(1.0, Instant.parse("2018-01-01T00:01:00.000Z"))); // Oldest record
         t.setValues(1, cols, Arrays.asList(2.0, Instant.parse("2018-01-01T00:02:00.000Z")));
         t.setValues(2, cols, Arrays.asList(3.0, Instant.parse("2018-01-01T00:03:00.000Z")));
@@ -109,38 +109,38 @@ public class Tests {
         t.setValues(4, cols, Arrays.asList(5.0, Instant.parse("2018-01-01T00:05:00.000Z"))); // Newest record
 
         // Remove all c1<2.0 which means 1 record with id 0
-        count = t.remove(c1, 2.0);
+        count = t.getData().remove(c1, 2.0);
         assertEquals(1, count);
-        assertEquals(0, t.getRemovedRange().start);
-        assertEquals(1, t.getRemovedRange().end);
-        assertEquals(4, t.getLength());
+        assertEquals(0, t.getData().getRemovedRange().start);
+        assertEquals(1, t.getData().getRemovedRange().end);
+        assertEquals(4, t.getData().getLength());
 
         // This record has been already deleted before so no changes expected
-        count = t.remove(c2, Instant.parse("2018-01-01T00:02:00.000Z"));
+        count = t.getData().remove(c2, Instant.parse("2018-01-01T00:02:00.000Z"));
         assertEquals(0, count);
-        assertEquals(0, t.getRemovedRange().start);
-        assertEquals(1, t.getRemovedRange().end);
-        assertEquals(4, t.getLength());
+        assertEquals(0, t.getData().getRemovedRange().start);
+        assertEquals(1, t.getData().getRemovedRange().end);
+        assertEquals(4, t.getData().getLength());
 
         // Remove 2 older records
-        count = t.remove(c2, Instant.parse("2018-01-01T00:03:03.000Z"));
+        count = t.getData().remove(c2, Instant.parse("2018-01-01T00:03:03.000Z"));
         assertEquals(2, count);
-        assertEquals(0, t.getRemovedRange().start);
-        assertEquals(3, t.getRemovedRange().end);
-        assertEquals(2, t.getLength());
+        assertEquals(0, t.getData().getRemovedRange().start);
+        assertEquals(3, t.getData().getRemovedRange().end);
+        assertEquals(2, t.getData().getLength());
 
         s.evaluate();
         // After evaluation the removed range has to be reset
-        assertEquals(3, t.getRemovedRange().start);
-        assertEquals(3, t.getRemovedRange().end);
-        assertEquals(2, t.getLength());
+        assertEquals(3, t.getData().getRemovedRange().start);
+        assertEquals(3, t.getData().getRemovedRange().end);
+        assertEquals(2, t.getData().getLength());
 
         // Remove more records than exist by specifying very large threshold
-        count = t.remove(c2, Instant.parse("2018-01-01T01:03:03.000Z"));
+        count = t.getData().remove(c2, Instant.parse("2018-01-01T01:03:03.000Z"));
         assertEquals(2, count);
-        assertEquals(3, t.getRemovedRange().start);
-        assertEquals(5, t.getRemovedRange().end);
-        assertEquals(0, t.getLength());
+        assertEquals(3, t.getData().getRemovedRange().start);
+        assertEquals(5, t.getData().getRemovedRange().end);
+        assertEquals(0, t.getData().getLength());
 
     }
 

@@ -85,7 +85,7 @@ public class Tests {
         ConnectorTimer timer = new ConnectorTimer(server,200);
         timer.addAction(
                 x -> {
-                    long id = table.add();
+                    long id = table.getData().add();
                     c.getData().setValue(id, message);
                 }
         );
@@ -103,7 +103,7 @@ public class Tests {
         timer.stop();
         server.stop();
 
-        assertEquals(2L, table.getLength() );
+        assertEquals(2L, table.getData().getLength() );
         assertEquals(message, c.getData().getValue(0));
     }
 
@@ -161,7 +161,7 @@ public class Tests {
         connector.stop();
         server.stop();
 
-        assertEquals(4L, t.getLength() );
+        assertEquals(4L, t.getData().getLength() );
 
         assertEquals(3.0, tc.getData().getValue(0));
         assertEquals(7.0, tc.getData().getValue(1));
@@ -220,7 +220,7 @@ public class Tests {
         connector.stop();
         server.stop();
 
-        assertEquals(21L, t.getLength() );
+        assertEquals(21L, t.getData().getLength() );
 
         assertEquals(9.9999991221206, tc.getData().getValue(0));
         assertEquals(3.9708022, tc.getData().getValue(1));
@@ -255,7 +255,7 @@ public class Tests {
         producer.stop();
         server.stop();
 
-        assertEquals(2L, t.getLength() );
+        assertEquals(2L, t.getData().getLength() );
 
         assertEquals(7.0, tc.getData().getValue(1));
         assertEquals(11.0, tc.getData().getValue(2));

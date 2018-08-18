@@ -34,9 +34,9 @@ public class AccumulateTests {
         // Define accumulate column
         Column ta = schema.createColumn("A", t);
 
-        t.add();
-        t.add();
-        t.add();
+        t.getData().add();
+        t.getData().add();
+        t.getData().add();
         tid.getData().setValue(0, 5);
         tid.getData().setValue(1, 10);
         tid.getData().setValue(2, 15);
@@ -55,10 +55,10 @@ public class AccumulateTests {
                 new Column[] { tid } // Keys: Id from T
         );
 
-        t2.add();
-        t2.add();
-        t2.add();
-        t2.add();
+        t2.getData().add();
+        t2.getData().add();
+        t2.getData().add();
+        t2.getData().add();
         t2id.getData().setValue(0, 5);
         t2id.getData().setValue(1, 5);
         t2id.getData().setValue(2, 10);
@@ -103,7 +103,7 @@ public class AccumulateTests {
         // Test incremental evaluation using adder
         //
 
-        t2.add();
+        t2.getData().add();
         t2id.getData().setValue(4, 10);
 
         s.evaluate();
@@ -112,7 +112,7 @@ public class AccumulateTests {
         assertEquals(20.0, ta.getData().getValue(1));
         assertEquals(0.0, ta.getData().getValue(2));
 
-        t2.remove();
+        t2.getData().remove();
 
         s.evaluate();
 
@@ -120,9 +120,9 @@ public class AccumulateTests {
         assertEquals(20.0, ta.getData().getValue(1));
         assertEquals(0.0, ta.getData().getValue(2));
 
-        t2.remove();
-        t2.remove();
-        t2.add();
+        t2.getData().remove();
+        t2.getData().remove();
+        t2.getData().add();
         t2id.getData().setValue(5, 15);
 
         s.evaluate();
@@ -131,7 +131,7 @@ public class AccumulateTests {
         assertEquals(10.0, ta.getData().getValue(1));
         assertEquals(15.0, ta.getData().getValue(2));
 
-        t2.remove(3);
+        t2.getData().remove(3);
 
         s.evaluate();
 

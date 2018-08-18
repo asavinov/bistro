@@ -175,7 +175,7 @@ public class Schema {
                     ((Column)elem).getData().resetChanged();
                 }
                 else if(elem instanceof Table) {
-                    ((Table)elem).resetChanged();
+                    ((Table)elem).getData().resetChanged();
                 }
             }
         }

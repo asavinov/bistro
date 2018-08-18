@@ -45,7 +45,7 @@ public class OpCalculate implements Operation {
         // Determine the scope of dirtiness
         //
 
-        Range mainRange = mainTable.getIdRange();
+        Range mainRange = mainTable.getData().getIdRange();
 
         boolean fullScope = false;
 
@@ -67,7 +67,7 @@ public class OpCalculate implements Operation {
         }
 
         if(!fullScope) {
-            mainRange = mainTable.getAddedRange();
+            mainRange = mainTable.getData().getAddedRange();
         }
 
         //

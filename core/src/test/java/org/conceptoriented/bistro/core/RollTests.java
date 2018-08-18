@@ -83,11 +83,11 @@ public class RollTests {
         // Table (fact table)
         //
         Table tf = schema.createTable("F");
-        tf.add();
-        tf.add();
-        tf.add();
-        tf.add();
-        tf.add();
+        tf.getData().add();
+        tf.getData().add();
+        tf.getData().add();
+        tf.getData().add();
+        tf.getData().add();
 
         // Create measure to be aggregated
         Column tf_m = schema.createColumn("M", tf);
