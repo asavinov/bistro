@@ -16,6 +16,8 @@ The goal of this project is to implement a novel general-purpose data modeling a
 * [**Bistro Streams**](./server) - a library for stream analytics (for IoT and edge computing) - it is an alternative to Kafka Streams
 * [**Examples**](./examples) - examples of how to use Bistro Engine and Bistro Streams
 
+There also another project based on the same column-oriented principles but aimed at feature engineering and data mining: Lambdo https://github.com/asavinov/lambdo
+
 # Contents
 
 * [Why column-orientation?](#Why-column-orientation)
@@ -34,6 +36,8 @@ The goal of this project is to implement a novel general-purpose data modeling a
   * [What is the formal basis of Bistro?](#What-is-the-formal-basis-of-Bistro)
   * [What are other implementation of this approach to data processing?](#What-are-other-implementation-of-this-approach-to-data-processing)
   * [Who has been developing Bistro?](#Who-has-been-developing-Bistro)
+
+* [References](#references)
 
 # Why column-orientation?
 
@@ -62,7 +66,7 @@ JOIN Products product ON item.ProductId = product.Id
 
 This new result table can be now used for computing amount precisely as we described above because it has the necessary attributes copied from the two source tables. Let us again compare this solution with the problem formulation. Do we really need a new table? No. Our goal is to have a possibility to access attributes from the second `Products` table (while computing a new attribute in the first table). Hence it again can be viewed as a workaround where a new set is produced just because there is no possibility not to produce it.
 
-A principled solution to this problem is a data model which uses column operations for data processing so that a link can be defined as a new column in an existing table.
+A principled solution to this problem is a data model which uses column operations for data processing so that a link can be defined as a new column in an existing table [3].
 
 ## Aggregating data
 
@@ -75,7 +79,7 @@ FROM Items GROUP BY ProductId
 
 Here we again get a *new* table although the goal is to produce a new (aggregated) attribute in an existing table (`Products`). Indeed, what we really want is to add a new attribute to the `Products` table which would be equivalent to all other attributes (like product `Price` used in the previous example). This `TotalQuantity` could be then used to compute some other properties of products. Of course, this also can be done using set operations in SQL but then we will have to again use join to combine the group-by result with the original `Products` table followed by producing yet another table with new calculated attributes. It is apparently not how it should work in an ideal data model because the task formulation does not mention and does not actually require any new tables - only attributes. Thus we see that the use of set operations in this and above cases is a problem-solution mismatch.
 
-A solution to this problem again is provided by a column oriented data model where aggregated columns can be defined without adding new tables.
+A solution to this problem again is provided by a column oriented data model where aggregated columns can be defined without adding new tables [1].
 
 # Frequently asked questions
 
@@ -131,6 +135,8 @@ Bistro relies on the *concept-oriented model* (COM) [2] where the main unit of r
 ## What are other implementation of this approach to data processing?
 
 The same formal basis has been also used in these projects:
+* Lambdo: https://github.com/asavinov/lambdo - A column-oriented approach to feature engineering. Feature engineering and machine learning: together at last!
+
 * Stream Commandr (2016-2017):
   * Stream Commandr Engine: https://github.com/asavinov/sc-core
   * Stream Commandr HTTP REST Server: https://github.com/asavinov/sc-rest
@@ -144,6 +150,13 @@ The same formal basis has been also used in these projects:
 ## Who has been developing Bistro?
 
 Bistro and the underlying concept-oriented model of data has been developed by Alexandr Savinov: http://conceptoriented.org
+
+# References
+
+* [1] A. Savinov, From Group-By to Accumulation: Data Aggregation Revisited. Proc. IoTBDS 2017, 370-379. https://www.researchgate.net/publication/316551218_From_Group-by_to_Accumulation_Data_Aggregation_Revisited
+* [2] A. Savinov, Concept-oriented model: the Functional View, Eprint: [arXiv:1606.02237](https://arxiv.org/abs/1606.02237) [cs.DB], 2016. https://www.researchgate.net/publication/303840097_Concept-Oriented_Model_the_Functional_View
+* [3] A. Savinov, Joins vs. Links or Relational Join Considered Harmful. Proc. IoTBD 2016, 362-368. https://www.researchgate.net/publication/301764816_Joins_vs_Links_or_Relational_Join_Considered_Harmful
+* [4] A. Savinov, DataCommandr: Column-Oriented Data Integration, Transformation and Analysis. Proc. IoTBD 2016, 339-347. https://www.researchgate.net/publication/301764506_DataCommandr_Column-Oriented_Data_Integration_Transformation_and_Analysis
 
 # License
 

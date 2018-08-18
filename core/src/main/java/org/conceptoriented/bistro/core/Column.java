@@ -42,57 +42,12 @@ public class Column implements Element {
     public void setOutput(Table table) { this.output = table; this.getData().setValue(null); }
 
     //
-    // Data (public)
+    // Data
     //
 
     private ColumnData data;
     public ColumnData getData() { return this.data; }
     public void setData(ColumnData data) { this.data = data; }
-
-
-
-
-    //public Object getValue(long id) { return this.data.getValue(id); }
-
-    //public void setValue(long id, Object value) { this.data.setValue(id, value); }
-
-    //public void setValue(Range range, Object value) { this.data.setValue(range, value); }
-    //public void setValue(Range range) { this.data.setValue(range); } // Default value
-
-    // All ids
-    //public void setValue(Object value) { this.data.setValue(value); this.setChanged(); }
-    //public void setValue() { this.data.setValue(); this.setChanged(); } // Default value
-
-    // Default value
-    //public Object getDefaultValue() { return this.data.getDefaultValue(); }
-    //public void setDefaultValue(Object value) { this.data.setDefaultValue(value); this.setChanged(); }
-
-    //
-    // Data (protected). They are used from Table only and determine physically existing mapping from a range of ids to output values.
-    //
-
-    //protected void add() { this.data.add(); this.isChanged = true; }
-    //protected void add(long count) { this.data.add(count); this.isChanged = true; }
-
-    //protected void remove() { this.data.remove(1); this.isChanged = true; }
-    //protected void remove(long count) { this.data.remove(count); this.isChanged = true; } // Remove the specified number of oldest records
-    //protected void removeAll() { this.data.removeAll(); this.isChanged = true; }
-
-/*
-    protected void reset() {
-        Table table = this.getInput();
-        if(table != null) {
-            this.data.reset(table.getIdRange().start, table.getIdRange().end);
-        }
-        else {
-            this.data.reset(0, 0);
-        }
-        this.isChanged = true;
-    }
-*/
-
-    //public long findSorted(Object value) { return this.data.findSorted(value); }
-    //public long findSortedFromStart(Object value) { return this.data.findSortedFromStart(value); }
 
     //
     // Element interface
@@ -513,7 +468,7 @@ public class Column implements Element {
         this.output = output;
 
         // Where its output values are stored
-        this.data = new ColumnData(this.input.getIdRange().start, this.input.getIdRange().end);
+        this.data = new org.conceptoriented.bistro.core.data.ColumnDataImpl(this.input.getIdRange().start, this.input.getIdRange().end);
 
         this.getData().setChangedAt(0); // Very old - need to be evaluated
     }

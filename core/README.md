@@ -38,7 +38,6 @@
 * [Examples](../examples)
 * [How to build](#how-to-build)
 * [How to use](#how-to-use)
-* [References](#references)
 
 # About Bistro Engine
 
@@ -51,8 +50,8 @@ Bistro is a light-weight column-oriented *data processing engine* which radicall
 At its core, Bistro relies on a novel *column-oriented* logical data model which describes data processing as a DAG of *column operations* as opposed to having only set operations in conventional approaches. Computations in Bistro are performed by *evaluating* column definitions. Each definition describes how this column output values are expressed in terms of other columns. Currently Bistro provides three column definition (operation) types:
 
 * calculate - roughly corresponds to the Map and SQL select operations
-* link [3] - roughly corresponds to the join operation
-* accumulate [1] - a column-oriented analogue of Group-by and Reduce
+* link - roughly corresponds to the join operation
+* accumulate - a column-oriented analogue of Group-by and Reduce
 * roll - rolling aggregation using accumulate functions
 
 Bistro is a major alternative to most other data models and data processing frameworks which are based on table (set) operations including SQL-like languages and MapReduce. In set-oriented approaches, data is being processed by producing new sets (tables, collections etc.) from the data stored in other sets by applying various set operations like join, group-by, filter, map or reduce. In contrast, Bistro processes data by producing new columns from existing columns by applying function operations.
@@ -398,10 +397,3 @@ dependencies {
     // Other dependencies
 }
 ```
-
-# References
-
-* [1] A. Savinov, From Group-By to Accumulation: Data Aggregation Revisited. Proc. IoTBDS 2017, 370-379. https://www.researchgate.net/publication/316551218_From_Group-by_to_Accumulation_Data_Aggregation_Revisited
-* [2] A. Savinov, Concept-oriented model: the Functional View, Eprint: [arXiv:1606.02237](https://arxiv.org/abs/1606.02237) [cs.DB], 2016. https://www.researchgate.net/publication/303840097_Concept-Oriented_Model_the_Functional_View
-* [3] A. Savinov, Joins vs. Links or Relational Join Considered Harmful. Proc. IoTBD 2016, 362-368. https://www.researchgate.net/publication/301764816_Joins_vs_Links_or_Relational_Join_Considered_Harmful
-* [4] A. Savinov, DataCommandr: Column-Oriented Data Integration, Transformation and Analysis. Proc. IoTBD 2016, 339-347. https://www.researchgate.net/publication/301764506_DataCommandr_Column-Oriented_Data_Integration_Transformation_and_Analysis
