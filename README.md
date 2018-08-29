@@ -20,22 +20,22 @@ There also another project based on the same column-oriented principles but aime
 
 # Contents
 
-* [Why column-orientation?](#Why-column-orientation)
-  * [Calculating data](#Calculating-data)
-  * [Linking data](#Linking-data)
-  * [Aggregating data](#Aggregating-data)
+* [Why column-orientation?](#why-column-orientation)
+  * [Calculating data](#calculating-data)
+  * [Linking data](#linking-data)
+  * [Aggregating data](#aggregating-data)
 
-* [Frequently asked questions](#Frequently-asked-questions)
-  * [What is Bistro intended for?](#What-is-Bistro-intended-for)
-  * [What kind of data can Bistro process?](#What-kind-of-data-can-Bistro-process)
-  * [How does Bistro process data?](#How-does-Bistro-process-data)
-  * [How is Bistro positioned among other data processing technologies?](#How-is-Bistro-positioned-among-other-data-processing-technologies)
-  * [Does Bistro have a query language?](#Does-Bistro-have-a-query-language)
-  * [What are unique features of Bistro?](#What-are-unique-features-of-Bistro)
-  * [What are benefits of column-orientation?](#What-are-benefits-of-column-orientation)
-  * [What is the formal basis of Bistro?](#What-is-the-formal-basis-of-Bistro)
-  * [What are other implementation of this approach to data processing?](#What-are-other-implementation-of-this-approach-to-data-processing)
-  * [Who has been developing Bistro?](#Who-has-been-developing-Bistro)
+* [Frequently asked questions](#frequently-asked-questions)
+  * [What is Bistro intended for?](#what-is-bistro-intended-for)
+  * [What kind of data can Bistro process?](#what-kind-of-data-can-bistro-process)
+  * [How does Bistro process data?](#how-does-bistro-process-data)
+  * [How is Bistro positioned among other data processing technologies?](#how-is-bistro-positioned-among-other-data-processing-technologies)
+  * [Does Bistro have a query language?](#does-bistro-have-a-query-language)
+  * [What are unique features of Bistro?](#what-are-unique-features-of-bistro)
+  * [What are benefits of column-orientation?](#what-are-benefits-of-column-orientation)
+  * [What is the formal basis of Bistro?](#what-is-the-formal-basis-of-bistro)
+  * [What are other implementation of this approach to data processing?](#what-are-other-implementation-of-this-approach-to-data-processing)
+  * [Who has been developing Bistro?](#who-has-been-developing-bistro)
 
 * [References](#references)
 
