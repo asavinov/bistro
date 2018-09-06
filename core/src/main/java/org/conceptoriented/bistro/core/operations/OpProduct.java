@@ -1,6 +1,7 @@
 package org.conceptoriented.bistro.core.operations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,9 @@ import org.conceptoriented.bistro.core.*;
 public class OpProduct implements Operation {
 
     Table table;
+
+    EvalCalculate whereLambda;
+    List<ColumnPath> whereParameterPaths = new ArrayList<>();
 
     @Override
     public OperationType getOperationType() {
@@ -32,6 +36,15 @@ public class OpProduct implements Operation {
         // And their input tables which have to be populated before
         List<Table> projTabs = projCols.stream().map(x -> x.getInput()).collect(Collectors.toList());
         //ret.addAll(projTabs);
+
+        // Add what evaluation of product condition requires
+        if(this.whereLambda != null && this.whereParameterPaths != null) {
+            List<Column> cols = ColumnPath.getColumns(this.whereParameterPaths);
+            for(Column col : cols) {
+                if(col.getInput() == this.table) continue; // This table columns will be evaluated during population and hence during product evaluation, so we exclude them
+                ret.add(col);
+            }
+        }
 
         return ret;
     }
@@ -80,7 +93,7 @@ public class OpProduct implements Operation {
                 //
                 boolean whereTrue = true;
                 try {
-                    whereTrue = this.table.isWhereTrue(record, keyColumns);
+                    whereTrue = this.isWhereTrue(record, keyColumns);
                 }
                 catch(BistroException e) {
                     throw(e);
@@ -127,8 +140,71 @@ public class OpProduct implements Operation {
 
     }
 
-    public OpProduct(Table table) {
-        this.table = table;
+    // Apply where-lambda to one record
+    // Check whether the specified record (which is not in the table yet) satisfies the product condition
+    // The record provides output values for the specified columns of this table
+    public boolean isWhereTrue(List<Object> record, List<Column> columns) {
+        if(this.whereLambda == null || this.whereParameterPaths == null) return true;
+
+        List<ColumnPath> paramPaths =  this.whereParameterPaths;
+        Object[] paramValues = new Object[paramPaths.size() + 1];
+
+        //
+        // OPTIMIZE: This array has to be filled only once if we want to evaluate many records
+        //
+        int[] paramColumnIndex = new int[paramPaths.size()]; // For each param path, store the index in the record
+        for(int i=0; i < paramColumnIndex.length; i++) {
+            Column firstSegment = paramPaths.get(i).columns.get(0); // First segment
+            int colIdx = columns.indexOf(firstSegment); // Index of the first segment in the record
+            paramColumnIndex[i] = colIdx;
+        }
+
+        //
+        // Prepare parameters
+        //
+        for(int p=0; p < paramPaths.size(); p++) {
+            int keyNo = paramColumnIndex[p];
+            Object recordValue = record.get(keyNo);
+            paramValues[p] = paramPaths.get(p).getValueSkipFirst(recordValue);
+        }
+
+        //
+        // Evaluate where condition
+        //
+        boolean result;
+        try {
+            result = (boolean) this.whereLambda.evaluate(paramValues);
+        }
+        catch(BistroException e) {
+            throw(e);
+        }
+        catch(Exception e) {
+            throw( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
+        }
+
+        return result;
     }
 
+    public OpProduct(Table table) {
+        this.table = table;
+
+        this.whereLambda = null;
+        this.whereParameterPaths = null;
+    }
+
+    public OpProduct(Table table, EvalCalculate lambda, ColumnPath... paths) {
+        this.table = table;
+
+        this.whereLambda = lambda;
+        this.whereParameterPaths = Arrays.asList(paths);
+    }
+
+    public OpProduct(Table table, EvalCalculate lambda, Column... columns) {
+        this.table = table;
+
+        this.whereLambda = lambda;
+        for(int i=0; i<columns.length; i++) {
+            this.whereParameterPaths.add(new ColumnPath(columns[i]));
+        }
+    }
 }

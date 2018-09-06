@@ -20,7 +20,7 @@ There also another project based on the same column-oriented principles but aime
 
 # Contents
 
-* [Why column-orientation?](#why-column-orientation)
+* [Motivation: Why column-orientation?](#motivation-why-column-orientation)
   * [Calculating data](#calculating-data)
   * [Linking data](#linking-data)
   * [Aggregating data](#aggregating-data)
@@ -39,7 +39,7 @@ There also another project based on the same column-oriented principles but aime
 
 * [References](#references)
 
-# Why column-orientation?
+# Motivation: Why column-orientation?
 
 ## Calculating data
 
@@ -49,22 +49,28 @@ One of the simplest data processing operations is computing a new attribute usin
 SELECT *, Quantity * Price AS Amount FROM Items
 ```
 
-Although this wide spread data processing pattern may seem very natural and almost trivial it does have one significant flaw: the task was to compute a new attribute while the query produces a new table. Although the result table does contain the required attribute, the question is why not to do exactly what has been requested? Why is it necessary to produce a new table if we actually want to compute only an attribute?
+Although this wide spread data processing pattern may seem very natural and almost trivial it does have one significant flaw: 
 
-The same problem exists in MapReduce. If our goal is to compute a new field then we apply the map operation which will emit completely new objects each having this new field. Here again the same problem: our intention was not to create a new collection with new objects – we wanted to add a new computed property to already existing objects. However, the data processing framework forces us to describe this task in terms of operations with collections. The reason is that we do not have any choice because these data models provides only sets and set operations and the only way to add a new attribute is to produce a set with this attribute.
+> the task was to compute a new *attribute* while the query produces a new *table*
+
+Although the result table does contain the required attribute, the question is why not to do exactly what has been requested? Why is it necessary to produce a new table if we actually want to compute only an attribute?
+
+The same problem exists in MapReduce. If our goal is to compute a new field then we apply the map operation which will emit completely new objects each having this new field. Here again the same problem: our intention was not to create a new collection with new objects – we wanted to add a new computed property to already existing objects. However, the data processing framework forces us to describe this task in terms of operations with collections. We simply do not have any choice because these data models provide only sets and set operations and the only way to add a new attribute is to produce a set with this attribute.
 
 An alternative approach consists in using column operations for data transformations and then we could do exactly what is requested: adding (calculated) attributes to existing tables.
 
 ## Linking data
 
-Another wide spread task consists in computing links or references between different tables: given an element of one table, how can I access attributes in a related table? For example, assume that `Price` is not an attribute of the `Items` table as in the above example but rather it is an attribute of a `Products` table. Here we have two tables, `Items` and `Products`, with attributes `ProductId` and `Id`, respectively, which relate their records. If now we want to compute the amount for each item then the price needs to be retrieved from the related `Products` table. The standard solution is to copy the necessary attributes into a *new* table by using the relational (left) join operation for matching the records:
+Another wide spread task consists in computing links or references between different tables: given an element of one table, how can I access attributes in a related table? For example, assume that `Price` is not an attribute of the `Items` table as in the above example but rather it is an attribute of a `Products` table. Here we have two tables, `Items` and `Products`, with attributes `ProductId` and `Id`, respectively, which relate their records. If now we want to compute the amount for each item then the price needs to be retrieved from the related `Products` table. The standard solution is to copy the necessary attributes into a *new table* by using the relational (left) join operation for matching the records:
 
 ```sql
 SELECT item.*, product.Price FROM Items item
 JOIN Products product ON item.ProductId = product.Id
 ```
 
-This new result table can be now used for computing amount precisely as we described above because it has the necessary attributes copied from the two source tables. Let us again compare this solution with the problem formulation. Do we really need a new table? No. Our goal is to have a possibility to access attributes from the second `Products` table (while computing a new attribute in the first table). Hence it again can be viewed as a workaround where a new set is produced just because there is no possibility not to produce it.
+This new result table can be now used for computing the amount precisely as we described earlier because it has the necessary attributes copied from the two source tables. Let us again compare this solution with the problem formulation. Do we really need a new table? No. Our goal was to have a possibility to access attributes from the second `Products` table (while computing a new attribute in the first table). Hence it again can be viewed as a workaround rather than a solution:
+
+> a new set is produced just because there is no possibility not to produce it while it is not needed for the solution
 
 A principled solution to this problem is a data model which uses column operations for data processing so that a link can be defined as a new column in an existing table [3].
 
@@ -77,7 +83,11 @@ SELECT ProductId, COUNT(ProductID) AS TotalQuantity
 FROM Items GROUP BY ProductId
 ```
 
-Here we again get a *new* table although the goal is to produce a new (aggregated) attribute in an existing table (`Products`). Indeed, what we really want is to add a new attribute to the `Products` table which would be equivalent to all other attributes (like product `Price` used in the previous example). This `TotalQuantity` could be then used to compute some other properties of products. Of course, this also can be done using set operations in SQL but then we will have to again use join to combine the group-by result with the original `Products` table followed by producing yet another table with new calculated attributes. It is apparently not how it should work in an ideal data model because the task formulation does not mention and does not actually require any new tables - only attributes. Thus we see that the use of set operations in this and above cases is a problem-solution mismatch.
+Here again see the same problem:
+
+> a new unnecessary *table* is produced although the goal is to produce a new (aggregated) attribute in an existing table
+
+Indeed, what we really want is to add a new attribute to the `Products` table which would be equivalent to all other attributes (like product `Price` used in the previous example). This `TotalQuantity` could be then used to compute some other properties of products. Of course, this also can be done using set operations in SQL but then we will have to again use join to combine the group-by result with the original `Products` table followed by producing yet another table with new calculated attributes. It is apparently not how it should work in a good data model because the task formulation does not mention and does not actually require any new tables - only attributes. Thus we see that the use of set operations in this and above cases is a problem-solution mismatch.
 
 A solution to this problem again is provided by a column oriented data model where aggregated columns can be defined without adding new tables [1].
 

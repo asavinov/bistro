@@ -5,7 +5,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -73,20 +72,12 @@ public class Tests {
 
         // Record search
         vals = Arrays.asList(2.0, "StringValue 2");
-        long found_id = t.find(vals, cols, false); // Record exist
+        long found_id = t.find(vals, cols); // Record exists
         assertEquals(id4, found_id);
 
         vals = Arrays.asList(2.0, "Non-existing value");
-        found_id = t.find(vals, cols, false); // Record does not exist
+        found_id = t.find(vals, cols); // Record does not exist
         assertTrue(found_id < 0);
-
-        vals = Arrays.asList(5.0, "String value 5"); // Record does not exist
-        found_id = t.find(vals, cols, true); // Add if not found
-        assertEquals(4, found_id);
-
-        vals = Arrays.asList(5L, "String value 5"); // Record exist but we specify different type (integer instead of double)
-        found_id = t.find(vals, cols, false);
-        assertTrue(found_id < 0); // Not found because of different types: Long is not comparable with Double
     }
 
     @Test

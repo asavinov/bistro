@@ -73,7 +73,7 @@ public class OpLink implements Operation {
         Range mainRange = this.column.getInput().getData().getIdRange();
 
         //
-        // Prepare value paths/exprs for search/find
+        // Prepare value paths/exprs for search/find_OLD
         //
         //List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
         //List<Object[]> rhsParamValues = new ArrayList<>();
@@ -143,7 +143,7 @@ public class OpLink implements Operation {
         // Update dirty elements
         //
 
-        // Prepare value paths/exprs for search/find
+        // Prepare value paths/exprs for search/find_OLD
         //List<List<ColumnPath>> rhsParamPaths = new ArrayList<>();
         //List<Object[]> rhsParamValues = new ArrayList<>();
         List<Object> rhsResults = new ArrayList<>(); // Record of value paths used for search (produced by expressions and having same length as column list)
@@ -168,12 +168,28 @@ public class OpLink implements Operation {
                 rhsResults.set(keyNo, result);
             }
 
+            //
             // Find element in the type table which corresponds to these expression results
-            // In it is not found and needs to be added and can be really added (satisfies product conditions) then it is appended as a new element
-            Object out = typeTable.find(rhsResults, this.keyColumns, this.isProj);
+            //
+            long idx = typeTable.find(rhsResults, this.keyColumns);
 
-            // Update output
-            this.column.getData().setValue(i, out);
+            //
+            // For project columns: if not found, the append since it is a populating column
+            //
+            if(this.isProj && idx < 0) {
+
+                // Check if this record satisfies the product condition and we really can add it
+                OpProduct productOp = (OpProduct)typeTable.getOperation(); // Where condition is used only in product tables
+                boolean whereTrue = productOp.isWhereTrue(rhsResults, this.keyColumns);
+                if(whereTrue) {
+                    // Really append
+                    idx = typeTable.getData().add();
+                    typeTable.setValues(idx, this.keyColumns, rhsResults);
+                }
+            }
+
+            // Update output (-1 if not found)
+            this.column.getData().setValue(i, idx);
         }
     }
 

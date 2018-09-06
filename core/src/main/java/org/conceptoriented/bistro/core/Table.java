@@ -110,15 +110,6 @@ public class Table implements Element {
             deps = this.operation.getDependencies();
         }
 
-        // Add what evaluation of product condition requires (except for this table columns)
-        if(this.whereLambda != null && this.whereParameterPaths != null) {
-            List<Column> cols = ColumnPath.getColumns(this.whereParameterPaths);
-            for(Column col : cols) {
-                if(col.getInput() == this) continue; // This table columns will be evaluated during population and hence during product evaluation, so we exclude them
-                deps.add(col);
-            }
-        }
-
         return deps;
     }
     @Override
@@ -263,8 +254,7 @@ public class Table implements Element {
 
     @Override
     public OperationType getOperationType() {
-        if(this.operation == null && this.whereLambda == null) return OperationType.NOOP;
-        else if (this.operation == null && this.whereLambda != null) return OperationType.PRODUCT;
+        if(this.operation == null) return OperationType.NOOP;
         else return this.operation.getOperationType();
     }
 
@@ -287,9 +277,6 @@ public class Table implements Element {
     public void noop() {
         this.errors.clear();
 
-        this.whereLambda = null;
-        this.whereParameterPaths = new ArrayList<>();
-
         this.operation = null;
         this.definitionChangedAt = System.nanoTime();
 
@@ -302,16 +289,10 @@ public class Table implements Element {
     // Product table
     //
 
-    EvalCalculate whereLambda;
-    List<ColumnPath> whereParameterPaths = new ArrayList<>();
-
     public void product() {
         this.noop();
 
         this.operation = new OpProduct(this); // Create operation
-
-        this.whereLambda = null;
-        this.whereParameterPaths = null;
 
         if(this.hasDependency(this)) {
             this.noop();
@@ -322,10 +303,7 @@ public class Table implements Element {
     public void product(EvalCalculate lambda, ColumnPath... paths) {
         this.noop();
 
-        this.operation = new OpProduct(this); // Create operation
-
-        this.whereLambda = lambda;
-        this.whereParameterPaths = Arrays.asList(paths);
+        this.operation = new OpProduct(this, lambda, paths); // Create operation
 
         if(this.hasDependency(this)) {
             this.noop();
@@ -336,63 +314,12 @@ public class Table implements Element {
     public void product(EvalCalculate lambda, Column... columns) {
         this.noop(); // Reset operation
 
-        this.operation = new OpProduct(this); // Create operation
-
-        this.whereLambda = lambda;
-        for(int i=0; i<columns.length; i++) {
-            this.whereParameterPaths.add(new ColumnPath(columns[i]));
-        }
+        this.operation = new OpProduct(this, lambda, columns); // Create operation
 
         if(this.hasDependency(this)) {
             this.noop();
             throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
         }
-    }
-
-    // Check whether the specified record (which is not in the table yet) satisfies the product condition
-    // The record provides output values for the specified columns of this table
-    public boolean isWhereTrue(List<Object> record, List<Column> columns) {
-        if(this.whereLambda == null || this.whereParameterPaths == null) return true;
-
-        List<ColumnPath> paramPaths =  this.whereParameterPaths;
-        Object[] paramValues = new Object[paramPaths.size() + 1];
-
-        //
-        // OPTIMIZE: This array has to be filled only once if we want to evaluate many records
-        //
-        int[] paramColumnIndex = new int[paramPaths.size()]; // For each param path, store the index in the record
-        for(int i=0; i < paramColumnIndex.length; i++) {
-            Column firstSegment = paramPaths.get(i).columns.get(0); // First segment
-            int colIdx = columns.indexOf(firstSegment); // Index of the first segment in the record
-            paramColumnIndex[i] = colIdx;
-        }
-
-        //
-        // Prepare parameters
-        //
-        for(int p=0; p < paramPaths.size(); p++) {
-            int keyNo = paramColumnIndex[p];
-            Object recordValue = record.get(keyNo);
-            paramValues[p] = paramPaths.get(p).getValueSkipFirst(recordValue);
-        }
-
-        //
-        // Evaluate adder
-        //
-        boolean result;
-        try {
-            result = (boolean) this.whereLambda.evaluate(paramValues);
-        }
-        catch(BistroException e) {
-            this.errors.add(e);
-            return false;
-        }
-        catch(Exception e) {
-            this.errors.add( new BistroException(BistroErrorCode.EVALUATION_ERROR, e.getMessage(), "") );
-            return false;
-        }
-
-        return result;
     }
 
     //
@@ -414,13 +341,12 @@ public class Table implements Element {
     // Search
     //
 
+    // Convenience method: find id with the specified column values.
+    // If many records satisfy the criteria then the id returned is not determined (any can be returned).
+    // If not found, then return negative id.
     // Important: Values must have the same type as the column data type - otherwise the comparision will not work
     // ISSUE: If not found, should output be NULL or -1? On one hand, we say that links are Long. But Long can be NULL. In future, it could be long which cannot be NULL.
-    public long find(List<Object> values, List<Column> columns, boolean append) {
-
-        //List<String> names = record.entrySet()..getNames();
-        //List<Object> valuePaths = names.stream().map(x -> record.get(x)).collect(Collectors.<Object>toList());
-        //List<Column> keyColumns = names.stream().map(x -> this.getSchema().getColumn(this.getName(), x)).collect(Collectors.<Column>toList());
+    public long find(List<Object> values, List<Column> columns) {
 
         Range searchRange = this.getData().getIdRange();
         long index = -1;
@@ -453,19 +379,7 @@ public class Table implements Element {
             }
         }
 
-        // If not found then add if requested
-        if(index < 0 && append) {
-
-            // Check if this record satisfies the product condition and we really can add it
-            boolean whereTrue = this.isWhereTrue(values, columns);
-            if(whereTrue) {
-                // Really add
-                index = this.getData().add();
-                this.setValues(index, columns, values);
-            }
-        }
-
-        return index;
+        return index; // Negative if not found
     }
 
     public List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
