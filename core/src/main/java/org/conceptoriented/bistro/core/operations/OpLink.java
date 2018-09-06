@@ -171,7 +171,7 @@ public class OpLink implements Operation {
             //
             // Find element in the type table which corresponds to these expression results
             //
-            long idx = typeTable.find(rhsResults, this.keyColumns);
+            long idx = typeTable.getData().findValues(rhsResults, this.keyColumns);
 
             //
             // For project columns: if not found, the append since it is a populating column
@@ -184,7 +184,7 @@ public class OpLink implements Operation {
                 if(whereTrue) {
                     // Really append
                     idx = typeTable.getData().add();
-                    typeTable.setValues(idx, this.keyColumns, rhsResults);
+                    typeTable.getData().setValues(idx, this.keyColumns, rhsResults);
                 }
             }
 

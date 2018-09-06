@@ -107,7 +107,7 @@ public class OpProduct implements Operation {
                 //
                 if(whereTrue == true) {
                     long input = this.table.getData().add();
-                    this.table.setValues(input, keyColumns, record);
+                    this.table.getData().setValues(input, keyColumns, record);
                 }
 
                 top--;

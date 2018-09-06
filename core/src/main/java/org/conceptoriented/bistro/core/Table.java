@@ -49,42 +49,6 @@ public class Table implements Element {
     }
 
     //
-    // Convenience methods: operations with records (data stored in columns)
-    //
-
-    public void getValues(long id, Map<String,Object> record) {
-        for (Map.Entry<String, Object> field : record.entrySet()) {
-            String name = field.getKey();
-            Column col = this.getColumn(name);
-            Object value = col.getData().getValue(id);
-            field.setValue(value);
-        }
-    }
-    public void getValues(long id, List<Column> columns, List<Object> values) {
-        for (int i = 0; i < columns.size(); i++) {
-            Column col = columns.get(i);
-            Object value = col.getData().getValue(id);
-            values.add(value);
-        }
-    }
-
-    public void setValues(long id, Map<String,Object> record) {
-        for (Map.Entry<String, Object> field : record.entrySet()) {
-            String name = field.getKey();
-            Column col = this.getColumn(name);
-            Object value = field.getValue();
-            col.getData().setValue(id, value);
-        }
-    }
-    public void setValues(long id, List<Column> columns, List<Object> values) {
-        for (int i = 0; i < columns.size(); i++) {
-            Column col = columns.get(i);
-            Object value = values.get(i);
-            col.getData().setValue(id, value);
-        }
-    }
-
-    //
     // Element interface
     //
 
@@ -338,49 +302,8 @@ public class Table implements Element {
     }
 
     //
-    // Search
+    // Convenience methods
     //
-
-    // Convenience method: find id with the specified column values.
-    // If many records satisfy the criteria then the id returned is not determined (any can be returned).
-    // If not found, then return negative id.
-    // Important: Values must have the same type as the column data type - otherwise the comparision will not work
-    // ISSUE: If not found, should output be NULL or -1? On one hand, we say that links are Long. But Long can be NULL. In future, it could be long which cannot be NULL.
-    public long find(List<Object> values, List<Column> columns) {
-
-        Range searchRange = this.getData().getIdRange();
-        long index = -1;
-        for(long i=searchRange.start; i<searchRange.end; i++) { // Scan all records and compare
-            // OPTIMIZATION: We could create or use an index and then binary search
-
-            boolean found = true;
-            for(int j=0; j<columns.size(); j++) {
-                Object recordValue = values.get(j);
-                Object columnValue = columns.get(j).getData().getValue(i);
-
-                // PROBLEM: The same number in Double and Integer will not be equal.
-                //   SOLUTION 1: cast to some common type before comparison. It can be done in-line here or we can use utility methods.
-                //   *SOLUTION 2: assume that the valuePaths have the type of the column, that is, the same comparable numeric type
-                //   SOLUTION 3: always cast the value to the type of this column (either here or in the expression)
-
-                // PROBLEM: Object.equals does not handle null's correctly
-                //   *SOLUTION: Use .Objects.equals (Java 1.7), ObjectUtils.equals (Apache), or Objects.equal (Google common), a==b (Kotlin, translated to "a?.equals(b) ?: (b === null)"
-
-                // Nullable comparison. If both are not null then for correct numeric comparison they must have the same type
-                if( !Objects.equals(recordValue, columnValue) ) {
-                    found = false;
-                    break;
-                }
-            }
-
-            if(found) {
-                index = i;
-                break;
-            }
-        }
-
-        return index; // Negative if not found
-    }
 
     public List<Column> getKeyColumns() { // Get all columns the domains of which have to be combined (non-primitive key-columns)
         List<Column> ret = new ArrayList<>();

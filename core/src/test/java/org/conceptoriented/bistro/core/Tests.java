@@ -66,17 +66,17 @@ public class Tests {
         long id4 = t.getData().add();
         List<Column> cols = Arrays.asList(c1, c2);
         List<Object> vals = Arrays.asList(2.0, "StringValue 2");
-        t.setValues(id4, cols, vals);
+        t.getData().setValues(id4, cols, vals);
         assertEquals(2.0, (double) c1.getData().getValue(id4), Double.MIN_VALUE);
         assertEquals("StringValue 2", (String) c2.getData().getValue(id4));
 
         // Record search
         vals = Arrays.asList(2.0, "StringValue 2");
-        long found_id = t.find(vals, cols); // Record exists
+        long found_id = t.getData().findValues(vals, cols); // Record exists
         assertEquals(id4, found_id);
 
         vals = Arrays.asList(2.0, "Non-existing value");
-        found_id = t.find(vals, cols); // Record does not exist
+        found_id = t.getData().findValues(vals, cols); // Record does not exist
         assertTrue(found_id < 0);
     }
 
@@ -93,11 +93,11 @@ public class Tests {
         long count;
 
         t.getData().add(5);
-        t.setValues(0, cols, Arrays.asList(1.0, Instant.parse("2018-01-01T00:01:00.000Z"))); // Oldest record
-        t.setValues(1, cols, Arrays.asList(2.0, Instant.parse("2018-01-01T00:02:00.000Z")));
-        t.setValues(2, cols, Arrays.asList(3.0, Instant.parse("2018-01-01T00:03:00.000Z")));
-        t.setValues(3, cols, Arrays.asList(4.0, Instant.parse("2018-01-01T00:04:00.000Z")));
-        t.setValues(4, cols, Arrays.asList(5.0, Instant.parse("2018-01-01T00:05:00.000Z"))); // Newest record
+        t.getData().setValues(0, cols, Arrays.asList(1.0, Instant.parse("2018-01-01T00:01:00.000Z"))); // Oldest record
+        t.getData().setValues(1, cols, Arrays.asList(2.0, Instant.parse("2018-01-01T00:02:00.000Z")));
+        t.getData().setValues(2, cols, Arrays.asList(3.0, Instant.parse("2018-01-01T00:03:00.000Z")));
+        t.getData().setValues(3, cols, Arrays.asList(4.0, Instant.parse("2018-01-01T00:04:00.000Z")));
+        t.getData().setValues(4, cols, Arrays.asList(5.0, Instant.parse("2018-01-01T00:05:00.000Z"))); // Newest record
 
         // Remove all c1<2.0 which means 1 record with id 0
         count = t.getData().remove(c1, 2.0);
