@@ -4,22 +4,31 @@ import java.util.List;
 
 public interface Element {
 
-    public Table getTable();
-    public Column getColumn();
+    Table getTable();
+    Column getColumn();
 
-    public List<Element> getDependencies();
-    public boolean hasDependency(Element element);
+    List<Element> getDependencies();
+    boolean hasDependency(Element element);
 
-    public List<Element> getDependents();
-    public boolean hasDependents(Element element);
+    List<Element> getDependents();
+    boolean hasDependents(Element element);
 
-    public List<BistroException> getErrors();
-    public boolean hasErrorsDeep();
+    List<BistroException> getErrors();
+    boolean hasErrorsDeep();
 
-    public Operation getOperation();
-    public OperationType getOperationType();
+    Operation getOperation();
+    void setOperation(Operation operation);
+    OperationType getOperationType();
 
-    public boolean isDirty(); // Based on dependencies
+    /**
+     * Whether dependencies (not this element) have changed their data state (since last evaluation) and hence this element has to be evaluated.
+     * This includes also changes of definitions including the definition of this element as well as anything that can influence the data state of this element.
+     * This does not include the data state of this element itself.
+     */
+    boolean isDirty();
 
-    public void evaluate(); // Evaluate
+    /**
+     * Make this element data state up-to-date and consistent with the state of all dependencies by processing new (dirty) data in the dependencies
+     */
+    void evaluate();
 }

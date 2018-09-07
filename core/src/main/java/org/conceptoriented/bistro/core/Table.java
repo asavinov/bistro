@@ -215,6 +215,18 @@ public class Table implements Element {
     public Operation getOperation() {
         return this.operation;
     }
+    @Override
+    public void setOperation(Operation operation) {
+        this.errors.clear();
+        this.definitionChangedAt = System.nanoTime();
+
+        this.operation = operation;
+
+        if(this.hasDependency(this)) {
+            this.noop(); // Reset definition because of failure to set new operation
+            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This table depends on itself directly or indirectly.");
+        }
+    }
 
     @Override
     public OperationType getOperationType() {
@@ -239,14 +251,10 @@ public class Table implements Element {
     //
 
     public void noop() {
-        this.errors.clear();
+        Operation op = null;
+        this.setOperation(op);
 
-        this.operation = null;
-        this.definitionChangedAt = System.nanoTime();
-
-        // TODO: Should we retains its current population (and if not, then has it to be overwritten automatically later during population or not) or it has to be emptied manually if necessary
-
-        // TODO: Error check: some other definitions might become invalid if they depend on this table
+        // TODO: Should we reset/empty the data or retain its current population?
     }
 
     //
@@ -254,36 +262,18 @@ public class Table implements Element {
     //
 
     public void product() {
-        this.noop();
-
-        this.operation = new OpProduct(this); // Create operation
-
-        if(this.hasDependency(this)) {
-            this.noop();
-            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
-        }
+        Operation op = new OpProduct(this);
+        this.setOperation(op);
     }
 
     public void product(EvalCalculate lambda, ColumnPath... paths) {
-        this.noop();
-
-        this.operation = new OpProduct(this, lambda, paths); // Create operation
-
-        if(this.hasDependency(this)) {
-            this.noop();
-            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
-        }
+        Operation op = new OpProduct(this, lambda, paths);
+        this.setOperation(op);
     }
 
     public void product(EvalCalculate lambda, Column... columns) {
-        this.noop(); // Reset operation
-
-        this.operation = new OpProduct(this, lambda, columns); // Create operation
-
-        if(this.hasDependency(this)) {
-            this.noop();
-            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
-        }
+        Operation op = new OpProduct(this, lambda, columns);
+        this.setOperation(op);
     }
 
     //
@@ -291,14 +281,8 @@ public class Table implements Element {
     //
 
     public void range(Object origin, Object period, Long length) {
-        this.noop(); // Reset operation
-
-        this.operation = new OpRange(this, origin, period, length); // Create operation
-
-        if(this.hasDependency(this)) {
-            this.noop();
-            throw new BistroException(BistroErrorCode.DEFINITION_ERROR, "Cyclic dependency.", "This column depends on itself directly or indirectly.");
-        }
+        Operation op = new OpRange(this, origin, period, length);
+        this.setOperation(op);
     }
 
     //
